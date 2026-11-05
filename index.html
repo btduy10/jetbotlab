@@ -124,7 +124,8 @@ body.reordering,body.reordering *{cursor:grabbing!important;user-select:none}
 .ed textarea{resize:none;overflow:hidden;background:transparent;color:transparent;caret-color:var(--fg);outline:none;width:100%;box-sizing:border-box}
 .ed textarea::selection{background:color-mix(in srgb, var(--accent) 32%, transparent);color:transparent}
 .ed textarea::-moz-selection{background:color-mix(in srgb, var(--accent) 32%, transparent);color:transparent}
-.errbar{position:absolute;left:0;right:0;height:20px;background:var(--err-bg);border-left:3px solid var(--err);pointer-events:none}
+.errbar{position:absolute;left:0;right:0;height:20px;background:var(--err-bg);border-left:3px solid var(--err);pointer-events:none;z-index:0}
+.ed pre,.ed textarea{position:relative;z-index:1}
 .t-kw{color:var(--kw);font-weight:500}.t-str{color:var(--str)}.t-num{color:var(--num)}.t-com{color:var(--com);font-style:italic}.t-fn{color:var(--fn)}.t-bi{color:var(--bi)}.t-self{color:var(--kw);font-style:italic}
 .ctools{position:absolute;right:6px;top:-11px;display:none;gap:1px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:2px;z-index:2;box-shadow:0 2px 6px rgb(0 0 0 / .06)}
 .cell.active .ctools,.cell:hover .ctools{display:flex}
@@ -137,7 +138,7 @@ body.reordering,body.reordering *{cursor:grabbing!important;user-select:none}
 .out pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font:inherit}
 .out .err{margin-top:4px;background:var(--err-bg);border-left:3px solid var(--err);padding:8px 10px;border-radius:0 var(--r) var(--r) 0}
 .out .err b{color:var(--err);font-weight:700}
-.out .err .hint{font-family:var(--f-ui);font-size:12.5px;color:var(--fg);margin-top:4px}
+.out .err .ehint{font-family:var(--f-ui);font-size:12.5px;color:var(--fg);margin-top:4px}
 .out .ask{display:flex;gap:6px;align-items:center;margin:4px 0}
 .out .ask input{flex:1;min-width:0;font-family:var(--f-code);font-size:12.5px;border:1px solid var(--accent);border-radius:4px;padding:3px 6px;background:var(--panel)}
 .out .meta{color:var(--faint);font-size:11.5px}
@@ -166,6 +167,7 @@ body.reordering,body.reordering *{cursor:grabbing!important;user-select:none}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
 .seg button{border:0;background:transparent;padding:5px 10px;font-size:12.5px;border-right:1px solid var(--line);color:var(--muted)}
 .seg button:last-child{border-right:0}
+.seg.lang button{padding:5px 9px;font-weight:600;font-size:12px;letter-spacing:.04em}
 .seg button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-ink);font-weight:600}
 .toggles{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
 .chip{border:1px solid var(--line);background:transparent;border-radius:99px;padding:4px 10px;font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:6px}
@@ -228,83 +230,87 @@ input[type=file]{display:none}
   <header class="top">
     <div class="brand">
       <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect x="3" y="8" width="20" height="10" rx="2" fill="var(--fg)"/><circle cx="7" cy="20" r="3.4" fill="var(--accent)"/><circle cx="19" cy="20" r="3.4" fill="var(--accent)"/><rect x="9" y="3" width="8" height="5" rx="2.5" fill="var(--fg)"/><circle cx="20.5" cy="13" r="1.6" fill="var(--accent)"/></svg>
-      JetBot Lab <small>ROS AI Kit · mô phỏng</small>
+      JetBot Lab <small data-i18n="brandSub">ROS AI Kit · mô phỏng</small>
     </div>
     <div class="nbname">
       <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 1.5h7l3 3v10H3z" fill="none" stroke="var(--muted)" stroke-width="1.3"/><path d="M10 1.5v3h3" fill="none" stroke="var(--muted)" stroke-width="1.3"/></svg>
-      <input id="nbTitle" value="bai-01-lam-quen.ipynb" aria-label="Tên notebook">
+      <input id="nbTitle" value="bai-01-lam-quen.ipynb" data-i18n-aria="nbAria" aria-label="Tên notebook">
       <span class="kpill" id="kpill" data-s="load"><i></i><span id="kstat">Đang tải Python…</span></span>
     </div>
     <div class="topctl">
-      <label class="field">Sa bàn
+      <label class="field"><span data-i18n="map">Sa bàn</span>
         <select id="mapSel"></select>
       </label>
-      <label class="field">Tốc độ
+      <label class="field"><span data-i18n="speed">Tốc độ</span>
         <select id="speedSel"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select>
       </label>
+      <div class="seg lang" id="langSeg" role="group" data-i18n-aria="langAria" aria-label="Ngôn ngữ">
+        <button data-lang="vi" aria-pressed="true" lang="vi" title="Tiếng Việt">VI</button>
+        <button data-lang="en" aria-pressed="false" lang="en" title="English">EN</button>
+      </div>
     </div>
   </header>
 
   <div class="main" id="main">
     <section class="left">
-      <nav class="rail" aria-label="Thanh bên">
-        <button id="rNb" aria-pressed="false" title="Bài mẫu"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4h5.5a2 2 0 0 1 2 2v10a1.6 1.6 0 0 0-1.6-1.6H3zM17 4h-5.5a2 2 0 0 0-2 2v10a1.6 1.6 0 0 1 1.6-1.6H17z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button>
-        <button id="rApi" aria-pressed="false" title="Tra cứu API"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5L3 10l4 5M13 5l4 5-4 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-        <button id="rOpen" title="Mở tệp .ipynb / .py"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6.5V15a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-6L8.5 5H4a1 1 0 0 0-1 1.5z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button>
+      <nav class="rail" data-i18n-aria="rail" aria-label="Thanh bên">
+        <button id="rNb" aria-pressed="false" data-i18n-title="rNb" title="Bài mẫu"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 4h5.5a2 2 0 0 1 2 2v10a1.6 1.6 0 0 0-1.6-1.6H3zM17 4h-5.5a2 2 0 0 0-2 2v10a1.6 1.6 0 0 1 1.6-1.6H17z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button>
+        <button id="rApi" aria-pressed="false" data-i18n-title="rApi" title="Tra cứu API"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M7 5L3 10l4 5M13 5l4 5-4 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button id="rOpen" data-i18n-title="rOpen" title="Mở tệp .ipynb / .py"><svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true"><path d="M3 6.5V15a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-6L8.5 5H4a1 1 0 0 0-1 1.5z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></button>
         <input type="file" id="fileIn" accept=".ipynb,.py,.txt">
       </nav>
       <aside class="drawer" id="drawer" hidden></aside>
       <div class="nb">
         <div class="nbbar">
-          <button class="tb primary" id="bRun" title="Chạy ô đang chọn (Shift+Enter)"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2.5 1.5l8 4.5-8 4.5z" fill="currentColor"/></svg>Chạy</button>
-          <button class="tb" id="bRunAll" title="Chạy tất cả các ô"><svg width="14" height="12" viewBox="0 0 14 12"><path d="M1 1.5l6 4.5-6 4.5zM7 1.5l6 4.5-6 4.5z" fill="currentColor"/></svg>Chạy tất cả</button>
-          <button class="tb stop" id="bStop" title="Dừng chương trình và động cơ (Esc Esc)" disabled><svg width="12" height="12" viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" rx="1" fill="currentColor"/></svg>Dừng</button>
-          <button class="tb" id="bRestart" title="Khởi động lại kernel: xoá mọi biến"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M11.5 7A4.5 4.5 0 1 1 9.8 3.5M10 1v3h-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Khởi động lại</button>
+          <button class="tb primary" id="bRun" data-i18n-title="runT" title="Chạy ô đang chọn (Shift+Enter)"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M2.5 1.5l8 4.5-8 4.5z" fill="currentColor"/></svg><span data-i18n="run">Chạy</span></button>
+          <button class="tb" id="bRunAll" data-i18n-title="runAllT" title="Chạy tất cả các ô"><svg width="14" height="12" viewBox="0 0 14 12"><path d="M1 1.5l6 4.5-6 4.5zM7 1.5l6 4.5-6 4.5z" fill="currentColor"/></svg><span data-i18n="runAll">Chạy tất cả</span></button>
+          <button class="tb stop" id="bStop" data-i18n-title="stopT" title="Dừng chương trình và động cơ (Esc Esc)" disabled><svg width="12" height="12" viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" rx="1" fill="currentColor"/></svg><span data-i18n="stop">Dừng</span></button>
+          <button class="tb" id="bRestart" data-i18n-title="restartT" title="Khởi động lại kernel: xoá mọi biến, đồng hồ về 0"><svg width="14" height="14" viewBox="0 0 14 14"><path d="M11.5 7A4.5 4.5 0 1 1 9.8 3.5M10 1v3h-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg><span data-i18n="restart">Khởi động lại</span></button>
           <span class="sep"></span>
-          <button class="tb" id="bAddCode" title="Thêm ô code bên dưới"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.6"/></svg>Code</button>
-          <button class="tb" id="bAddMd" title="Thêm ô ghi chú bên dưới"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.6"/></svg>Ghi chú</button>
-          <button class="tb" id="bClear" title="Xoá kết quả của mọi ô">Xoá kết quả</button>
-          <button class="tb" id="bCopy" title="Sao chép toàn bộ code">Sao chép code</button>
+          <button class="tb" id="bAddCode" data-i18n-title="addCodeT" title="Thêm ô code bên dưới"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.6"/></svg><span data-i18n="addCode">Code</span></button>
+          <button class="tb" id="bAddMd" data-i18n-title="addMdT" title="Thêm ô ghi chú bên dưới"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.6"/></svg><span data-i18n="addMd">Ghi chú</span></button>
+          <button class="tb" id="bClear" data-i18n-title="clearT" title="Xoá kết quả của mọi ô"><span data-i18n="clear">Xoá kết quả</span></button>
+          <button class="tb" id="bCopy" data-i18n-title="copyT" title="Sao chép toàn bộ code"><span data-i18n="copy">Sao chép code</span></button>
         </div>
         <div class="cells" id="cells"></div>
       </div>
     </section>
-    <div class="split" id="split" role="separator" aria-label="Kéo để đổi kích thước"></div>
+    <div class="split" id="split" role="separator" data-i18n-aria="splitAria" aria-label="Kéo để đổi kích thước"></div>
     <section class="right">
       <div class="vbar">
         <div class="seg" id="views">
-          <button data-v="iso" aria-pressed="true">3D</button>
-          <button data-v="top" aria-pressed="false">Trên</button>
-          <button data-v="front" aria-pressed="false">Trước</button>
-          <button data-v="side" aria-pressed="false">Cạnh</button>
-          <button data-v="follow" aria-pressed="false">Theo robot</button>
+          <button data-v="iso" aria-pressed="true" data-i18n="vIso">3D</button>
+          <button data-v="top" aria-pressed="false" data-i18n="vTop">Trên</button>
+          <button data-v="front" aria-pressed="false" data-i18n="vFront">Trước</button>
+          <button data-v="side" aria-pressed="false" data-i18n="vSide">Cạnh</button>
+          <button data-v="follow" aria-pressed="false" data-i18n="vFollow">Theo robot</button>
         </div>
         <div class="toggles">
-          <button class="chip" id="tLidar" aria-pressed="true"><i></i>Lidar</button>
-          <button class="chip" id="tTrail" aria-pressed="true"><i></i>Vết</button>
-          <button class="chip" id="tCam" aria-pressed="true"><i></i>Camera</button>
-          <button class="chip" id="tLbl" aria-pressed="false"><i></i>Linh kiện</button>
-          <button class="chip" id="tKey" aria-pressed="false" title="Lái bằng phím mũi tên / WASD"><i></i>Lái phím</button>
-          <button class="btn-reset" id="bHome" title="Đặt robot về vị trí xuất phát và xoá encoder, IMU"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M1.5 6L6 1.5 10.5 6M3 5v5.5h6V5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>Về xuất phát</button>
+          <button class="chip" id="tLidar" aria-pressed="true"><i></i><span data-i18n="tLidar">Lidar</span></button>
+          <button class="chip" id="tTrail" aria-pressed="true"><i></i><span data-i18n="tTrail">Vết</span></button>
+          <button class="chip" id="tCam" aria-pressed="true"><i></i><span data-i18n="tCam">Camera</span></button>
+          <button class="chip" id="tLbl" aria-pressed="false"><i></i><span data-i18n="tLbl">Linh kiện</span></button>
+          <button class="chip" id="tKey" aria-pressed="false" data-i18n-title="tKeyT" title="Lái bằng phím mũi tên / WASD"><i></i><span data-i18n="tKey">Lái phím</span></button>
+          <button class="btn-reset" id="bHome" data-i18n-title="homeT" title="Đặt robot về vị trí xuất phát, xoá encoder, IMU và đồng hồ"><svg width="12" height="12" viewBox="0 0 12 12"><path d="M1.5 6L6 1.5 10.5 6M3 5v5.5h6V5" fill="none" stroke="currentColor" stroke-width="1.4"/></svg><span data-i18n="home">Về xuất phát</span></button>
         </div>
       </div>
       <div class="stage grab" id="stage">
-        <div class="loading" id="sceneLoading">Đang dựng sa bàn 3D…</div>
+        <div class="loading" id="sceneLoading" data-i18n="sceneLoading">Đang dựng sa bàn 3D…</div>
         <div class="labels" id="labels"></div>
         <div class="pip-frame" id="pipFrame" hidden></div>
-        <div class="pip-label" id="pipLabel" hidden>CAMERA CSI · GÓC RỘNG</div>
-        <div class="teleop" id="teleopTag" hidden>Lái phím: ↑ ↓ ← → hoặc W A S D</div>
+        <div class="pip-label" id="pipLabel" hidden data-i18n="pip">CAMERA CSI · GÓC RỘNG</div>
+        <div class="teleop" id="teleopTag" hidden data-i18n="teleop">Lái phím: ↑ ↓ ← → hoặc W A S D</div>
         <div class="toast" id="toast"></div>
-        <div class="hint" id="hint"><kbd>Chuột phải</kbd> xoay 3D · <kbd>Shift</kbd>+<kbd>Chuột phải</kbd> hoặc <kbd>Chuột trái</kbd> vào nền: dời khung nhìn · <kbd>Cuộn</kbd> phóng to<br><kbd>Chuột trái</kbd> kéo robot, <kbd>Cuộn</kbd> khi đang kéo để xoay robot · thả gần ô START để về vị trí xuất phát</div>
+        <div class="hint" id="hint" data-i18n-html="hint"><kbd>Chuột phải</kbd> xoay 3D · <kbd>Shift</kbd>+<kbd>Chuột phải</kbd> hoặc <kbd>Chuột trái</kbd> vào nền: dời khung nhìn · <kbd>Cuộn</kbd> phóng to<br><kbd>Chuột trái</kbd> kéo robot, <kbd>Cuộn</kbd> khi đang kéo để xoay robot · thả gần ô START để về vị trí xuất phát</div>
       </div>
       <div class="tele" id="tele">
-        <div><small>Vị trí x, y (cm)</small><b id="tPos">—</b></div>
-        <div><small>Hướng (yaw)</small><b id="tYaw">—</b></div>
-        <div><small>Động cơ T / P</small><div class="bars"><div class="bar"><span id="mL"></span></div><div class="bar"><span id="mR"></span></div></div></div>
-        <div><small>Encoder T / P</small><b id="tEnc">—</b></div>
-        <div><small>Lidar 0°</small><b id="tLid">—</b></div>
-        <div><small>Camera line</small><b id="tLine">—</b></div>
-        <div><small>Thời gian chạy</small><b id="tTime">—</b></div>
+        <div><small data-i18n="telePos">Vị trí x, y (cm)</small><b id="tPos">—</b></div>
+        <div><small data-i18n="teleYaw">Hướng (yaw)</small><b id="tYaw">—</b></div>
+        <div><small data-i18n="teleMot">Động cơ T / P</small><div class="bars"><div class="bar"><span id="mL"></span></div><div class="bar"><span id="mR"></span></div></div></div>
+        <div><small data-i18n="teleEnc">Encoder T / P</small><b id="tEnc">—</b></div>
+        <div><small data-i18n="teleLid">Lidar 0°</small><b id="tLid">—</b></div>
+        <div><small data-i18n="teleLine">Camera line</small><b id="tLine">—</b></div>
+        <div><small data-i18n="teleTime">Thời gian chạy</small><b id="tTime">—</b></div>
       </div>
     </section>
   </div>
@@ -321,6 +327,11 @@ const store = {
   get(k){ try{ return JSON.parse(localStorage.getItem(k)); }catch(e){ return null; } },
   set(k,v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
 };
+
+/* ---------- ngôn ngữ / language ---------- */
+const I18N = {"vi": {"brandSub": "ROS AI Kit · mô phỏng", "nbAria": "Tên notebook", "kLoad": "Đang tải Python…", "kFail": "Không tải được Python", "kIdle": "Python 3 · Sẵn sàng", "kBusy": "Đang chạy…", "map": "Sa bàn", "speed": "Tốc độ", "langAria": "Ngôn ngữ", "rail": "Thanh bên", "rNb": "Bài mẫu", "rApi": "Tra cứu API", "rOpen": "Mở tệp .ipynb / .py", "run": "Chạy", "runT": "Chạy ô đang chọn (Shift+Enter)", "runAll": "Chạy tất cả", "runAllT": "Chạy tất cả các ô", "stop": "Dừng", "stopT": "Dừng chương trình và động cơ (Esc Esc)", "restart": "Khởi động lại", "restartT": "Khởi động lại kernel: xoá mọi biến, đồng hồ về 0", "addCode": "Code", "addCodeT": "Thêm ô code bên dưới", "addMd": "Ghi chú", "addMdT": "Thêm ô ghi chú bên dưới", "clear": "Xoá kết quả", "clearT": "Xoá kết quả của mọi ô", "copy": "Sao chép code", "copyT": "Sao chép toàn bộ code", "splitAria": "Kéo để đổi kích thước", "vIso": "3D", "vTop": "Trên", "vFront": "Trước", "vSide": "Cạnh", "vFollow": "Theo robot", "tLidar": "Lidar", "tTrail": "Vết", "tCam": "Camera", "tLbl": "Linh kiện", "tKey": "Lái phím", "tKeyT": "Lái bằng phím mũi tên / WASD", "home": "Về xuất phát", "homeT": "Đặt robot về vị trí xuất phát, xoá encoder, IMU và đồng hồ", "sceneLoading": "Đang dựng sa bàn 3D…", "sceneFail": "Không tải được thư viện 3D. Kiểm tra kết nối mạng.", "pip": "CAMERA CSI · GÓC RỘNG", "teleop": "Lái phím: ↑ ↓ ← → hoặc W A S D", "hint": "<kbd>Chuột phải</kbd> xoay 3D · <kbd>Shift</kbd>+<kbd>Chuột phải</kbd> hoặc <kbd>Chuột trái</kbd> vào nền: dời khung nhìn · <kbd>Cuộn</kbd> phóng to<br><kbd>Chuột trái</kbd> kéo robot, <kbd>Cuộn</kbd> khi đang kéo để xoay robot · thả gần ô START để về vị trí xuất phát", "telePos": "Vị trí x, y (cm)", "teleYaw": "Hướng (yaw)", "teleMot": "Động cơ T / P", "teleEnc": "Encoder T / P", "teleLid": "Lidar 0°", "teleLine": "Camera line", "teleTime": "Thời gian chạy", "noLine": "không thấy", "stopped": " · dừng", "pyLoading": "Python đang tải, chờ một chút…", "restarted": "Đã khởi động lại kernel: biến đã xoá, đồng hồ về 0", "copied": "Đã sao chép code", "opened": "Đã mở ", "openFail": "Không đọc được tệp: cần .ipynb hợp lệ hoặc .py", "teleopToast": "Bấm vào sa bàn rồi dùng phím mũi tên để lái", "homeToast": "Robot đã về vị trí xuất phát · encoder, IMU và đồng hồ về 0", "drawerLessons": "Bài mẫu", "drawerApi": "Thư viện jetbot", "insert": "Chèn", "cellCode": "Ô code", "cellMd": "Ô ghi chú", "cRun": "Chạy ô (Shift+Enter)", "cStop": "Dừng", "cUp": "Chuyển lên", "cDown": "Chuyển xuống", "cType": "Đổi Code / Ghi chú", "cDel": "Xoá ô", "grip": "Kéo để đổi thứ tự ô", "addRowCode": "+ Ô code", "addRowMd": "+ Ô ghi chú", "mdEmpty": "Nhấp đúp để viết ghi chú…", "trimmed": "…(đã lược bớt)", "interrupted": "chương trình đã được dừng. Động cơ đã tắt.", "line": "dòng", "inputAria": "Nhập dữ liệu", "goal": "ĐÍCH"}, "en": {"brandSub": "ROS AI Kit · simulator", "nbAria": "Notebook name", "kLoad": "Loading Python…", "kFail": "Python failed to load", "kIdle": "Python 3 · Ready", "kBusy": "Running…", "map": "Field", "speed": "Speed", "langAria": "Language", "rail": "Sidebar", "rNb": "Sample lessons", "rApi": "API reference", "rOpen": "Open .ipynb / .py file", "run": "Run", "runT": "Run selected cell (Shift+Enter)", "runAll": "Run all", "runAllT": "Run every cell", "stop": "Stop", "stopT": "Stop the program and motors (Esc Esc)", "restart": "Restart", "restartT": "Restart kernel: clear all variables, reset the clock", "addCode": "Code", "addCodeT": "Add a code cell below", "addMd": "Note", "addMdT": "Add a note cell below", "clear": "Clear outputs", "clearT": "Clear the output of every cell", "copy": "Copy code", "copyT": "Copy all code", "splitAria": "Drag to resize", "vIso": "3D", "vTop": "Top", "vFront": "Front", "vSide": "Side", "vFollow": "Follow", "tLidar": "Lidar", "tTrail": "Trail", "tCam": "Camera", "tLbl": "Parts", "tKey": "Drive", "tKeyT": "Drive with arrow keys / WASD", "home": "Back to start", "homeT": "Put the robot back at START and reset encoders, IMU and clock", "sceneLoading": "Building the 3D field…", "sceneFail": "The 3D library failed to load. Check your internet connection.", "pip": "CSI CAMERA · WIDE ANGLE", "teleop": "Drive: ↑ ↓ ← → or W A S D", "hint": "<kbd>Right-drag</kbd> rotate 3D · <kbd>Shift</kbd>+<kbd>Right-drag</kbd> or <kbd>Left-drag</kbd> on the floor: pan · <kbd>Scroll</kbd> zoom<br><kbd>Left-drag</kbd> the robot to move it, <kbd>Scroll</kbd> while dragging to rotate it · drop it near START to reset", "telePos": "Position x, y (cm)", "teleYaw": "Heading (yaw)", "teleMot": "Motors L / R", "teleEnc": "Encoder L / R", "teleLid": "Lidar 0°", "teleLine": "Camera line", "teleTime": "Run time", "noLine": "not seen", "stopped": " · idle", "pyLoading": "Python is still loading, one moment…", "restarted": "Kernel restarted: variables cleared, clock reset", "copied": "Code copied", "opened": "Opened ", "openFail": "Could not read the file: use a valid .ipynb or .py", "teleopToast": "Click the field, then drive with the arrow keys", "homeToast": "Robot is back at START · encoders, IMU and clock reset", "drawerLessons": "Sample lessons", "drawerApi": "jetbot library", "insert": "Insert", "cellCode": "Code cell", "cellMd": "Note cell", "cRun": "Run cell (Shift+Enter)", "cStop": "Stop", "cUp": "Move up", "cDown": "Move down", "cType": "Switch Code / Note", "cDel": "Delete cell", "grip": "Drag to reorder", "addRowCode": "+ Code cell", "addRowMd": "+ Note cell", "mdEmpty": "Double-click to write a note…", "trimmed": "…(truncated)", "interrupted": "the program was stopped. Motors are off.", "line": "line", "inputAria": "Input", "goal": "GOAL"}};
+let LANG = (() => { const v = store.get("jetbotlab.lang"); return v === "en" || v === "vi" ? v : "vi"; })();
+const t = k => (I18N[LANG] && I18N[LANG][k] !== undefined ? I18N[LANG][k] : (I18N.vi[k] !== undefined ? I18N.vi[k] : k));
 
 /* =====================================================================
    1. SA BÀN (đơn vị mét, hệ toạ độ ROS: x tiến, y trái, z lên)
@@ -645,6 +656,13 @@ const LESSONS = [
   ["md","# Bài 10 · Màn hình OLED\nMàn OLED 128×32 có 4 dòng (`0` đến `3`). Chọn chế độ **Lái phím** rồi điều khiển robot để xem số liệu đổi theo."],
   ["code","from jetbot import OLED, IMU, Encoder, Lidar\nimport time\noled = OLED()\nimu = IMU()\nenc = Encoder()\nlidar = Lidar()\n\nfor i in range(300):\n    oled.text(\"Yaw: \" + str(round(imu.yaw())) + \" do\", 0)\n    oled.text(\"Enc: \" + str(enc.left()) + \"/\" + str(enc.right()), 1)\n    oled.text(\"Truoc: \" + str(lidar.distance(0)) + \" m\", 2)\n    oled.text(\"t = \" + str(round(time.time(), 1)) + \" s\", 3)\n    time.sleep(0.1)"]]}
 ];
+const LESSONS_EN = {"l1": {"tag": "Basics", "title": "1. Getting started: drive, turn, stop", "desc": "Create a Robot and control it with forward / left / stop.", "file": "lesson-01-getting-started.ipynb", "cells": [["md", "# Lesson 1 · Meet JetBot\nCreate the robot, then drive forward, turn and stop.\n- Select a cell and press **Shift + Enter** to run it and move to the next one.\n- Motor speed goes from `-1.0` (full reverse) to `1.0` (full forward)."], ["code", "from jetbot import Robot\nimport time\n\nrobot = Robot()\nprint(\"JetBot is ready!\")"], ["code", "robot.forward(0.4)   # drive forward at 40% speed\ntime.sleep(1.5)\nrobot.stop()"], ["code", "robot.left(0.3)      # spin left in place\ntime.sleep(0.8)\nrobot.stop()"], ["md", "> The motors keep their last command until you call `robot.stop()`, just like the real robot. Press **Stop** if the robot keeps going."]]}, "l2": {"tag": "Loops", "title": "2. Loops: drive a square", "desc": "Use for to repeat 4 sides. Turn on Trail to see the shape.", "file": "lesson-02-square.ipynb", "cells": [["md", "# Lesson 2 · Drive a square\nRepeat 4 times: drive straight, then turn right. Tune the turn time until each corner is exactly 90°. Turn on **Trail** to see the path."], ["code", "from jetbot import Robot\nimport time\nrobot = Robot()\n\nfor side in range(4):\n    robot.forward(0.4)\n    time.sleep(1.2)\n    robot.right(0.3)\n    time.sleep(0.7)    # try 0.6 or 0.8\nrobot.stop()\nprint(\"Square done\")"]]}, "l3": {"tag": "Motors", "title": "3. Controlling each motor", "desc": "set_motors and left_motor.value to drive along an arc.", "file": "lesson-03-motors.ipynb", "cells": [["md", "# Lesson 3 · Differential drive\nWhen the two wheels spin at different speeds, the robot follows an arc. It turns away from the faster wheel."], ["code", "from jetbot import Robot\nimport time\nrobot = Robot()\n\nrobot.set_motors(0.5, 0.25)   # left is faster → turn right\ntime.sleep(3)\nrobot.stop()"], ["code", "# Same style as the original JetBot library\nrobot.left_motor.value = 0.25\nrobot.right_motor.value = 0.5\ntime.sleep(3)\nrobot.stop()"]]}, "l4": {"tag": "Encoder", "title": "4. Encoder: drive exactly 50 cm", "desc": "Count encoder ticks to measure distance instead of guessing time.", "file": "lesson-04-encoder.ipynb", "cells": [["md", "# Lesson 4 · Measuring distance with encoders\nOne wheel turn gives `1320` ticks. The wheel is `6.5 cm` across, so 1 tick ≈ `0.155 mm`. `enc.distance()` already converts to metres."], ["code", "from jetbot import Robot, Encoder\nimport time\nrobot = Robot()\nenc = Encoder()\nenc.reset()\n\nrobot.forward(0.35)\nwhile True:\n    left_m, right_m = enc.distance()\n    if (left_m + right_m) / 2 >= 0.50:\n        break\n    time.sleep(0.01)\nrobot.stop()\n\nprint(\"Encoder ticks (left, right):\", enc.read())\nprint(\"Distance:\", round((left_m + right_m) / 2 * 100, 1), \"cm\")"], ["md", "**Challenge:** write a function `drive_straight(cm)` and drive a 60 × 30 cm rectangle."]]}, "l5": {"tag": "IMU", "title": "5. IMU: turn exactly 90°", "desc": "Read the yaw angle from the IMU, then add a P controller.", "file": "lesson-05-imu.ipynb", "cells": [["md", "# Lesson 5 · Turning with the IMU\n`imu.yaw()` returns the angle turned (degrees) since the last `reset()`. Turning left is positive."], ["code", "from jetbot import Robot, IMU\nimport time\nrobot = Robot()\nimu = IMU()\nimu.reset()\n\nrobot.left(0.25)\nwhile imu.yaw() < 90:\n    time.sleep(0.01)\nrobot.stop()\ntime.sleep(0.3)\nprint(\"Final angle:\", imu.yaw(), \"degrees\")"], ["code", "# P controller: the closer to the target, the slower it turns\ntarget = imu.yaw() + 90\nKP = 0.012\nwhile True:\n    error = target - imu.yaw()\n    if abs(error) < 0.5:\n        break\n    speed = max(-0.4, min(0.4, KP * error))\n    robot.set_motors(-speed, speed)\n    time.sleep(0.02)\nrobot.stop()\nprint(\"Error:\", round(target - imu.yaw(), 2), \"degrees\")"]]}, "l6": {"tag": "Lidar", "title": "6. Lidar: read a 360° scan", "desc": "Each item is the distance (m) at one angle.", "file": "lesson-06-lidar.ipynb", "cells": [["md", "# Lesson 6 · Reading the Lidar\n`lidar.scan()` returns a list of 360 distances (metres). The index is the angle: `0` front, `90` left, `180` back, `270` right."], ["code", "from jetbot import Lidar\nlidar = Lidar()\n\nscan = lidar.scan()\nprint(\"Points:\", len(scan))\nprint(\"Front (0°):  \", scan[0], \"m\")\nprint(\"Left  (90°): \", scan[90], \"m\")\nprint(\"Back  (180°):\", scan[180], \"m\")\nprint(\"Right (270°):\", scan[270], \"m\")\nprint(\"Closest within ±30° in front:\", lidar.min_distance(-30, 30), \"m\")"]]}, "l7": {"tag": "Lidar", "title": "7. Lidar: avoid obstacles", "desc": "Detect obstacles ahead and turn toward the clearer side.", "file": "lesson-07-obstacles.ipynb", "cells": [["md", "# Lesson 7 · Obstacle avoidance\nIf something is closer than `0.25 m` ahead, compare both sides and turn toward the clearer one. Goal: reach the **green** square in the top-right corner."], ["code", "from jetbot import Robot, Lidar, Camera\nimport time\nrobot = Robot()\nlidar = Lidar()\ncamera = Camera()\n\nfor step in range(800):\n    if camera.color() == \"green\":\n        print(\"Reached the goal after\", step, \"steps\")\n        break\n    front = lidar.min_distance(-25, 25)\n    if front < 0.25:\n        left = lidar.min_distance(30, 90)\n        right = lidar.min_distance(-90, -30)\n        if left > right:\n            robot.left(0.3)\n        else:\n            robot.right(0.3)\n    else:\n        robot.forward(0.35)\n    time.sleep(0.05)\nrobot.stop()"]]}, "l8": {"tag": "Camera", "title": "8. Camera: line following", "desc": "A P controller that follows the black line on the field.", "file": "lesson-08-line-following.ipynb", "cells": [["md", "# Lesson 8 · Line following with the camera\n`camera.line_position()` tells you how far the black line is off centre: `-1` left, `0` centre, `+1` right, `None` if no line is seen."], ["code", "from jetbot import Robot, Camera\nimport time\nrobot = Robot()\ncamera = Camera()\nprint(\"Current line offset:\", camera.line_position())"], ["code", "SPEED = 0.3\nKP = 0.35\nfor i in range(1200):\n    offset = camera.line_position()\n    if offset is None:\n        robot.set_motors(0.15, -0.15)   # line lost: spin to search\n    else:\n        robot.set_motors(SPEED + KP * offset, SPEED - KP * offset)\n    if camera.color() == \"red\" and i > 100:\n        print(\"Back at the red mark, one lap done!\")\n        break\n    time.sleep(0.03)\nrobot.stop()"], ["md", "**Challenge:** raise `SPEED` to `0.5`. Does the robot still follow the line? How should you change `KP`?"]]}, "l9": {"tag": "Challenge", "title": "9. Maze: right-wall following", "desc": "Keep a fixed distance to the right wall to escape the maze.", "file": "lesson-09-maze.ipynb", "cells": [["md", "# Lesson 9 · Escape the maze\nRight-hand rule: always keep a wall on your right. The goal is the **green** square in the bottom-right corner. Tune `DISTANCE` and `KP` for a smoother run."], ["code", "from jetbot import Robot, Lidar, Camera\nimport time\nrobot = Robot()\nlidar = Lidar()\ncamera = Camera()\n\nDISTANCE = 0.2\nKP = 1.2\nfor i in range(3000):\n    if camera.color() == \"green\":\n        print(\"Out of the maze!\")\n        break\n    front = lidar.min_distance(-20, 20)\n    right = lidar.min_distance(-100, -60)\n    if front < 0.22:\n        robot.left(0.3)\n    else:\n        err = max(-0.25, min(0.25, right - DISTANCE))\n        robot.set_motors(0.3 + KP * err, 0.3 - KP * err)\n    time.sleep(0.03)\nrobot.stop()"]]}, "l10": {"tag": "Projects", "title": "10. OLED: show sensor data", "desc": "Print sensor values on the robot's OLED screen.", "file": "lesson-10-oled.ipynb", "cells": [["md", "# Lesson 10 · OLED display\nThe 128×32 OLED has 4 lines (`0` to `3`). Turn on **Drive** mode and steer the robot to watch the numbers change."], ["code", "from jetbot import OLED, IMU, Encoder, Lidar\nimport time\noled = OLED()\nimu = IMU()\nenc = Encoder()\nlidar = Lidar()\n\nfor i in range(300):\n    oled.text(\"Yaw: \" + str(round(imu.yaw())) + \" deg\", 0)\n    oled.text(\"Enc: \" + str(enc.left()) + \"/\" + str(enc.right()), 1)\n    oled.text(\"Front: \" + str(lidar.distance(0)) + \" m\", 2)\n    oled.text(\"t = \" + str(round(time.time(), 1)) + \" s\", 3)\n    time.sleep(0.1)"]]}};
+const lessonIn = (l, lang) => lang === "en" ? Object.assign({}, l, LESSONS_EN[l.id]) : l;
+const API_EN = {"robot = Robot()": "Two DCGM-370 motors with encoders, Ø 65 mm wheels, 17 cm apart.", "robot.forward(0.4)": "Drive forward. Optional duration=seconds stops automatically.", "robot.backward(0.4)": "Drive backward.", "robot.left(0.3)": "Spin left in place (left wheel back, right wheel forward).", "robot.right(0.3)": "Spin right in place.", "robot.set_motors(0.4, 0.2)": "Set left and right speeds separately (-1.0 … 1.0).", "robot.left_motor.value = 0.3": "Read / write each motor's speed.", "robot.stop()": "Stop both motors.", "robot.bumped()": "True if the robot just hit something.", "enc = Encoder()": "Optical encoder, 1320 ticks per wheel turn, Ø 65 mm wheel.", "enc.read()": "(left ticks, right ticks).", "enc.distance()": "(left metres, right metres) since the last reset.", "enc.speed()": "Wheel speed (m/s).", "enc.reset()": "Reset the counters to 0.", "imu = IMU()": "9-axis attitude sensor on the driver board.", "imu.yaw()": "Angle turned (degrees), left is positive, does not wrap back to 0.", "imu.heading()": "Heading 0 … 360 degrees.", "imu.gyro()": "Turn rate around the z axis (degrees/s).", "imu.accel()": "Acceleration (ax, ay, az) m/s².", "imu.reset()": "Set yaw to 0.", "lidar = Lidar()": "360° scanning Lidar, 12 m range.", "lidar.scan()": "List of 360 distances (m), index = angle, 0 is the front.", "lidar.distance(90)": "Distance at one angle (90 = left, -90 = right).", "lidar.min_distance(-30, 30)": "Smallest distance within an arc of angles.", "camera = Camera()": "CSI camera at the front of the robot.", "camera.line_position()": "Black line offset: -1 left … +1 right, None if the line is lost.", "camera.sees_line()": "True if the line is visible.", "camera.color()": "Colour of the square under the camera: \"red\", \"green\", \"blue\", \"yellow\" or None.", "oled = OLED()": "4-line OLED screen on the robot.", "oled.text(\"Xin chao\", 0)": "Write text on line 0 … 3.", "oled.clear()": "Clear the screen.", "time.sleep(0.5)": "Wait in simulated time (seconds).", "time.time()": "Simulated time (seconds), reset by Restart or Back to start."};
+const MAP_EN = {"open": "Open field · 10 cm grid", "line": "Line track", "obst": "Obstacles · Lidar", "maze": "Maze · wall following"};
+const mapName = id => LANG === "en" ? MAP_EN[id] : MAPS[id].name;
+const ANCHOR_EN = {"Camera góc rộng": "Wide-angle camera", "trên mạch Waveshare": "on Waveshare board", "Động cơ + encoder": "Motor + encoder", "trái": "left", "phải": "right", "Pin 3×18650": "3×18650 battery", "Bánh tự do": "Caster", "trước": "front", "sau": "rear"};
+const tA = s => LANG === "en" ? (ANCHOR_EN[s] || s) : s;
 const API = [
  ["Robot", "from jetbot import Robot", [
   ["robot = Robot()", "Hai động cơ DCGM-370 có encoder, bánh Ø 65 mm, cách nhau 17 cm."],
@@ -721,7 +739,7 @@ function mdRender(src){
     else html += "<p>" + inl(l) + "</p>";
   }
   if (list) html += "</ul>";
-  return html || '<p style="color:var(--faint)">Nhấp đúp để viết ghi chú…</p>';
+  return html || '<p style="color:var(--faint)">' + esc(t("mdEmpty")) + '</p>';
 }
 const ICON = {
   run:'<svg width="11" height="11" viewBox="0 0 12 12"><path d="M2.5 1.5l8 4.5-8 4.5z" fill="currentColor"/></svg>',
@@ -735,8 +753,8 @@ function makeCell(type, src){
   const c = { id: ++uid, type, src: src || "", count: null, state: "", errLine: 0 };
   const el = document.createElement("div");
   el.className = "cell" + (type === "md" ? " mdc" : "");
-  el.innerHTML = `<div class="gut"><span class="pr"></span><button class="grip" title="Kéo để đổi thứ tự ô" aria-label="Kéo để đổi thứ tự ô"><svg width="10" height="16" viewBox="0 0 10 16"><g fill="currentColor"><circle cx="2.5" cy="3" r="1.4"/><circle cx="7.5" cy="3" r="1.4"/><circle cx="2.5" cy="8" r="1.4"/><circle cx="7.5" cy="8" r="1.4"/><circle cx="2.5" cy="13" r="1.4"/><circle cx="7.5" cy="13" r="1.4"/></g></svg></button></div><div class="cbody"><div class="ed"><div class="errbar" hidden></div><pre class="hl" aria-hidden="true"></pre><textarea id="cell-${c.id}" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Ô ${type === "md" ? "ghi chú" : "code"}"></textarea></div>${type === "md" ? '<div class="md"></div>' : ""}<div class="out" aria-live="polite"></div></div>
-  <div class="ctools"><button class="r" data-a="run" title="Chạy ô (Shift+Enter)">${ICON.run}</button><button data-a="up" title="Chuyển lên">${ICON.up}</button><button data-a="down" title="Chuyển xuống">${ICON.down}</button><button data-a="type" title="Đổi Code / Ghi chú">${ICON.type}</button><button data-a="del" title="Xoá ô">${ICON.del}</button></div>`;
+  el.innerHTML = `<div class="gut"><span class="pr"></span><button class="grip" title="${t("grip")}" aria-label="${t("grip")}"><svg width="10" height="16" viewBox="0 0 10 16"><g fill="currentColor"><circle cx="2.5" cy="3" r="1.4"/><circle cx="7.5" cy="3" r="1.4"/><circle cx="2.5" cy="8" r="1.4"/><circle cx="7.5" cy="8" r="1.4"/><circle cx="2.5" cy="13" r="1.4"/><circle cx="7.5" cy="13" r="1.4"/></g></svg></button></div><div class="cbody"><div class="ed"><div class="errbar" hidden></div><pre class="hl" aria-hidden="true"></pre><textarea id="cell-${c.id}" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="${t(type === "md" ? "cellMd" : "cellCode")}"></textarea></div>${type === "md" ? '<div class="md"></div>' : ""}<div class="out" aria-live="polite"></div></div>
+  <div class="ctools"><button class="r" data-a="run" title="${t("cRun")}">${ICON.run}</button><button data-a="up" title="${t("cUp")}">${ICON.up}</button><button data-a="down" title="${t("cDown")}">${ICON.down}</button><button data-a="type" title="${t("cType")}">${ICON.type}</button><button data-a="del" title="${t("cDel")}">${ICON.del}</button></div>`;
   c.el = el; c.ta = el.querySelector("textarea"); c.hl = el.querySelector("pre"); c.out = el.querySelector(".out");
  c.gut = el.querySelector(".gut .pr"); el._cell = c; bindGrip(c, el.querySelector(".grip"));
   c.md = el.querySelector(".md"); c.errbar = el.querySelector(".errbar");
@@ -803,7 +821,7 @@ function gutter(c){
   if (c.type === "md"){ c.gut.textContent = ""; return; }
   c.gut.textContent = c.state === "running" ? "[*]:" : c.state === "queued" ? "[-]:" : `[${c.count ?? " "}]:`;
   c.el.classList.toggle("running", c.state === "running");
-  const b = c.el.querySelector('[data-a="run"]'); b.innerHTML = c.state === "running" ? ICON.stop : ICON.run; b.title = c.state === "running" ? "Dừng" : "Chạy ô (Shift+Enter)";
+  const b = c.el.querySelector('[data-a="run"]'); b.innerHTML = c.state === "running" ? ICON.stop : ICON.run; b.title = t(c.state === "running" ? "cStop" : "cRun");
 }
 function setActive(c){ if (ACTIVE === c) return; if (ACTIVE) ACTIVE.el.classList.remove("active"); ACTIVE = c; if (c) c.el.classList.add("active"); }
 function insertAfter(ref, c){
@@ -861,7 +879,8 @@ function onKey(e, c){
 }
 const addRow = document.createElement("div");
 addRow.className = "addrow";
-addRow.innerHTML = '<button data-t="code">+ Ô code</button><button data-t="md">+ Ô ghi chú</button>';
+function renderAddRow(){ addRow.innerHTML = `<button data-t="code">${esc(t("addRowCode"))}</button><button data-t="md">${esc(t("addRowMd"))}</button>`; }
+renderAddRow();
 addRow.addEventListener("click", e => { const b = e.target.closest("button"); if (!b) return; const n = insertAfter(CELLS[CELLS.length-1], makeCell(b.dataset.t, "")); if (b.dataset.t === "md") n.el.classList.add("editing"); n.ta.focus(); });
 
 function loadCells(list, title){
@@ -882,8 +901,9 @@ function outText(c, s){
   let pre = c.out.lastElementChild;
   if (!pre || pre.tagName !== "PRE"){ pre = document.createElement("pre"); c.out.appendChild(pre); }
   pre.textContent += s;
-  if (pre.textContent.length > 20000) pre.textContent = "…(đã lược bớt)\n" + pre.textContent.slice(-15000);
+  if (pre.textContent.length > 20000) pre.textContent = t("trimmed") + "\n" + pre.textContent.slice(-15000);
 }
+const HINTS_EN = {"NameError": "This variable or function name is not defined. Check the spelling (Python is case-sensitive) or run the setup cell above first.", "SyntaxError": "Syntax error. Check the colon at the end of if / for / while / def lines, brackets and quotes.", "IndentationError": "Wrong indentation. Lines in the same block must be indented equally (usually 4 spaces, press Tab).", "TypeError": "Wrong data type or wrong number of arguments. Check the call in the API tab.", "AttributeError": "This object has no such attribute or method. Open the API tab on the left to see the correct name.", "ImportError": "Library not found. The simulator supports: jetbot, time, math, random.", "ModuleNotFoundError": "Library not found. The simulator supports: jetbot, time, math, random.", "ZeroDivisionError": "Division by zero.", "IndexError": "Index out of range. lidar.scan() has indexes 0 to 359.", "ValueError": "Invalid value, for example converting text to a number.", "TimeoutError": "The program ran too long."};
 const HINTS = {
   NameError:"Tên biến hoặc hàm chưa được định nghĩa. Kiểm tra chính tả (Python phân biệt chữ hoa, chữ thường) hoặc chạy ô khởi tạo phía trên trước.",
   SyntaxError:"Sai cú pháp. Kiểm tra dấu hai chấm ở cuối dòng if / for / while / def, các cặp ngoặc và dấu nháy.",
@@ -899,7 +919,7 @@ const HINTS = {
 };
 function outError(c, e){
   const box = document.createElement("div"); box.className = "err";
-  if (e && e.__stop){ box.innerHTML = "<b>KeyboardInterrupt</b>: chương trình đã được dừng. Động cơ đã tắt."; c.out.appendChild(box); return; }
+  if (e && e.__stop){ box.innerHTML = "<b>KeyboardInterrupt</b>: " + t("interrupted"); c.out.appendChild(box); return; }
   let name = "Error", msg = String(e), line = 0;
   if (e && e.tp$name){
     name = e.tp$name;
@@ -908,7 +928,7 @@ function outError(c, e){
     if (tb.length) line = tb[tb.length - 1].lineno;
   }
   msg = String(msg).replace(/ on line \d+$/, "");
-  box.innerHTML = `<b>${esc(name)}</b>: ${esc(msg)}${line ? ` <span class="meta">· dòng ${line}</span>` : ""}${HINTS[name] ? `<div class="hint">${HINTS[name]}</div>` : ""}`;
+  box.innerHTML = `<b>${esc(name)}</b>: ${esc(msg)}${line ? ` <span class="meta">· ${t("line")} ${line}</span>` : ""}${(LANG === "en" ? HINTS_EN : HINTS)[name] ? `<div class="ehint">${(LANG === "en" ? HINTS_EN : HINTS)[name]}</div>` : ""}`;
   c.out.appendChild(box);
   if (line){ c.errLine = line; c.errbar.hidden = false; c.errbar.style.top = (9 + (line - 1)*20) + "px"; }
 }
@@ -917,28 +937,29 @@ function outError(c, e){
    6. KERNEL (Skulpt – Python 3 trong trình duyệt)
    ===================================================================== */
 const K = { ready:false, running:false, queue:[], stop:false, count:0, cur:null, injected:new Set(), base:null };
-function kstat(s, t){ $("#kpill").dataset.s = s; $("#kstat").textContent = t; }
+let KSTAT = "kLoad";
+function kstat(s, key){ KSTAT = key; $("#kpill").dataset.s = s; $("#kstat").textContent = t(key); }
 function initKernel(){
-  if (!window.Sk){ kstat("load", "Không tải được Python"); return; }
+  if (!window.Sk){ kstat("load", "kFail"); return; }
   Sk.configure({
     output: s => { if (K.cur) outText(K.cur, s); },
     read: x => { if (PYLIB[x] !== undefined) return PYLIB[x]; if (!Sk.builtinFiles || Sk.builtinFiles.files[x] === undefined) throw "File not found: '" + x + "'"; return Sk.builtinFiles.files[x]; },
     inputfun: p => new Promise(res => {
       const c = K.cur, row = document.createElement("div"); row.className = "ask";
-      row.innerHTML = `<span>${esc(p || "")}</span><input id="ask-${Date.now()}" aria-label="Nhập dữ liệu">`;
+      row.innerHTML = `<span>${esc(p || "")}</span><input id="ask-${Date.now()}" aria-label="${t("inputAria")}">`;
       c.out.appendChild(row); const inp = row.querySelector("input"); inp.focus();
       inp.addEventListener("keydown", e => { if (e.key === "Enter"){ const v = inp.value; row.remove(); outText(c, (p||"") + v + "\n"); res(v); } });
     }),
     inputfunTakesPrompt: true, __future__: Sk.python3, yieldLimit: 25, killableWhile: true, killableFor: true
   });
-  K.ready = true; kstat("idle", "Python 3 · Sẵn sàng");
+  K.ready = true; kstat("idle", "kIdle");
 }
 function setBusy(b){
   K.running = b; $("#bStop").disabled = !b;
-  kstat(b ? "busy" : "idle", b ? "Đang chạy…" : "Python 3 · Sẵn sàng");
+  kstat(b ? "busy" : "idle", b ? "kBusy" : "kIdle");
 }
 function runCells(list){
-  if (!K.ready){ toast("Python đang tải, chờ một chút…"); return; }
+  if (!K.ready){ toast(t("pyLoading")); return; }
   list.filter(c => c.type === "code").forEach(c => { if (!K.queue.includes(c) && K.cur !== c){ c.state = "queued"; gutter(c); K.queue.push(c); } });
   if (!K.running) pump();
 }
@@ -977,7 +998,7 @@ function restartKernel(){
     for (const k of ["__main__", "jetbot", "_sim", "time"]){ try{ Sk.sysmodules.mp$del_subscript(new Sk.builtin.str(k)); }catch(e){} }
     K.count = 0; CELLS.forEach(c => { c.count = null; gutter(c); });
     SIM.resetClock();
-    toast("Đã khởi động lại kernel: biến đã xoá, đồng hồ về 0");
+    toast(t("restarted"));
   };
   if (K.running){ const w = setInterval(() => { if (!K.running){ clearInterval(w); done(); } }, 50); } else done();
 }
@@ -990,8 +1011,8 @@ $("#bAddMd").onclick = () => { const n = insertAfter(ACTIVE, makeCell("md", ""))
 $("#bClear").onclick = () => CELLS.forEach(c => { c.out.innerHTML = ""; c.errbar.hidden = true; });
 $("#bCopy").onclick = () => {
   const code = CELLS.filter(c => c.type === "code").map(c => c.src).join("\n\n");
-  const fallback = () => { const t = document.createElement("textarea"); t.value = code; document.body.appendChild(t); t.select(); try{ document.execCommand("copy"); }catch(e){} t.remove(); toast("Đã sao chép code"); };
-  try { navigator.clipboard.writeText(code).then(() => toast("Đã sao chép code"), fallback); } catch (e) { fallback(); }
+  const fallback = () => { const t = document.createElement("textarea"); t.value = code; document.body.appendChild(t); t.select(); try{ document.execCommand("copy"); }catch(e){} t.remove(); toast(t("copied")); };
+  try { navigator.clipboard.writeText(code).then(() => toast(t("copied")), fallback); } catch (e) { fallback(); }
 };
 let escT = 0;
 document.addEventListener("keydown", e => {
@@ -1004,19 +1025,23 @@ function openDrawer(which){
   const btn = which === "nb" ? $("#rNb") : $("#rApi"), other = which === "nb" ? $("#rApi") : $("#rNb");
   const on = btn.getAttribute("aria-pressed") !== "true";
   btn.setAttribute("aria-pressed", on); other.setAttribute("aria-pressed", "false");
-  drawer.hidden = !on; if (!on) return;
+  drawer.hidden = !on; DRAWER = on ? which : null; if (!on) return;
+  renderDrawer(which);
+}
+let DRAWER = null;
+function renderDrawer(which){
   if (which === "nb"){
-    drawer.innerHTML = "<h3>Bài mẫu</h3>" + LESSONS.map(l => `<button class="lesson" data-id="${l.id}"><em>${l.tag} · ${MAPS[l.map].name.split(" · ")[0]}</em><b>${esc(l.title)}</b><span>${esc(l.desc)}</span></button>`).join("");
+    drawer.innerHTML = `<h3>${esc(t("drawerLessons"))}</h3>` + LESSONS.map(l0 => { const l = lessonIn(l0, LANG); return `<button class="lesson" data-id="${l.id}"><em>${esc(l.tag)} · ${esc(mapName(l.map).split(" · ")[0])}</em><b>${esc(l.title)}</b><span>${esc(l.desc)}</span></button>`; }).join("");
   } else {
-    drawer.innerHTML = "<h3>Thư viện jetbot</h3><div class='api'>" + API.map(([cls, imp, fns]) =>
-      `<h4>${cls}<small>${esc(imp)}</small></h4>` + fns.map(([code, d]) => `<div class="fn"><code>${esc(code)}</code><button class="ins" data-code="${esc(code)}">Chèn</button><p>${esc(d)}</p></div>`).join("")).join("") + "</div>";
+    drawer.innerHTML = `<h3>${esc(t("drawerApi"))}</h3><div class="api">` + API.map(([cls, imp, fns]) =>
+      `<h4>${cls}<small>${esc(imp)}</small></h4>` + fns.map(([code, d]) => `<div class="fn"><code>${esc(code)}</code><button class="ins" data-code="${esc(code)}">${esc(t("insert"))}</button><p>${esc(LANG === "en" && API_EN[code] ? API_EN[code] : d)}</p></div>`).join("")).join("") + "</div>";
   }
 }
 $("#rNb").onclick = () => openDrawer("nb");
 $("#rApi").onclick = () => openDrawer("api");
 drawer.addEventListener("click", e => {
   const l = e.target.closest(".lesson");
-  if (l){ const L = LESSONS.find(x => x.id === l.dataset.id); setMap(L.map); loadCells(L.cells, L.file); if (innerWidth < 900) openDrawer("nb"); return; }
+  if (l){ const L = lessonIn(LESSONS.find(x => x.id === l.dataset.id), LANG); setMap(L.map); loadCells(L.cells, L.file); if (innerWidth < 900) openDrawer("nb"); return; }
   const ins = e.target.closest(".ins");
   if (ins){
     let c = ACTIVE; if (!c || c.type !== "code") c = insertAfter(ACTIVE, makeCell("code", ""));
@@ -1038,8 +1063,8 @@ $("#fileIn").addEventListener("change", e => {
           .map(x => [x.cell_type === "code" ? "code" : "md", Array.isArray(x.source) ? x.source.join("") : String(x.source || "")]);
         loadCells(list.length ? list : [["code",""]], f.name);
       } else loadCells([["code", String(r.result)]], f.name.replace(/\.\w+$/, ".ipynb"));
-      toast("Đã mở " + f.name);
-    } catch (x){ toast("Không đọc được tệp: cần .ipynb hợp lệ hoặc .py"); }
+      toast(t("opened") + f.name);
+    } catch (x){ toast(t("openFail")); }
     e.target.value = "";
   };
   r.readAsText(f);
@@ -1227,7 +1252,7 @@ function matTexture(){
   x.font = "700 24px 'JetBrains Mono', monospace"; x.fillStyle = "#d8403a"; x.fillText("x", ox + 96, oy + 8); x.fillStyle = "#3fa34d"; x.fillText("y", ox - 7, oy - 98);
   for (const z of MAP.zones){
     const [zx, zy] = P(z.x - z.w/2, z.y + z.h/2); x.fillStyle = ZONE[z.c]; x.globalAlpha = 0.85; x.fillRect(zx, zy, z.w*S, z.h*S); x.globalAlpha = 1;
-    if (z.w > 0.2){ x.fillStyle = "#fff"; x.font = "700 34px 'Be Vietnam Pro', sans-serif"; x.textAlign = "center"; x.fillText(MAPID === "open" ? z.c.toUpperCase() : "ĐÍCH", zx + z.w*S/2, zy + z.h*S/2 + 12); x.textAlign = "left"; }
+    if (z.w > 0.2){ x.fillStyle = "#fff"; x.font = "700 34px 'Be Vietnam Pro', sans-serif"; x.textAlign = "center"; x.fillText(MAPID === "open" ? z.c.toUpperCase() : t("goal"), zx + z.w*S/2, zy + z.h*S/2 + 12); x.textAlign = "left"; }
   }
   if (MAP.line){
     x.strokeStyle = "#141414"; x.lineWidth = 25; x.lineJoin = "round"; x.beginPath();
@@ -1258,7 +1283,7 @@ function buildField(){
   scene.add(fieldGroup);
 }
 function initScene(){
-  if (!window.THREE){ $("#sceneLoading").textContent = "Không tải được thư viện 3D. Kiểm tra kết nối mạng."; return false; }
+  if (!window.THREE){ $("#sceneLoading").textContent = t("sceneFail"); return false; }
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(2, devicePixelRatio)); renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.autoClear = false;
@@ -1372,7 +1397,7 @@ function setupRobotDrag(){
   el.addEventListener("contextmenu", e => e.preventDefault());
 }
 function homeRobot(){
-  SIM.place(MAP.start, true); SIM.resetClock(); clearTrail(); toast("Robot đã về vị trí xuất phát · encoder, IMU và đồng hồ về 0");
+  SIM.place(MAP.start, true); SIM.resetClock(); clearTrail(); toast(t("homeToast"));
 }
 function clearTrail(){ if (trail){ trail.n = 0; trail.geometry.setDrawRange(0, 0); } }
 $("#bHome").onclick = () => { if (K.running) stopAll(); else SIM.setMotors(0, 0); homeRobot(); };
@@ -1382,7 +1407,7 @@ const TG = { lidar: true, trail: true, cam: true, lbl: false, key: false };
 function bindToggle(id, key, after){ const b = $(id); b.onclick = () => { TG[key] = !TG[key]; b.setAttribute("aria-pressed", TG[key]); after && after(); }; }
 bindToggle("#tLidar", "lidar"); bindToggle("#tTrail", "trail"); bindToggle("#tCam", "cam");
 bindToggle("#tLbl", "lbl", () => { $("#labels").innerHTML = ""; if (TG.lbl && VIEW !== "follow") setView("follow"); });
-bindToggle("#tKey", "key", () => { $("#teleopTag").hidden = !TG.key; if (!TG.key) SIM.setMotors(0, 0); else { document.activeElement && document.activeElement.blur && document.activeElement.blur(); toast("Bấm vào sa bàn rồi dùng phím mũi tên để lái"); } });
+bindToggle("#tKey", "key", () => { $("#teleopTag").hidden = !TG.key; if (!TG.key) SIM.setMotors(0, 0); else { document.activeElement && document.activeElement.blur && document.activeElement.blur(); toast(t("teleopToast")); } });
 const keys = new Set();
 function teleop(){
   if (!TG.key || K.running) return;
@@ -1400,7 +1425,8 @@ addEventListener("blur", () => { keys.clear(); teleop(); });
 
 /* ---------- map & speed ---------- */
 const mapSel = $("#mapSel");
-mapSel.innerHTML = Object.entries(MAPS).map(([k, m]) => `<option value="${k}">${m.name}</option>`).join("");
+function renderMapSel(){ mapSel.innerHTML = Object.keys(MAPS).map(k => `<option value="${k}">${esc(mapName(k))}</option>`).join(""); mapSel.value = MAPID; }
+renderMapSel();
 function setMap(id){
   if (!MAPS[id]) id = "open";
   MAPID = id; MAP = MAPS[id]; BOXES = allBoxes(); mapSel.value = id;
@@ -1481,7 +1507,7 @@ function loop(now){
   // labels
   if (TG.lbl){
     const L = $("#labels");
-    if (!L.children.length) robot3d.anchors.forEach(([n, s]) => { const d = document.createElement("div"); d.className = "lbl"; d.innerHTML = esc(n) + (s ? `<small>${esc(s)}</small>` : ""); L.appendChild(d); });
+    if (!L.children.length) robot3d.anchors.forEach(([n, s]) => { const d = document.createElement("div"); d.className = "lbl"; d.innerHTML = esc(tA(n)) + (s ? `<small>${esc(tA(s))}</small>` : ""); L.appendChild(d); });
     robot3d.g.updateMatrixWorld();
     robot3d.anchors.forEach(([, , p], i) => {
       const v = new THREE.Vector3(...p).applyMatrix4(robot3d.g.matrixWorld).project(camera), el = L.children[i];
@@ -1498,8 +1524,8 @@ function telemetry(){
   $("#tEnc").textContent = `${Math.round(SIM.encL)} / ${Math.round(SIM.encR)}`;
   $("#tLid").textContent = `${SIM.lidarAt(0).toFixed(3)} m`;
   const lp = SIM.linePos(), col = SIM.color();
-  $("#tLine").textContent = lp === null ? (col ? `— · ${col}` : "không thấy") : lp.toFixed(2) + (col ? ` · ${col}` : "");
-  $("#tTime").textContent = SIM.runT.toFixed(1) + " s" + (K.running ? "" : " · dừng");
+  $("#tLine").textContent = lp === null ? (col ? `— · ${col}` : t("noLine")) : lp.toFixed(2) + (col ? ` · ${col}` : "");
+  $("#tTime").textContent = SIM.runT.toFixed(1) + " s" + (K.running ? "" : t("stopped"));
 }
 
 /* =====================================================================
@@ -1509,7 +1535,40 @@ const saved = store.get("jetbotlab.nb.v1");
 MAPID = saved && MAPS[saved.map] ? saved.map : "open"; MAP = MAPS[MAPID]; BOXES = allBoxes(); mapSel.value = MAPID;
 SIM.place(MAP.start, true);
 initScene();
-if (saved && saved.cells && saved.cells.length) loadCells(saved.cells, saved.title); else loadCells(LESSONS[0].cells, LESSONS[0].file);
+if (saved && saved.cells && saved.cells.length) loadCells(saved.cells, saved.title); else { const L0 = lessonIn(LESSONS[0], LANG); loadCells(L0.cells, L0.file); }
+function applyLang(prev){
+  document.documentElement.lang = LANG;
+  document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-title]").forEach(el => { el.title = t(el.dataset.i18nTitle); });
+  document.querySelectorAll("[data-i18n-aria]").forEach(el => { el.setAttribute("aria-label", t(el.dataset.i18nAria)); });
+  document.querySelectorAll("[data-i18n-html]").forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
+  document.querySelectorAll("#langSeg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.lang === LANG));
+  $("#kstat").textContent = t(KSTAT);
+  renderMapSel(); renderAddRow();
+  // bài mẫu chưa sửa thì đổi sang bản cùng ngôn ngữ
+  if (prev && prev !== LANG && !K.running){
+    const cur = JSON.stringify(CELLS.map(c => [c.type, c.src]));
+    for (const l of LESSONS){
+      const o = lessonIn(l, prev);
+      if (JSON.stringify(o.cells) === cur){ const n = lessonIn(l, LANG); loadCells(n.cells, n.file); break; }
+    }
+  }
+  CELLS.forEach(c => {
+    c.ta.setAttribute("aria-label", t(c.type === "md" ? "cellMd" : "cellCode"));
+    const g = c.el.querySelector(".grip"); g.title = t("grip"); g.setAttribute("aria-label", t("grip"));
+    for (const [a, k] of [["up","cUp"],["down","cDown"],["type","cType"],["del","cDel"]]) c.el.querySelector(`[data-a="${a}"]`).title = t(k);
+    if (c.md) paint(c); gutter(c);
+  });
+  if (DRAWER) renderDrawer(DRAWER);
+  $("#labels").innerHTML = "";
+  if (renderer) buildField();
+  if (typeof telemetry === "function") telemetry();
+}
+document.querySelectorAll("#langSeg button").forEach(b => b.onclick = () => {
+  if (b.dataset.lang === LANG) return;
+  const prev = LANG; LANG = b.dataset.lang; store.set("jetbotlab.lang", LANG); applyLang(prev);
+});
+applyLang();
 initKernel();
 requestAnimationFrame(loop);
 if (document.fonts) document.fonts.ready.then(() => { if (renderer) buildField(); drawOled && robot3d && drawOled(); });
