@@ -13,6 +13,7 @@ img{max-width:100%}
   --kw:#7b3fa0; --str:#a14a12; --num:#1a64ad; --com:#7f8c84; --fn:#08766a; --bi:#b02c66;
   --err:#b8322a; --err-bg:#fbeceb; --warn:#a56a00; --run:#c98300; --ok:#2d7d3a;
   --scene:#dde3dc;
+  --note-bg:#fcf7e6; --note-line:#e4d49a; --note-ink:#8a6508;
   --f-ui:"Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
   --f-code:"JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
   --r:6px;
@@ -24,7 +25,7 @@ img{max-width:100%}
   --code-bg:#0f1512; --sel:#33461f;
   --kw:#c99bf0; --str:#ebac74; --num:#7fb8f5; --com:#6d7c73; --fn:#5fd3bf; --bi:#ff8fbd;
   --err:#ff7f70; --err-bg:#2a1614; --warn:#e9b04a; --run:#f0b23a; --ok:#6fcf7e;
-  --scene:#0e1411; color-scheme:dark;
+  --scene:#0e1411; --note-bg:#1f1b10; --note-line:#4d4222; --note-ink:#e2c26a; color-scheme:dark;
 }}
 :root[data-theme="dark"]{
   --bg:#0c110e; --panel:#131a16; --panel-2:#18201b; --line:#27322b; --line-2:#1f2923;
@@ -33,7 +34,7 @@ img{max-width:100%}
   --code-bg:#0f1512; --sel:#33461f;
   --kw:#c99bf0; --str:#ebac74; --num:#7fb8f5; --com:#6d7c73; --fn:#5fd3bf; --bi:#ff8fbd;
   --err:#ff7f70; --err-bg:#2a1614; --warn:#e9b04a; --run:#f0b23a; --ok:#6fcf7e;
-  --scene:#0e1411; color-scheme:dark;
+  --scene:#0e1411; --note-bg:#1f1b10; --note-line:#4d4222; --note-ink:#e2c26a; color-scheme:dark;
 }
 html,body{height:100%}
 body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:14px;overflow:hidden}
@@ -147,7 +148,14 @@ body.reordering,body.reordering *{cursor:grabbing!important;user-select:none}
 .md ul{margin:4px 0;padding-left:20px}
 .md code{font-family:var(--f-code);font-size:12.5px;background:var(--code-bg);border:1px solid var(--line-2);border-radius:4px;padding:0 4px}
 .md blockquote{margin:6px 0;padding:6px 12px;border-left:3px solid var(--accent);background:var(--accent-soft);border-radius:0 var(--r) var(--r) 0}
-.cell.mdc .ed{display:none}
+.cell.mdc .ed{display:none;background:var(--note-bg);border-color:var(--note-line)}
+.cell.mdc .ed pre,.cell.mdc .ed textarea{font-family:var(--f-ui);font-size:13.5px}
+.cell.mdc.active .ed{border-color:var(--note-ink)}
+.cell.mdc.active::before{background:var(--note-ink)}
+.cell.mdc .gut{color:var(--note-ink)}
+.cell.mdc .ctools [data-a="run"]{display:none}
+.cell.mdc .md{border-radius:var(--r)}
+.cell.mdc.active .md{background:var(--note-bg);box-shadow:inset 0 0 0 1px var(--note-line)}
 .cell.mdc.editing .ed{display:grid}
 .cell.mdc.editing .md{display:none}
 .addrow{display:flex;gap:8px;margin-left:64px}

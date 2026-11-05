@@ -449,7 +449,10 @@ function makeCell(type, src){
   c.ta.addEventListener("keydown", e => onKey(e, c));
   c.ta.addEventListener("focus", () => setActive(c));
   el.addEventListener("mousedown", () => setActive(c));
-  if (c.md){ c.md.addEventListener("dblclick", () => { el.classList.add("editing"); c.ta.focus(); }); }
+  if (c.md){
+    c.md.addEventListener("dblclick", () => { el.classList.add("editing"); c.ta.focus(); });
+    c.ta.addEventListener("blur", () => { if (c.src.trim()) el.classList.remove("editing"); });
+  }
   el.querySelector(".ctools").addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b) return; const a = b.dataset.a, i = CELLS.indexOf(c);
     if (a === "run"){ if (c.state === "running") stopAll(); else runCells([c]); }
@@ -504,7 +507,7 @@ function paint(c){
   if (c.md) c.md.innerHTML = mdRender(c.src);
 }
 function gutter(c){
-  if (c.type === "md"){ c.gut.textContent = ""; return; }
+  if (c.type === "md"){ c.gut.textContent = "✎"; c.gut.title = t("cellMd"); return; }
   c.gut.textContent = c.state === "running" ? "[*]:" : c.state === "queued" ? "[-]:" : `[${c.count ?? " "}]:`;
   c.el.classList.toggle("running", c.state === "running");
   const b = c.el.querySelector('[data-a="run"]'); b.innerHTML = c.state === "running" ? ICON.stop : ICON.run; b.title = t(c.state === "running" ? "cStop" : "cRun");
