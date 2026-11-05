@@ -106,7 +106,14 @@ select{background:var(--panel-2);border:1px solid var(--line);border-radius:var(
 .cell::before{content:"";position:absolute;left:58px;top:0;bottom:0;width:3px;border-radius:2px;background:transparent}
 .cell.active::before{background:var(--accent)}
 .cell.running::before{background:var(--run)}
-.gut{font-family:var(--f-code);font-size:12px;color:var(--faint);text-align:right;padding:9px 12px 0 0;font-variant-numeric:tabular-nums;user-select:none}
+.gut{font-family:var(--f-code);font-size:12px;color:var(--faint);text-align:right;padding:9px 12px 0 0;font-variant-numeric:tabular-nums;user-select:none;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.grip{border:0;background:transparent;width:22px;height:26px;border-radius:4px;display:grid;place-items:center;color:var(--faint);cursor:grab;touch-action:none;opacity:0;transition:opacity .12s}
+.cell:hover .grip,.cell.active .grip,.grip:focus-visible{opacity:1}
+.grip:hover{background:var(--panel-2);color:var(--fg)}
+.cell.dragging{opacity:.45}
+.cell.dragging .grip{cursor:grabbing}
+body.reordering,body.reordering *{cursor:grabbing!important;user-select:none}
+.dropline{height:3px;border-radius:2px;background:var(--accent);margin:-6px 0 7px 64px;box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent)}
 .cell.active .gut{color:var(--accent-ink)}
 .cell.running .gut{color:var(--run)}
 .cbody{min-width:0}
@@ -115,7 +122,8 @@ select{background:var(--panel-2);border:1px solid var(--line);border-radius:var(
 .ed pre,.ed textarea{grid-area:1/1;margin:0;padding:9px 12px;font-family:var(--f-code);font-size:13px;line-height:20px;white-space:pre-wrap;overflow-wrap:anywhere;tab-size:4;border:0;letter-spacing:0;font-variant-ligatures:none}
 .ed pre{pointer-events:none;color:var(--fg);min-height:20px}
 .ed textarea{resize:none;overflow:hidden;background:transparent;color:transparent;caret-color:var(--fg);outline:none;width:100%;box-sizing:border-box}
-.ed textarea::selection{background:var(--sel);color:transparent}
+.ed textarea::selection{background:color-mix(in srgb, var(--accent) 32%, transparent);color:transparent}
+.ed textarea::-moz-selection{background:color-mix(in srgb, var(--accent) 32%, transparent);color:transparent}
 .errbar{position:absolute;left:0;right:0;height:20px;background:var(--err-bg);border-left:3px solid var(--err);pointer-events:none}
 .t-kw{color:var(--kw);font-weight:500}.t-str{color:var(--str)}.t-num{color:var(--num)}.t-com{color:var(--com);font-style:italic}.t-fn{color:var(--fn)}.t-bi{color:var(--bi)}.t-self{color:var(--kw);font-style:italic}
 .ctools{position:absolute;right:6px;top:-11px;display:none;gap:1px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:2px;z-index:2;box-shadow:0 2px 6px rgb(0 0 0 / .06)}
@@ -207,6 +215,8 @@ input[type=file]{display:none}
   .cell::before{left:37px}
   .gut{padding-right:8px;font-size:11px}
   .addrow{margin-left:42px}
+  .dropline{margin-left:42px}
+  .grip{opacity:1}
   .cells{padding-right:8px}
 }
 @media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
@@ -725,10 +735,11 @@ function makeCell(type, src){
   const c = { id: ++uid, type, src: src || "", count: null, state: "", errLine: 0 };
   const el = document.createElement("div");
   el.className = "cell" + (type === "md" ? " mdc" : "");
-  el.innerHTML = `<div class="gut"></div><div class="cbody"><div class="ed"><div class="errbar" hidden></div><pre class="hl" aria-hidden="true"></pre><textarea id="cell-${c.id}" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Ô ${type === "md" ? "ghi chú" : "code"}"></textarea></div>${type === "md" ? '<div class="md"></div>' : ""}<div class="out" aria-live="polite"></div></div>
+  el.innerHTML = `<div class="gut"><span class="pr"></span><button class="grip" title="Kéo để đổi thứ tự ô" aria-label="Kéo để đổi thứ tự ô"><svg width="10" height="16" viewBox="0 0 10 16"><g fill="currentColor"><circle cx="2.5" cy="3" r="1.4"/><circle cx="7.5" cy="3" r="1.4"/><circle cx="2.5" cy="8" r="1.4"/><circle cx="7.5" cy="8" r="1.4"/><circle cx="2.5" cy="13" r="1.4"/><circle cx="7.5" cy="13" r="1.4"/></g></svg></button></div><div class="cbody"><div class="ed"><div class="errbar" hidden></div><pre class="hl" aria-hidden="true"></pre><textarea id="cell-${c.id}" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Ô ${type === "md" ? "ghi chú" : "code"}"></textarea></div>${type === "md" ? '<div class="md"></div>' : ""}<div class="out" aria-live="polite"></div></div>
   <div class="ctools"><button class="r" data-a="run" title="Chạy ô (Shift+Enter)">${ICON.run}</button><button data-a="up" title="Chuyển lên">${ICON.up}</button><button data-a="down" title="Chuyển xuống">${ICON.down}</button><button data-a="type" title="Đổi Code / Ghi chú">${ICON.type}</button><button data-a="del" title="Xoá ô">${ICON.del}</button></div>`;
   c.el = el; c.ta = el.querySelector("textarea"); c.hl = el.querySelector("pre"); c.out = el.querySelector(".out");
-  c.gut = el.querySelector(".gut"); c.md = el.querySelector(".md"); c.errbar = el.querySelector(".errbar");
+ c.gut = el.querySelector(".gut .pr"); el._cell = c; bindGrip(c, el.querySelector(".grip"));
+  c.md = el.querySelector(".md"); c.errbar = el.querySelector(".errbar");
   c.ta.value = c.src;
   c.ta.addEventListener("input", () => { c.src = c.ta.value; paint(c); if (c.errLine){ c.errLine = 0; c.errbar.hidden = true; } save(); });
   c.ta.addEventListener("keydown", e => onKey(e, c));
@@ -745,6 +756,44 @@ function makeCell(type, src){
   });
   paint(c); gutter(c);
   return c;
+}
+function bindGrip(c, grip){
+  grip.addEventListener("pointerdown", e => {
+    if (e.button !== 0) return;
+    e.preventDefault(); setActive(c);
+    const line = document.createElement("div"); line.className = "dropline";
+    const scroller = cellsEl.scrollHeight > cellsEl.clientHeight + 2 ? cellsEl : null;
+    let lastY = e.clientY, raf = 0, moved = false;
+    grip.setPointerCapture(e.pointerId);
+    c.el.classList.add("dragging"); document.body.classList.add("reordering");
+    const place = () => {
+      const others = CELLS.filter(x => x !== c);
+      const tgt = others.find(x => { const r = x.el.getBoundingClientRect(); return lastY < r.top + r.height/2; });
+      cellsEl.insertBefore(line, tgt ? tgt.el : addRow);
+    };
+    const tick = () => {
+      const box = scroller ? scroller.getBoundingClientRect() : { top: 0, bottom: innerHeight };
+      const edge = 48; let dy = 0;
+      if (lastY < box.top + edge) dy = -Math.ceil((box.top + edge - lastY)/4);
+      else if (lastY > box.bottom - edge) dy = Math.ceil((lastY - box.bottom + edge)/4);
+      if (dy){ scroller ? (scroller.scrollTop += dy) : scrollBy(0, dy); place(); }
+      raf = requestAnimationFrame(tick);
+    };
+    const mv = ev => { lastY = ev.clientY; if (!moved && Math.abs(ev.clientY - e.clientY) > 3){ moved = true; raf = requestAnimationFrame(tick); } if (moved) place(); };
+    const up = () => {
+      cancelAnimationFrame(raf);
+      grip.removeEventListener("pointermove", mv); grip.removeEventListener("pointerup", up); grip.removeEventListener("pointercancel", up);
+      c.el.classList.remove("dragging"); document.body.classList.remove("reordering");
+      if (line.parentNode){ cellsEl.insertBefore(c.el, line); line.remove(); }
+      CELLS = [...cellsEl.querySelectorAll(":scope > .cell")].map(x => x._cell);
+      save();
+    };
+    grip.addEventListener("pointermove", mv); grip.addEventListener("pointerup", up); grip.addEventListener("pointercancel", up);
+  });
+  grip.addEventListener("keydown", e => {
+    if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+    e.preventDefault(); c.el.querySelector(`[data-a="${e.key === "ArrowUp" ? "up" : "down"}"]`).click(); grip.focus();
+  });
 }
 function paint(c){
   c.hl.innerHTML = c.type === "md" ? esc(c.src) + "\n" : highlight(c.src);
