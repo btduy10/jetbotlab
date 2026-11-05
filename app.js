@@ -755,6 +755,11 @@ function openDrawer(which){
   renderDrawer(which);
 }
 let DRAWER = null;
+function closeDrawer(){
+  $("#rNb").setAttribute("aria-pressed", "false");
+  $("#rApi").setAttribute("aria-pressed", "false");
+  drawer.hidden = true; DRAWER = null;
+}
 function renderDrawer(which){
   if (which === "nb"){
     drawer.innerHTML = `<h3>${esc(t("drawerLessons"))}</h3>` + LESSONS.map(l0 => { const l = lessonIn(l0, LANG); return `<button class="lesson" data-id="${l.id}"><em>${esc(l.tag)} · ${esc(mapName(l.map).split(" · ")[0])}</em><b>${esc(l.title)}</b><span>${esc(l.desc)}</span></button>`; }).join("");
@@ -767,7 +772,7 @@ $("#rNb").onclick = () => openDrawer("nb");
 $("#rApi").onclick = () => openDrawer("api");
 drawer.addEventListener("click", e => {
   const l = e.target.closest(".lesson");
-  if (l){ const L = lessonIn(LESSONS.find(x => x.id === l.dataset.id), LANG); setMap(L.map); loadCells(L.cells, L.file); if (innerWidth < 900) openDrawer("nb"); return; }
+  if (l){ const L = lessonIn(LESSONS.find(x => x.id === l.dataset.id), LANG); setMap(L.map); loadCells(L.cells, L.file); closeDrawer(); return; }
   const ins = e.target.closest(".ins");
   if (ins){
     let c = ACTIVE; if (!c || c.type !== "code") c = insertAfter(ACTIVE, makeCell("code", ""));
@@ -775,6 +780,7 @@ drawer.addEventListener("click", e => {
     if (ta.selectionStart === ta.selectionEnd && ta.selectionStart === 0 && v) ta.setSelectionRange(v.length, v.length);
     const pre = ta.selectionStart > 0 && v[ta.selectionStart - 1] !== "\n" ? "\n" : "";
     insertText(ta, pre + ins.dataset.code);
+    closeDrawer();
   }
 });
 function sanitizeCells(list){
