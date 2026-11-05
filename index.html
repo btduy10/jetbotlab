@@ -294,7 +294,7 @@ input[type=file]{display:none}
         <div><small>Encoder T / P</small><b id="tEnc">—</b></div>
         <div><small>Lidar 0°</small><b id="tLid">—</b></div>
         <div><small>Camera line</small><b id="tLine">—</b></div>
-        <div><small>Thời gian</small><b id="tTime">—</b></div>
+        <div><small>Thời gian chạy</small><b id="tTime">—</b></div>
       </div>
     </section>
   </div>
@@ -351,7 +351,7 @@ let BOXES = allBoxes();
    ===================================================================== */
 const RB = { D:0.065, TRACK:0.17, VMAX:0.6, TAU:0.08, TPR:1320, BODY_OFF:0, RADIUS:0.105, LIDAR_OFF:0.004, LIDAR_H:0.16, CAM_LOOK:0.16 };
 const SIM = {
-  t:0, x:0, y:0, th:0, vl:0, vr:0, cmd:[0,0], encL:0, encR:0, yaw:0, gyro:0, ax:0, ay:0, bumpT:0,
+  t:0, t0:0, runT:0, x:0, y:0, th:0, vl:0, vr:0, cmd:[0,0], encL:0, encR:0, yaw:0, gyro:0, ax:0, ay:0, bumpT:0,
   angL:0, angR:0, lidarAng:0, sleepers:[], dragging:false, oled:["JetBot","IP 192.168.1.8","",""], oledDirty:true,
   clamp(v){ v = Number(v); if (!isFinite(v)) v = 0; return Math.max(-1, Math.min(1, v)); },
   setMotors(l, r){ this.cmd[0] = this.clamp(l); this.cmd[1] = this.clamp(r); },
@@ -389,6 +389,7 @@ const SIM = {
     this.bumpT = Math.max(0, this.bumpT - dt);
     this.lidarAng += dt*2*Math.PI*7;
     this.t += dt;
+    if (K.running) this.runT += dt;
     if (this.sleepers.length){
       const due = this.sleepers.filter(o => o.until <= this.t + 1e-9);
       if (due.length){ this.sleepers = this.sleepers.filter(o => o.until > this.t + 1e-9); due.forEach(o => o.res()); }
@@ -432,6 +433,7 @@ const SIM = {
     for (const z of MAP.zones) if (Math.abs(px-z.x) <= z.w/2 && Math.abs(py-z.y) <= z.h/2) return z.c;
     return null;
   },
+  resetClock(){ this.t0 = this.t; this.runT = 0; },
   place(pose, resetSensors){
     this.x = pose.x; this.y = pose.y; this.th = pose.th; this.vl = this.vr = 0; this._vp = 0; this.ax = this.ay = 0;
     if (resetSensors){ this.encL = this.encR = 0; this.yaw = 0; this.gyro = 0; }
@@ -584,7 +586,7 @@ const TIME_JS = `var $builtinmodule = function(name){
     if (t === undefined) throw new Sk.builtin.TypeError("sleep() cần 1 tham số: số giây");
     return Sk.misceval.promiseToSuspension(S.sleep(Sk.ffi.remapToJs(t)).then(function(){ return Sk.builtin.none.none$; }));
   });
-  m.time = new Sk.builtin.func(function(){ return new Sk.builtin.float_(S.t); });
+  m.time = new Sk.builtin.func(function(){ return new Sk.builtin.float_(Math.round((S.t - S.t0)*1000)/1000); });
   m.monotonic = m.time; m.perf_counter = m.time;
   return m;
 };`;
@@ -673,7 +675,7 @@ const API = [
   ["oled.clear()", "Xoá màn hình."]]],
  ["time", "import time", [
   ["time.sleep(0.5)", "Chờ theo thời gian mô phỏng (giây)."],
-  ["time.time()", "Thời gian mô phỏng (giây)."]]]
+  ["time.time()", "Thời gian mô phỏng (giây), về 0 khi Khởi động lại hoặc Về xuất phát."]]]
 ];
 
 /* =====================================================================
@@ -925,7 +927,8 @@ function restartKernel(){
     K.injected.forEach(k => { delete Sk.builtins[k]; }); K.injected.clear();
     for (const k of ["__main__", "jetbot", "_sim", "time"]){ try{ Sk.sysmodules.mp$del_subscript(new Sk.builtin.str(k)); }catch(e){} }
     K.count = 0; CELLS.forEach(c => { c.count = null; gutter(c); });
-    toast("Đã khởi động lại kernel: mọi biến đã được xoá");
+    SIM.resetClock();
+    toast("Đã khởi động lại kernel: biến đã xoá, đồng hồ về 0");
   };
   if (K.running){ const w = setInterval(() => { if (!K.running){ clearInterval(w); done(); } }, 50); } else done();
 }
@@ -1320,7 +1323,7 @@ function setupRobotDrag(){
   el.addEventListener("contextmenu", e => e.preventDefault());
 }
 function homeRobot(){
-  SIM.place(MAP.start, true); clearTrail(); toast("Robot đã về vị trí xuất phát · encoder và IMU về 0");
+  SIM.place(MAP.start, true); SIM.resetClock(); clearTrail(); toast("Robot đã về vị trí xuất phát · encoder, IMU và đồng hồ về 0");
 }
 function clearTrail(){ if (trail){ trail.n = 0; trail.geometry.setDrawRange(0, 0); } }
 $("#bHome").onclick = () => { if (K.running) stopAll(); else SIM.setMotors(0, 0); homeRobot(); };
@@ -1353,7 +1356,7 @@ function setMap(id){
   if (!MAPS[id]) id = "open";
   MAPID = id; MAP = MAPS[id]; BOXES = allBoxes(); mapSel.value = id;
   if (K.running) stopAll(); else SIM.setMotors(0, 0);
-  SIM.place(MAP.start, true); clearTrail();
+  SIM.place(MAP.start, true); SIM.resetClock(); clearTrail();
   if (renderer) buildField();
   save();
 }
@@ -1447,7 +1450,7 @@ function telemetry(){
   $("#tLid").textContent = `${SIM.lidarAt(0).toFixed(3)} m`;
   const lp = SIM.linePos(), col = SIM.color();
   $("#tLine").textContent = lp === null ? (col ? `— · ${col}` : "không thấy") : lp.toFixed(2) + (col ? ` · ${col}` : "");
-  $("#tTime").textContent = SIM.t.toFixed(1) + " s";
+  $("#tTime").textContent = SIM.runT.toFixed(1) + " s" + (K.running ? "" : " · dừng");
 }
 
 /* =====================================================================
