@@ -153,6 +153,9 @@ body.reordering,body.reordering *{cursor:grabbing!important;user-select:none}
 .cell.mdc.active .ed{border-color:var(--note-ink)}
 .cell.mdc.active::before{background:var(--note-ink)}
 .cell.mdc .gut{color:var(--note-ink)}
+.cell.mdc .pr{cursor:pointer;width:26px;height:26px;border-radius:4px;display:grid;place-items:center;font-size:14px;margin-top:-4px}
+.cell.mdc .pr:hover{background:var(--note-bg);box-shadow:inset 0 0 0 1px var(--note-line)}
+.cell.mdc.editing .pr{background:var(--note-ink);color:var(--panel)}
 .cell.mdc .ctools [data-a="run"]{display:none}
 .cell.mdc .md{border-radius:var(--r)}
 .cell.mdc.active .md{background:var(--note-bg);box-shadow:inset 0 0 0 1px var(--note-line)}
