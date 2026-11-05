@@ -110,6 +110,8 @@ body.reordering,body.reordering *{cursor:grabbing!important;user-select:none}
 .dropline{height:3px;border-radius:2px;background:var(--accent);margin:-6px 0 7px 64px;box-shadow:0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent)}
 .cell.active .gut{color:var(--accent-ink)}
 .cell.running .gut{color:var(--run)}
+.cell.step-next .pr::before{content:"▸ ";color:var(--accent-ink);font-weight:700}
+.cell.step-next .ed{border-style:dashed;border-color:var(--accent)}
 .cbody{min-width:0}
 .ed{position:relative;display:grid;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--r)}
 .cell.active .ed{border-color:color-mix(in srgb, var(--accent) 55%, var(--line))}
