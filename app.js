@@ -772,7 +772,7 @@ $("#rNb").onclick = () => openDrawer("nb");
 $("#rApi").onclick = () => openDrawer("api");
 drawer.addEventListener("click", e => {
   const l = e.target.closest(".lesson");
-  if (l){ const L = lessonIn(LESSONS.find(x => x.id === l.dataset.id), LANG); setMap(L.map); loadCells(L.cells, L.file); closeDrawer(); return; }
+  if (l){ const L = lessonIn(LESSONS.find(x => x.id === l.dataset.id), LANG); setMap(L.map); loadCells(L.cells, L.file); if (innerWidth < 900) closeDrawer(); return; }
   const ins = e.target.closest(".ins");
   if (ins){
     let c = ACTIVE; if (!c || c.type !== "code") c = insertAfter(ACTIVE, makeCell("code", ""));
@@ -780,8 +780,10 @@ drawer.addEventListener("click", e => {
     if (ta.selectionStart === ta.selectionEnd && ta.selectionStart === 0 && v) ta.setSelectionRange(v.length, v.length);
     const pre = ta.selectionStart > 0 && v[ta.selectionStart - 1] !== "\n" ? "\n" : "";
     insertText(ta, pre + ins.dataset.code);
-    closeDrawer();
   }
+});
+document.addEventListener("pointerdown", e => {
+  if (DRAWER && !drawer.contains(e.target) && !e.target.closest(".rail")) closeDrawer();
 });
 function sanitizeCells(list){
   if (!Array.isArray(list) || list.length > 300) return null;
