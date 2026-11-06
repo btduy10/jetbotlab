@@ -737,7 +737,7 @@ $("#bAddMd").onclick = () => { const n = insertAfter(ACTIVE, makeCell("md", ""))
 $("#bClear").onclick = () => CELLS.forEach(c => { c.out.innerHTML = ""; c.errbar.hidden = true; });
 $("#bCopy").onclick = () => {
   const code = CELLS.filter(c => c.type === "code").map(c => c.src).join("\n\n");
-  const fallback = () => { const t = document.createElement("textarea"); t.value = code; document.body.appendChild(t); t.select(); try{ document.execCommand("copy"); }catch(e){} t.remove(); toast(t("copied")); };
+  const fallback = () => { const ta = document.createElement("textarea"); ta.value = code; document.body.appendChild(ta); ta.select(); try{ document.execCommand("copy"); }catch(e){} ta.remove(); toast(t("copied")); };
   try { navigator.clipboard.writeText(code).then(() => toast(t("copied")), fallback); } catch (e) { fallback(); }
 };
 let escT = 0;
@@ -1011,7 +1011,7 @@ function matTexture(){
   x.fillStyle = "#467000"; x.beginPath(); x.moveTo(150, 0); x.lineTo(128, -14); x.lineTo(128, 14); x.fill();
   x.font = "700 26px 'Be Vietnam Pro', sans-serif"; x.fillText("START", -88, -124);
   x.restore();
-  const t = new THREE.CanvasTexture(cv); t.anisotropy = renderer.capabilities.getMaxAnisotropy(); return t;
+  const tex = new THREE.CanvasTexture(cv); tex.anisotropy = renderer.capabilities.getMaxAnisotropy(); return tex;
 }
 function buildField(){
   if (fieldGroup){ scene.remove(fieldGroup); fieldGroup.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material){ if (o.material.map) o.material.map.dispose(); o.material.dispose(); } }); }
