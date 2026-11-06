@@ -1207,19 +1207,19 @@ let SPEED = 1; $("#speedSel").onchange = e => SPEED = Number(e.target.value);
 let lastT = performance.now(), teleT = 0, lidT = 0, simDebt = 0, pumping = false;
 // Dừng đúng lúc time.sleep() hết hạn và nhường cho Python chạy tiếp trước khi mô phỏng thêm,
 // để lệnh động cơ kế tiếp có hiệu lực đúng thời điểm (không trễ cả một khung hình).
-function pump(){
+function simPump(){
   pumping = false;
   while (simDebt > 1e-9){
     const h = Math.min(simDebt, 1/240, Math.max(1e-4, SIM.nextWake() - SIM.t));
     SIM.step(h); simDebt -= h;
-    if (SIM.woke){ SIM.woke = false; if (simDebt > 1e-9){ pumping = true; setTimeout(pump, 0); } return; }
+    if (SIM.woke){ SIM.woke = false; if (simDebt > 1e-9){ pumping = true; setTimeout(simPump, 0); } return; }
   }
 }
 function loop(now){
   requestAnimationFrame(loop);
   const dt = Math.min(0.05, (now - lastT)/1000)*SPEED; lastT = now;
   simDebt = Math.min(simDebt + dt, 0.25);
-  if (!pumping) pump();
+  if (!pumping) simPump();
   if (!renderer) return;
   // robot pose
   robot3d.g.position.set(SIM.x, 0, -SIM.y); robot3d.g.rotation.y = SIM.th;
