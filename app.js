@@ -6,7 +6,7 @@ const store = {
 };
 
 /* ---------- ngôn ngữ / language ---------- */
-const I18N = {"vi": {"brandSub": "ROS AI Kit · mô phỏng", "nbAria": "Tên notebook", "kLoad": "Đang tải Python…", "kFail": "Không tải được Python", "kIdle": "Python 3 · Sẵn sàng", "kBusy": "Đang chạy…", "map": "Sa bàn", "speed": "Tốc độ", "langAria": "Ngôn ngữ", "rail": "Thanh bên", "rNb": "Bài mẫu", "rApi": "Tra cứu API", "rOpen": "Mở tệp .ipynb / .py", "rSave": "Lưu notebook về máy (.ipynb) · Ctrl+S", "rNew": "Tạo notebook mới", "saved": "Đã lưu ", "newConfirm": "Tạo notebook mới? Nội dung hiện tại sẽ bị thay thế. Hãy bấm Lưu trước nếu muốn giữ lại.", "newDone": "Đã tạo notebook mới", "run": "Chạy", "runT": "Chạy tất cả các ô (Shift+Enter: chạy ô đang chọn)", "stop": "Dừng", "stopT": "Dừng chương trình và động cơ (Esc Esc)", "restart": "Khởi động lại", "restartT": "Khởi động lại kernel: xoá mọi biến, đồng hồ về 0", "addCode": "Code", "addCodeT": "Thêm ô code bên dưới", "addMd": "Ghi chú", "addMdT": "Thêm ô ghi chú bên dưới", "clear": "Xoá kết quả", "clearT": "Xoá kết quả của mọi ô", "copy": "Sao chép code", "copyT": "Sao chép toàn bộ code", "splitAria": "Kéo để đổi kích thước", "vIso": "3D", "vTop": "Trên", "vFront": "Trước", "vSide": "Cạnh", "vFollow": "Theo robot", "tLidar": "Lidar", "tTrail": "Vết", "tCam": "Camera", "tAxis": "Trục Oxyz", "tAxisT": "Hệ trục gắn với robot: x mũi robot, y bên trái, z hướng lên", "tLbl": "Linh kiện", "tKey": "Lái phím", "tKeyT": "Lái bằng phím mũi tên / WASD", "home": "Về xuất phát", "homeT": "Đặt robot về vị trí xuất phát, xoá encoder, IMU và đồng hồ", "sceneLoading": "Đang dựng sa bàn 3D…", "sceneFail": "Không tải được thư viện 3D. Kiểm tra kết nối mạng.", "pip": "CAMERA CSI · GÓC RỘNG", "teleop": "Lái phím: ↑ ↓ ← → hoặc W A S D", "hint": "<kbd>Chuột phải</kbd> xoay 3D · <kbd>Shift</kbd>+<kbd>Chuột phải</kbd> hoặc <kbd>Chuột trái</kbd> vào nền: dời khung nhìn · <kbd>Cuộn</kbd> phóng to<br><kbd>Chuột trái</kbd> kéo robot, <kbd>Cuộn</kbd> khi đang kéo để xoay robot · thả gần ô START để về vị trí xuất phát", "telePos": "Vị trí x, y (cm)", "teleYaw": "Hướng (yaw)", "teleMot": "Động cơ T / P", "teleEnc": "Encoder T / P", "teleLid": "Lidar 0°", "teleLine": "Camera line", "teleTime": "Thời gian chạy", "noLine": "không thấy", "stopped": " · dừng", "pyLoading": "Python đang tải, chờ một chút…", "restarted": "Đã khởi động lại kernel: biến đã xoá, đồng hồ về 0", "copied": "Đã sao chép code", "opened": "Đã mở ", "openFail": "Không đọc được tệp: cần .ipynb hợp lệ hoặc .py", "teleopToast": "Bấm vào sa bàn rồi dùng phím mũi tên để lái", "homeToast": "Robot đã về vị trí xuất phát · encoder, IMU và đồng hồ về 0", "drawerLessons": "Bài mẫu", "drawerApi": "Thư viện jetbot", "insert": "Chèn", "cellCode": "Ô code", "cellMd": "Ô ghi chú", "cRun": "Chạy ô (Shift+Enter)", "cStop": "Dừng", "cUp": "Chuyển lên", "cDown": "Chuyển xuống", "cType": "Đổi Code / Ghi chú", "cDel": "Xoá ô", "grip": "Kéo để đổi thứ tự ô", "addRowCode": "+ Ô code", "addRowMd": "+ Ô ghi chú", "mdEmpty": "Nhấp đúp để viết ghi chú…", "trimmed": "…(đã lược bớt)", "interrupted": "chương trình đã được dừng. Động cơ đã tắt.", "line": "dòng", "inputAria": "Nhập dữ liệu", "goal": "ĐÍCH", "editNote": "Sửa ghi chú (hoặc nhấp đúp vào ghi chú)", "doneNote": "Xong, hiển thị ghi chú", "step": "Chạy từng ô", "stepT": "Mỗi lần bấm chạy ô code kế tiếp (bỏ qua ghi chú)", "stepDone": "Đã chạy hết các ô, lần bấm tới sẽ chạy lại từ ô đầu", "stepBusy": "Ô trước đang chạy, chờ xong hoặc bấm Dừng", "noFiles": "Mô phỏng không cho phép đọc / ghi tệp.", "blockedMod": "Thư viện này bị chặn trong mô phỏng vì lý do an toàn.", "fileTooBig": "Tệp quá lớn (tối đa 2 MB).", "badNotebook": "Notebook không hợp lệ hoặc quá nhiều ô (tối đa 300)."}, "en": {"brandSub": "ROS AI Kit · simulator", "nbAria": "Notebook name", "kLoad": "Loading Python…", "kFail": "Python failed to load", "kIdle": "Python 3 · Ready", "kBusy": "Running…", "map": "Field", "speed": "Speed", "langAria": "Language", "rail": "Sidebar", "rNb": "Sample lessons", "rApi": "API reference", "rOpen": "Open .ipynb / .py file", "rSave": "Save notebook to your computer (.ipynb) · Ctrl+S", "rNew": "New notebook", "saved": "Saved ", "newConfirm": "Create a new notebook? The current one will be replaced. Save it first if you want to keep it.", "newDone": "New notebook created", "run": "Run", "runT": "Run every cell (Shift+Enter: run selected cell)", "stop": "Stop", "stopT": "Stop the program and motors (Esc Esc)", "restart": "Restart", "restartT": "Restart kernel: clear all variables, reset the clock", "addCode": "Code", "addCodeT": "Add a code cell below", "addMd": "Note", "addMdT": "Add a note cell below", "clear": "Clear outputs", "clearT": "Clear the output of every cell", "copy": "Copy code", "copyT": "Copy all code", "splitAria": "Drag to resize", "vIso": "3D", "vTop": "Top", "vFront": "Front", "vSide": "Side", "vFollow": "Follow", "tLidar": "Lidar", "tTrail": "Trail", "tCam": "Camera", "tAxis": "Axes", "tAxisT": "Robot frame: x forward, y left, z up", "tLbl": "Parts", "tKey": "Drive", "tKeyT": "Drive with arrow keys / WASD", "home": "Back to start", "homeT": "Put the robot back at START and reset encoders, IMU and clock", "sceneLoading": "Building the 3D field…", "sceneFail": "The 3D library failed to load. Check your internet connection.", "pip": "CSI CAMERA · WIDE ANGLE", "teleop": "Drive: ↑ ↓ ← → or W A S D", "hint": "<kbd>Right-drag</kbd> rotate 3D · <kbd>Shift</kbd>+<kbd>Right-drag</kbd> or <kbd>Left-drag</kbd> on the floor: pan · <kbd>Scroll</kbd> zoom<br><kbd>Left-drag</kbd> the robot to move it, <kbd>Scroll</kbd> while dragging to rotate it · drop it near START to reset", "telePos": "Position x, y (cm)", "teleYaw": "Heading (yaw)", "teleMot": "Motors L / R", "teleEnc": "Encoder L / R", "teleLid": "Lidar 0°", "teleLine": "Camera line", "teleTime": "Run time", "noLine": "not seen", "stopped": " · idle", "pyLoading": "Python is still loading, one moment…", "restarted": "Kernel restarted: variables cleared, clock reset", "copied": "Code copied", "opened": "Opened ", "openFail": "Could not read the file: use a valid .ipynb or .py", "teleopToast": "Click the field, then drive with the arrow keys", "homeToast": "Robot is back at START · encoders, IMU and clock reset", "drawerLessons": "Sample lessons", "drawerApi": "jetbot library", "insert": "Insert", "cellCode": "Code cell", "cellMd": "Note cell", "cRun": "Run cell (Shift+Enter)", "cStop": "Stop", "cUp": "Move up", "cDown": "Move down", "cType": "Switch Code / Note", "cDel": "Delete cell", "grip": "Drag to reorder", "addRowCode": "+ Code cell", "addRowMd": "+ Note cell", "mdEmpty": "Double-click to write a note…", "trimmed": "…(truncated)", "interrupted": "the program was stopped. Motors are off.", "line": "line", "inputAria": "Input", "goal": "GOAL", "editNote": "Edit note (or double-click the note)", "doneNote": "Done, show the note", "step": "Step", "stepT": "Each click runs the next code cell (notes are skipped)", "stepDone": "All cells done, the next click starts again from the first cell", "stepBusy": "The previous cell is still running, wait or press Stop", "noFiles": "Reading or writing files is not allowed in the simulator.", "blockedMod": "This library is blocked in the simulator for safety.", "fileTooBig": "File too large (2 MB max).", "badNotebook": "Invalid notebook or too many cells (300 max)."}};
+const I18N = {"vi": {"brandSub": "ROS AI Kit · mô phỏng", "nbAria": "Tên notebook", "kLoad": "Đang tải Python…", "kFail": "Không tải được Python", "kIdle": "Python 3 · Sẵn sàng", "kBusy": "Đang chạy…", "map": "Sa bàn", "speed": "Tốc độ", "langAria": "Ngôn ngữ", "rail": "Thanh bên", "rNb": "Bài mẫu", "rApi": "Tra cứu API", "rOpen": "Mở tệp .ipynb / .py", "aiNoScene": "Sa bàn 3D chưa sẵn sàng.", "aiOldFrame": "Ảnh này đã cũ, hãy chụp lại bằng camera.value.", "aiEmpty": "Bộ dữ liệu đang trống.", "aiNetSees": "Mạng nơ-ron thấy (16×16)", "aiUndo": "Xoá ảnh vừa thêm", "aiNotTrained": "Mô hình chưa được huấn luyện. Hãy gọi model.train(dataset) hoặc model.load('collision_model.pth').", "aiNeedData": "Cần ít nhất 4 ảnh mỗi loại để huấn luyện", "aiTrainHead": "Ảnh huấn luyện: {tr} · ảnh kiểm tra: {te}", "aiSaved": "Đã lưu mô hình: ", "aiSaveFail": "Không lưu được mô hình (bộ nhớ trình duyệt đầy?).", "aiNoModel": "Chưa có mô hình '{p}'. Hãy chạy bài 12 để huấn luyện và lưu mô hình.", "aiOut": "Robot đã ra ngoài vạch đen!", "rSave": "Lưu notebook về máy (.ipynb) · Ctrl+S", "rNew": "Tạo notebook mới", "saved": "Đã lưu ", "newConfirm": "Tạo notebook mới? Nội dung hiện tại sẽ bị thay thế. Hãy bấm Lưu trước nếu muốn giữ lại.", "newDone": "Đã tạo notebook mới", "run": "Chạy", "runT": "Chạy tất cả các ô (Shift+Enter: chạy ô đang chọn)", "stop": "Dừng", "stopT": "Dừng chương trình và động cơ (Esc Esc)", "restart": "Khởi động lại", "restartT": "Khởi động lại kernel: xoá mọi biến, đồng hồ về 0", "addCode": "Code", "addCodeT": "Thêm ô code bên dưới", "addMd": "Ghi chú", "addMdT": "Thêm ô ghi chú bên dưới", "clear": "Xoá kết quả", "clearT": "Xoá kết quả của mọi ô", "copy": "Sao chép code", "copyT": "Sao chép toàn bộ code", "splitAria": "Kéo để đổi kích thước", "vIso": "3D", "vTop": "Trên", "vFront": "Trước", "vSide": "Cạnh", "vFollow": "Theo robot", "tLidar": "Lidar", "tTrail": "Vết", "tCam": "Camera", "tAxis": "Trục Oxyz", "tAxisT": "Hệ trục gắn với robot: x mũi robot, y bên trái, z hướng lên", "tLbl": "Linh kiện", "tKey": "Lái phím", "tKeyT": "Lái bằng phím mũi tên / WASD", "home": "Về xuất phát", "homeT": "Đặt robot về vị trí xuất phát, xoá encoder, IMU và đồng hồ", "sceneLoading": "Đang dựng sa bàn 3D…", "sceneFail": "Không tải được thư viện 3D. Kiểm tra kết nối mạng.", "pip": "CAMERA CSI · GÓC RỘNG", "teleop": "Lái phím: ↑ ↓ ← → hoặc W A S D", "hint": "<kbd>Chuột phải</kbd> xoay 3D · <kbd>Shift</kbd>+<kbd>Chuột phải</kbd> hoặc <kbd>Chuột trái</kbd> vào nền: dời khung nhìn · <kbd>Cuộn</kbd> phóng to<br><kbd>Chuột trái</kbd> kéo robot, <kbd>Cuộn</kbd> khi đang kéo để xoay robot · thả gần ô START để về vị trí xuất phát", "telePos": "Vị trí x, y (cm)", "teleYaw": "Hướng (yaw)", "teleMot": "Động cơ T / P", "teleEnc": "Encoder T / P", "teleLid": "Lidar 0°", "teleLine": "Camera line", "teleTime": "Thời gian chạy", "noLine": "không thấy", "stopped": " · dừng", "pyLoading": "Python đang tải, chờ một chút…", "restarted": "Đã khởi động lại kernel: biến đã xoá, đồng hồ về 0", "copied": "Đã sao chép code", "opened": "Đã mở ", "openFail": "Không đọc được tệp: cần .ipynb hợp lệ hoặc .py", "teleopToast": "Bấm vào sa bàn rồi dùng phím mũi tên để lái", "homeToast": "Robot đã về vị trí xuất phát · encoder, IMU và đồng hồ về 0", "drawerLessons": "Bài mẫu", "drawerApi": "Thư viện jetbot", "insert": "Chèn", "cellCode": "Ô code", "cellMd": "Ô ghi chú", "cRun": "Chạy ô (Shift+Enter)", "cStop": "Dừng", "cUp": "Chuyển lên", "cDown": "Chuyển xuống", "cType": "Đổi Code / Ghi chú", "cDel": "Xoá ô", "grip": "Kéo để đổi thứ tự ô", "addRowCode": "+ Ô code", "addRowMd": "+ Ô ghi chú", "mdEmpty": "Nhấp đúp để viết ghi chú…", "trimmed": "…(đã lược bớt)", "interrupted": "chương trình đã được dừng. Động cơ đã tắt.", "line": "dòng", "inputAria": "Nhập dữ liệu", "goal": "ĐÍCH", "editNote": "Sửa ghi chú (hoặc nhấp đúp vào ghi chú)", "doneNote": "Xong, hiển thị ghi chú", "step": "Chạy từng ô", "stepT": "Mỗi lần bấm chạy ô code kế tiếp (bỏ qua ghi chú)", "stepDone": "Đã chạy hết các ô, lần bấm tới sẽ chạy lại từ ô đầu", "stepBusy": "Ô trước đang chạy, chờ xong hoặc bấm Dừng", "noFiles": "Mô phỏng không cho phép đọc / ghi tệp.", "blockedMod": "Thư viện này bị chặn trong mô phỏng vì lý do an toàn.", "fileTooBig": "Tệp quá lớn (tối đa 2 MB).", "badNotebook": "Notebook không hợp lệ hoặc quá nhiều ô (tối đa 300)."}, "en": {"brandSub": "ROS AI Kit · simulator", "nbAria": "Notebook name", "kLoad": "Loading Python…", "kFail": "Python failed to load", "kIdle": "Python 3 · Ready", "kBusy": "Running…", "map": "Field", "speed": "Speed", "langAria": "Language", "rail": "Sidebar", "rNb": "Sample lessons", "rApi": "API reference", "rOpen": "Open .ipynb / .py file", "aiNoScene": "The 3D field is not ready.", "aiOldFrame": "This image is too old, take a new one with camera.value.", "aiEmpty": "The dataset is empty.", "aiNetSees": "What the network sees (16×16)", "aiUndo": "Remove last image", "aiNotTrained": "The model is not trained. Call model.train(dataset) or model.load('collision_model.pth').", "aiNeedData": "Need at least 4 images of each class to train", "aiTrainHead": "Training images: {tr} · test images: {te}", "aiSaved": "Model saved: ", "aiSaveFail": "Could not save the model (browser storage full?).", "aiNoModel": "No model '{p}' yet. Run lesson 12 to train and save one.", "aiOut": "The robot left the black line!", "rSave": "Save notebook to your computer (.ipynb) · Ctrl+S", "rNew": "New notebook", "saved": "Saved ", "newConfirm": "Create a new notebook? The current one will be replaced. Save it first if you want to keep it.", "newDone": "New notebook created", "run": "Run", "runT": "Run every cell (Shift+Enter: run selected cell)", "stop": "Stop", "stopT": "Stop the program and motors (Esc Esc)", "restart": "Restart", "restartT": "Restart kernel: clear all variables, reset the clock", "addCode": "Code", "addCodeT": "Add a code cell below", "addMd": "Note", "addMdT": "Add a note cell below", "clear": "Clear outputs", "clearT": "Clear the output of every cell", "copy": "Copy code", "copyT": "Copy all code", "splitAria": "Drag to resize", "vIso": "3D", "vTop": "Top", "vFront": "Front", "vSide": "Side", "vFollow": "Follow", "tLidar": "Lidar", "tTrail": "Trail", "tCam": "Camera", "tAxis": "Axes", "tAxisT": "Robot frame: x forward, y left, z up", "tLbl": "Parts", "tKey": "Drive", "tKeyT": "Drive with arrow keys / WASD", "home": "Back to start", "homeT": "Put the robot back at START and reset encoders, IMU and clock", "sceneLoading": "Building the 3D field…", "sceneFail": "The 3D library failed to load. Check your internet connection.", "pip": "CSI CAMERA · WIDE ANGLE", "teleop": "Drive: ↑ ↓ ← → or W A S D", "hint": "<kbd>Right-drag</kbd> rotate 3D · <kbd>Shift</kbd>+<kbd>Right-drag</kbd> or <kbd>Left-drag</kbd> on the floor: pan · <kbd>Scroll</kbd> zoom<br><kbd>Left-drag</kbd> the robot to move it, <kbd>Scroll</kbd> while dragging to rotate it · drop it near START to reset", "telePos": "Position x, y (cm)", "teleYaw": "Heading (yaw)", "teleMot": "Motors L / R", "teleEnc": "Encoder L / R", "teleLid": "Lidar 0°", "teleLine": "Camera line", "teleTime": "Run time", "noLine": "not seen", "stopped": " · idle", "pyLoading": "Python is still loading, one moment…", "restarted": "Kernel restarted: variables cleared, clock reset", "copied": "Code copied", "opened": "Opened ", "openFail": "Could not read the file: use a valid .ipynb or .py", "teleopToast": "Click the field, then drive with the arrow keys", "homeToast": "Robot is back at START · encoders, IMU and clock reset", "drawerLessons": "Sample lessons", "drawerApi": "jetbot library", "insert": "Insert", "cellCode": "Code cell", "cellMd": "Note cell", "cRun": "Run cell (Shift+Enter)", "cStop": "Stop", "cUp": "Move up", "cDown": "Move down", "cType": "Switch Code / Note", "cDel": "Delete cell", "grip": "Drag to reorder", "addRowCode": "+ Code cell", "addRowMd": "+ Note cell", "mdEmpty": "Double-click to write a note…", "trimmed": "…(truncated)", "interrupted": "the program was stopped. Motors are off.", "line": "line", "inputAria": "Input", "goal": "GOAL", "editNote": "Edit note (or double-click the note)", "doneNote": "Done, show the note", "step": "Step", "stepT": "Each click runs the next code cell (notes are skipped)", "stepDone": "All cells done, the next click starts again from the first cell", "stepBusy": "The previous cell is still running, wait or press Stop", "noFiles": "Reading or writing files is not allowed in the simulator.", "blockedMod": "This library is blocked in the simulator for safety.", "fileTooBig": "File too large (2 MB max).", "badNotebook": "Invalid notebook or too many cells (300 max)."}};
 let LANG = (() => { const v = store.get("jetbotlab.lang"); return v === "en" || v === "vi" ? v : "vi"; })();
 const t = k => (I18N[LANG] && I18N[LANG][k] !== undefined ? I18N[LANG][k] : (I18N.vi[k] !== undefined ? I18N.vi[k] : k));
 
@@ -22,6 +22,13 @@ function stadium(L, r){
   for (let i = 1; i < n; i++){ const a = Math.PI/2 + Math.PI*i/n; p.push([-L/2 + r*Math.cos(a), r*Math.sin(a)]); }
   return p;
 }
+function roundRect(hw, hh, r, n = 8){
+  const p = [];
+  [[hw-r, hh-r], [-hw+r, hh-r], [-hw+r, -hh+r], [hw-r, -hh+r]].forEach(([cx, cy], q) => {
+    for (let i = 0; i <= n; i++){ const a = (q + i/n)*Math.PI/2; p.push([cx + r*Math.cos(a), cy + r*Math.sin(a)]); }
+  });
+  return p;
+}
 const ZONE = { red:"#d8403a", green:"#3fa34d", blue:"#2f6fd0", yellow:"#e8b923" };
 const MAPS = {
   open: { name:"Sân trống · lưới 10 cm", start:{x:0, y:0, th:0}, boxes:[], line:null,
@@ -33,7 +40,10 @@ const MAPS = {
     line:null, zones:[{x:0.98,y:0.58,w:0.36,h:0.36,c:"green"}] },
   maze: { name:"Mê cung · bám tường", start:{x:-0.92, y:-0.55, th:Math.PI/2},
     boxes:[{x:-0.6,y:-0.25,w:0.03,d:1.1},{x:0,y:0.25,w:0.03,d:1.1},{x:0.6,y:-0.25,w:0.03,d:1.1}],
-    line:null, zones:[{x:0.92,y:-0.58,w:0.4,h:0.34,c:"green"}] }
+    line:null, zones:[{x:0.92,y:-0.58,w:0.4,h:0.34,c:"green"}] },
+  arena: { name:"Tránh vật cản AI · camera", start:{x:-0.7, y:-0.38, th:0}, fence:true,
+    boxes:[{x:-0.2,y:-0.36,w:0.14,d:0.14},{x:0.45,y:0.08,w:0.12,d:0.3},{x:-0.52,y:0.3,w:0.22,d:0.1},{x:0.08,y:0.42,w:0.12,d:0.12},{x:0.74,y:-0.4,w:0.16,d:0.16}],
+    line:roundRect(1.02, 0.64, 0.22), zones:[] }
 };
 let MAP = MAPS.open, MAPID = "open";
 function allBoxes(){
@@ -244,6 +254,63 @@ class Camera(object):
         return _sim.line_position() is not None
     def color(self):
         return _sim.color()
+    def _get_value(self):
+        return CameraImage(_sim.ai_capture())
+    value = property(_get_value)
+    def show(self):
+        _sim.ai_show(_sim.ai_capture())
+    def stop(self):
+        pass
+
+class CameraImage(object):
+    """Anh 224x224 chup tu camera robot"""
+    def __init__(self, fid):
+        self._id = fid
+    def show(self):
+        _sim.ai_show(self._id)
+    def __repr__(self):
+        return "<CameraImage 224x224>"
+
+class Dataset(object):
+    """Bo du lieu anh gom 2 thu muc: free va blocked"""
+    def __init__(self, name='dataset'):
+        self.name = str(name)
+    def add(self, label, image=None):
+        if label != 'free' and label != 'blocked':
+            raise ValueError("label: 'free' / 'blocked'")
+        return _sim.ai_add(self.name, label, -1 if image is None else image._id)
+    def add_free(self, image=None):
+        return self.add('free', image)
+    def add_blocked(self, image=None):
+        return self.add('blocked', image)
+    def count(self, label=None):
+        return _sim.ai_count(self.name, '' if label is None else str(label))
+    def __len__(self):
+        return self.count()
+    def remove_last(self):
+        _sim.ai_pop(self.name)
+    def clear(self):
+        _sim.ai_clear(self.name)
+    def show(self, n=12):
+        _sim.ai_gallery(self.name, int(n))
+    def widget(self):
+        _sim.ai_widget(self.name)
+
+class CollisionModel(object):
+    """Mang no-ron phan loai anh camera: blocked / free"""
+    def __init__(self, hidden=32):
+        self._h = _sim.ai_model_new(int(hidden))
+    def train(self, dataset, epochs=30, test_size=0.2, lr=0.001):
+        return _sim.ai_train(self._h, dataset.name, int(epochs), float(test_size), float(lr))
+    def save(self, path='collision_model.pth'):
+        _sim.ai_save(self._h, str(path))
+    def load(self, path='collision_model.pth'):
+        _sim.ai_load(self._h, str(path))
+        return self
+    def predict(self, image=None):
+        return _sim.ai_predict(self._h, -1 if image is None else image._id)
+    def __call__(self, image=None):
+        return self.predict(image)
 
 class OLED(object):
     def __init__(self, *args, **kwargs):
@@ -277,6 +344,22 @@ const SIM_JS = `var $builtinmodule = function(name){
   f("color", function(){ var c = S.color(); return c ? new Sk.builtin.str(c) : N; });
   f("oled_text", function(s, l){ S.oledText(js(s), js(l)); return N; });
   f("oled_clear", function(){ S.oledClear(); return N; });
+  var A = window.AIJS, I = function(v){ return new Sk.builtin.int_(v); };
+  function err(e){ return e instanceof Error ? new Sk.builtin.ValueError(e.message) : e; }
+  function g(n, fn){ m[n] = new Sk.builtin.func(function(){ try { return fn.apply(null, arguments); } catch (e) { throw err(e); } }); }
+  g("ai_capture", function(){ return I(A.capture()); });
+  g("ai_show", function(id){ A.show(js(id)); return N; });
+  g("ai_add", function(n, l, id){ return I(A.add(js(n), js(l), js(id))); });
+  g("ai_count", function(n, l){ return I(A.count(js(n), js(l))); });
+  g("ai_pop", function(n){ A.pop(js(n)); return N; });
+  g("ai_clear", function(n){ A.clear(js(n)); return N; });
+  g("ai_gallery", function(n, k){ A.gallery(js(n), js(k)); return N; });
+  g("ai_widget", function(n){ A.widget(js(n)); return N; });
+  g("ai_model_new", function(h){ return I(A.newModel(js(h))); });
+  g("ai_train", function(h, n, e, ts, lr){ return Sk.misceval.promiseToSuspension(A.train(js(h), js(n), js(e), js(ts), js(lr)).then(function(v){ return fl(v); }, function(e){ throw err(e); })); });
+  g("ai_save", function(h, p){ A.save(js(h), js(p)); return N; });
+  g("ai_load", function(h, p){ A.load(js(h), js(p)); return N; });
+  g("ai_predict", function(h, id){ return fl(A.predict(js(h), js(id))); });
   return m;
 };`;
 const TIME_JS = `var $builtinmodule = function(name){
@@ -341,12 +424,37 @@ const LESSONS = [
   ["code","from jetbot import Robot, Lidar, Camera\nimport time\nrobot = Robot()\nlidar = Lidar()\ncamera = Camera()\n\nKHOANG_CACH = 0.2\nKP = 1.2\nfor i in range(3000):\n    if camera.color() == \"green\":\n        print(\"Thoát mê cung!\")\n        break\n    truoc = lidar.min_distance(-20, 20)\n    phai = lidar.min_distance(-100, -60)\n    if truoc < 0.22:\n        robot.left(0.3)\n    else:\n        sai = max(-0.25, min(0.25, phai - KHOANG_CACH))\n        robot.set_motors(0.3 + KP * sai, 0.3 - KP * sai)\n    time.sleep(0.03)\nrobot.stop()"]]},
  { id:"l10", tag:"Tổng hợp", title:"10. OLED: hiển thị cảm biến", desc:"In giá trị cảm biến lên màn hình OLED trên robot.", map:"open", file:"bai-10-oled.ipynb", cells:[
   ["md","# Bài 10 · Màn hình OLED\nMàn OLED 128×32 có 4 dòng (`0` đến `3`). Chọn chế độ **Lái phím** rồi điều khiển robot để xem số liệu đổi theo."],
-  ["code","from jetbot import OLED, IMU, Encoder, Lidar\nimport time\noled = OLED()\nimu = IMU()\nenc = Encoder()\nlidar = Lidar()\n\nfor i in range(300):\n    oled.text(\"Yaw: \" + str(round(imu.yaw())) + \" do\", 0)\n    oled.text(\"Enc: \" + str(enc.left()) + \"/\" + str(enc.right()), 1)\n    oled.text(\"Truoc: \" + str(lidar.distance(0)) + \" m\", 2)\n    oled.text(\"t = \" + str(round(time.time(), 1)) + \" s\", 3)\n    time.sleep(0.1)"]]}
+  ["code","from jetbot import OLED, IMU, Encoder, Lidar\nimport time\noled = OLED()\nimu = IMU()\nenc = Encoder()\nlidar = Lidar()\n\nfor i in range(300):\n    oled.text(\"Yaw: \" + str(round(imu.yaw())) + \" do\", 0)\n    oled.text(\"Enc: \" + str(enc.left()) + \"/\" + str(enc.right()), 1)\n    oled.text(\"Truoc: \" + str(lidar.distance(0)) + \" m\", 2)\n    oled.text(\"t = \" + str(round(time.time(), 1)) + \" s\", 3)\n    time.sleep(0.1)"]]},
+ { id:"l11", tag:"AI", title:"11. AI tránh vật cản ①: thu thập dữ liệu", desc:"Chụp ảnh camera, gán nhãn free / blocked để dạy robot.", map:"arena", file:"bai-11-thu-thap-du-lieu.ipynb", cells:[
+  ["md", "# Bài 11 · Tránh vật cản bằng AI ①: Thu thập dữ liệu\nRobot chỉ dùng **camera** để tự tránh vật cản và **không vượt ra ngoài vạch đen**. Bài toán chia làm 3 bước, giống bộ notebook *collision_avoidance* của JetBot:\n1. **Thu thập dữ liệu** (bài này): chụp ảnh và gán nhãn `free` / `blocked`.\n2. **Huấn luyện** (bài 12): dạy mạng nơ-ron phân loại ảnh.\n3. **Chạy mô hình** (bài 13): robot tự chạy.\n\nÝ tưởng: tạo một **vùng an toàn** quanh robot. Vật cản hoặc vạch đen lọt vào vùng này thì gán `blocked`; robot còn đi thẳng được một đoạn thì gán `free`.\n> Khi quay tại chỗ, JetBot quay quanh **điểm giữa hai bánh xe** (gốc trục Oxyz), không phải tâm khung xe. Nếu phân vân, hãy chọn `blocked` (vùng an toàn rộng hơn)."],
+  ["md", "### Xem ảnh camera\nMạng nơ-ron nhận ảnh **224×224**. Chạy ô dưới để xem robot đang thấy gì."],
+  ["code", "from jetbot import Camera, Dataset\n\ncamera = Camera.instance(width=224, height=224)\ncamera.value.show()"],
+  ["md", "### Tạo bộ dữ liệu\nBộ dữ liệu `dataset` có 2 thư mục: `free` và `blocked`. Ảnh được lưu trong trình duyệt, mở lại trang vẫn còn."],
+  ["code", "dataset = Dataset('dataset')\nprint('free:', dataset.count('free'), '· blocked:', dataset.count('blocked'))"],
+  ["md", "### Chụp ảnh và gán nhãn\nChạy ô dưới để hiện ảnh camera trực tiếp và hai nút, rồi lặp lại:\n1. Đặt robot vào chỗ **bị chặn** (sát vật cản hoặc sát vạch đen), bấm **add blocked**.\n2. Đặt robot vào chỗ **thoáng**, bấm **add free**.\n\nCách đặt robot: **kéo robot bằng chuột trái**, **cuộn chuột khi đang kéo** để xoay hướng, hoặc bật **Lái phím**.\n\nMẹo: thử nhiều hướng, nhiều khoảng cách, vật cản bên trái / bên phải, vạch đen ở cạnh và ở góc. Nên có ít nhất **50 ảnh mỗi loại**, hai loại gần bằng nhau."],
+  ["code", "dataset.widget()"],
+  ["md", "> Lỡ gán sai thì bấm **Xoá ảnh vừa thêm**. Muốn làm lại từ đầu: `dataset.clear()`.\n\nĐủ ảnh rồi thì chuyển sang **Bài 12** để huấn luyện."]]},
+ { id:"l12", tag:"AI", title:"12. AI tránh vật cản ②: huấn luyện", desc:"Huấn luyện mạng nơ-ron phân loại ảnh free / blocked.", map:"arena", file:"bai-12-huan-luyen.ipynb", cells:[
+  ["md", "# Bài 12 · Tránh vật cản bằng AI ②: Huấn luyện mô hình\nTa dạy một **mạng nơ-ron** nhìn ảnh camera rồi đoán `blocked` hay `free`.\n\nJetBot thật dùng *PyTorch* với mạng **resnet18** chạy trên GPU. Trình duyệt không có GPU nên mô phỏng dùng mạng nhỏ hơn: ảnh thu về **16×16 điểm màu** (768 số) → **1 lớp ẩn 32 nơ-ron** → **2 lớp ra**: `blocked`, `free`. Cách học vẫn giống: chia tập train / test, lặp nhiều *epoch*, giữ lại mô hình tốt nhất."],
+  ["md", "### 1. Nạp bộ dữ liệu"],
+  ["code", "from jetbot import Dataset, CollisionModel\n\ndataset = Dataset('dataset')\nprint('free:', dataset.count('free'), '· blocked:', dataset.count('blocked'))\ndataset.show(16)    # 16 ảnh mới nhất"],
+  ["md", "### 2. Tạo mạng nơ-ron\nTrọng số ban đầu là số ngẫu nhiên, mô hình chưa biết gì."],
+  ["code", "model = CollisionModel(hidden=32)"],
+  ["md", "### 3. Huấn luyện\nMỗi *epoch*, mạng học hết ảnh train một lượt (ảnh được đổi độ sáng và lật ngang ngẫu nhiên, giống `ColorJitter`). Sau mỗi epoch in **độ chính xác trên tập test** (từ 0 đến 1). Mô hình tốt nhất được giữ lại."],
+  ["code", "NUM_EPOCHS = 30\nBEST_MODEL_PATH = 'collision_model.pth'\n\nbest_accuracy = model.train(dataset, epochs=NUM_EPOCHS, test_size=0.2)\nmodel.save(BEST_MODEL_PATH)\nprint('Độ chính xác tốt nhất:', best_accuracy)"],
+  ["md", "**Thử thách:** độ chính xác thấp? Thu thêm ảnh ở những chỗ robot hay đoán sai, thử `hidden=64` hoặc tăng `NUM_EPOCHS`.\n\nTiếp theo: **Bài 13** để robot tự chạy bằng mô hình vừa lưu."]]},
+ { id:"l13", tag:"AI", title:"13. AI tránh vật cản ③: chạy mô hình", desc:"Robot tự tránh vật cản, giữ trong vạch đen chỉ bằng camera.", map:"arena", file:"bai-13-chay-mo-hinh.ipynb", cells:[
+  ["md", "# Bài 13 · Tránh vật cản bằng AI ③: Chạy mô hình\nDùng mô hình đã huấn luyện để robot tự chạy. Mỗi khung hình, mạng nơ-ron đoán **xác suất bị chặn** `prob_blocked`:\n- `prob_blocked < 0.5`: đi thẳng.\n- ngược lại: quay trái.\n\nThanh **blocked** phía trên khung Camera hiện xác suất này theo thời gian thực."],
+  ["md", "### 1. Nạp mô hình"],
+  ["code", "from jetbot import Robot, Camera, CollisionModel\nimport time\n\nrobot = Robot()\ncamera = Camera.instance(width=224, height=224)\n\nmodel = CollisionModel()\nmodel.load('collision_model.pth')\nprint('prob_blocked hiện tại =', model.predict(camera.value))"],
+  ["md", "### 2. Chạy\n> Robot sẽ di chuyển! Bấm **Dừng** để dừng. Nếu robot ra ngoài vạch đen, sa bàn sẽ báo."],
+  ["code", "speed = 0.25\n\nfor i in range(1500):\n    prob_blocked = model.predict(camera.value)\n    if prob_blocked < 0.5:\n        robot.forward(speed)\n    else:\n        robot.left(speed)\n    time.sleep(0.05)\n\nrobot.stop()"],
+  ["md", "### Kết luận\nRobot vẫn va chạm hoặc ra ngoài vạch? Để ý **chỗ nó sai**, quay lại **Bài 11** thu thêm ảnh đúng những tình huống đó rồi huấn luyện lại. Dữ liệu càng nhiều và đa dạng, robot càng giỏi.\n\n**Thử thách:** tăng `speed` lên `0.4`. Cần thêm dữ liệu gì để robot vẫn an toàn?"]]}
 ];
-const LESSONS_EN = {"l1": {"tag": "Basics", "title": "1. Getting started: drive, turn, stop", "desc": "Create a Robot and control it with forward / left / stop.", "file": "lesson-01-getting-started.ipynb", "cells": [["md", "# Lesson 1 · Meet JetBot\nCreate the robot, then drive forward, turn and stop.\n- Select a cell and press **Shift + Enter** to run it and move to the next one.\n- Motor speed goes from `-1.0` (full reverse) to `1.0` (full forward)."], ["code", "from jetbot import Robot\nimport time\n\nrobot = Robot()\nprint(\"JetBot is ready!\")"], ["code", "robot.forward(0.4)   # drive forward at 40% speed\ntime.sleep(1.5)\nrobot.stop()"], ["code", "robot.left(0.3)      # spin left in place\ntime.sleep(0.74)     # ≈ 90°\nrobot.stop()"], ["md", "> The motors keep their last command until you call `robot.stop()`, just like the real robot. Press **Stop** if the robot keeps going."]]}, "l2": {"tag": "Loops", "title": "2. Loops: drive a square", "desc": "Use for to repeat 4 sides. Turn on Trail to see the shape.", "file": "lesson-02-square.ipynb", "cells": [["md", "# Lesson 2 · Drive a square\nRepeat 4 times: drive straight, then turn right. Turn on **Trail** and **Axes** to see the path and the robot's heading.\n\nTime to spin 90° in place: `t = (π/2 · d/2) / (speed · v_max)` with wheel spacing `d = 0.17 m`, `v_max = 0.6 m/s`. For `right(0.3)`: `t = 0.1335 / 0.18 ≈ 0.74 s`."], ["code", "from jetbot import Robot\nimport time\nrobot = Robot()\n\nfor side in range(4):\n    robot.forward(0.4)\n    time.sleep(1.2)\n    robot.right(0.3)\n    time.sleep(0.74)   # 0.74 s ≈ 90°\nrobot.stop()\nprint(\"Square done\")"]]}, "l3": {"tag": "Motors", "title": "3. Controlling each motor", "desc": "set_motors and left_motor.value to drive along an arc.", "file": "lesson-03-motors.ipynb", "cells": [["md", "# Lesson 3 · Differential drive\nWhen the two wheels spin at different speeds, the robot follows an arc. It turns away from the faster wheel."], ["code", "from jetbot import Robot\nimport time\nrobot = Robot()\n\nrobot.set_motors(0.5, 0.25)   # left is faster → turn right\ntime.sleep(3)\nrobot.stop()"], ["code", "# Same style as the original JetBot library\nrobot.left_motor.value = 0.25\nrobot.right_motor.value = 0.5\ntime.sleep(3)\nrobot.stop()"]]}, "l4": {"tag": "Encoder", "title": "4. Encoder: drive exactly 50 cm", "desc": "Count encoder ticks to measure distance instead of guessing time.", "file": "lesson-04-encoder.ipynb", "cells": [["md", "# Lesson 4 · Measuring distance with encoders\nOne wheel turn gives `1320` ticks. The wheel is `6.5 cm` across, so 1 tick ≈ `0.155 mm`. `enc.distance()` already converts to metres."], ["code", "from jetbot import Robot, Encoder\nimport time\nrobot = Robot()\nenc = Encoder()\nenc.reset()\n\nrobot.forward(0.35)\nwhile True:\n    left_m, right_m = enc.distance()\n    if (left_m + right_m) / 2 >= 0.50:\n        break\n    time.sleep(0.01)\nrobot.stop()\n\nprint(\"Encoder ticks (left, right):\", enc.read())\nprint(\"Distance:\", round((left_m + right_m) / 2 * 100, 1), \"cm\")"], ["md", "**Challenge:** write a function `drive_straight(cm)` and drive a 60 × 30 cm rectangle."]]}, "l5": {"tag": "IMU", "title": "5. IMU: turn exactly 90°", "desc": "Read the yaw angle from the IMU, then add a P controller.", "file": "lesson-05-imu.ipynb", "cells": [["md", "# Lesson 5 · Turning with the IMU\n`imu.yaw()` returns the angle turned (degrees) since the last `reset()`. Turning left is positive."], ["code", "from jetbot import Robot, IMU\nimport time\nrobot = Robot()\nimu = IMU()\nimu.reset()\n\nrobot.left(0.25)\nwhile imu.yaw() < 90:\n    time.sleep(0.01)\nrobot.stop()\ntime.sleep(0.3)\nprint(\"Final angle:\", imu.yaw(), \"degrees\")"], ["code", "# P controller: the closer to the target, the slower it turns\ntarget = imu.yaw() + 90\nKP = 0.012\nwhile True:\n    error = target - imu.yaw()\n    if abs(error) < 0.5:\n        break\n    speed = max(-0.4, min(0.4, KP * error))\n    robot.set_motors(-speed, speed)\n    time.sleep(0.02)\nrobot.stop()\nprint(\"Error:\", round(target - imu.yaw(), 2), \"degrees\")"]]}, "l6": {"tag": "Lidar", "title": "6. Lidar: read a 360° scan", "desc": "Each item is the distance (m) at one angle.", "file": "lesson-06-lidar.ipynb", "cells": [["md", "# Lesson 6 · Reading the Lidar\n`lidar.scan()` returns a list of 360 distances (metres). The index is the angle: `0` front, `90` left, `180` back, `270` right."], ["code", "from jetbot import Lidar\nlidar = Lidar()\n\nscan = lidar.scan()\nprint(\"Points:\", len(scan))\nprint(\"Front (0°):  \", scan[0], \"m\")\nprint(\"Left  (90°): \", scan[90], \"m\")\nprint(\"Back  (180°):\", scan[180], \"m\")\nprint(\"Right (270°):\", scan[270], \"m\")\nprint(\"Closest within ±30° in front:\", lidar.min_distance(-30, 30), \"m\")"]]}, "l7": {"tag": "Lidar", "title": "7. Lidar: avoid obstacles", "desc": "Detect obstacles ahead and turn toward the clearer side.", "file": "lesson-07-obstacles.ipynb", "cells": [["md", "# Lesson 7 · Obstacle avoidance\nIf something is closer than `0.25 m` ahead, compare both sides and turn toward the clearer one. Goal: reach the **green** square in the top-right corner."], ["code", "from jetbot import Robot, Lidar, Camera\nimport time\nrobot = Robot()\nlidar = Lidar()\ncamera = Camera()\n\nfor step in range(800):\n    if camera.color() == \"green\":\n        print(\"Reached the goal after\", step, \"steps\")\n        break\n    front = lidar.min_distance(-25, 25)\n    if front < 0.25:\n        left = lidar.min_distance(30, 90)\n        right = lidar.min_distance(-90, -30)\n        if left > right:\n            robot.left(0.3)\n        else:\n            robot.right(0.3)\n    else:\n        robot.forward(0.35)\n    time.sleep(0.05)\nrobot.stop()"]]}, "l8": {"tag": "Camera", "title": "8. Camera: line following", "desc": "A P controller that follows the black line on the field.", "file": "lesson-08-line-following.ipynb", "cells": [["md", "# Lesson 8 · Line following with the camera\n`camera.line_position()` tells you how far the black line is off centre: `-1` left, `0` centre, `+1` right, `None` if no line is seen."], ["code", "from jetbot import Robot, Camera\nimport time\nrobot = Robot()\ncamera = Camera()\nprint(\"Current line offset:\", camera.line_position())"], ["code", "SPEED = 0.3\nKP = 0.35\nfor i in range(1200):\n    offset = camera.line_position()\n    if offset is None:\n        robot.set_motors(0.15, -0.15)   # line lost: spin to search\n    else:\n        robot.set_motors(SPEED + KP * offset, SPEED - KP * offset)\n    if camera.color() == \"red\" and i > 100:\n        print(\"Back at the red mark, one lap done!\")\n        break\n    time.sleep(0.03)\nrobot.stop()"], ["md", "**Challenge:** raise `SPEED` to `0.5`. Does the robot still follow the line? How should you change `KP`?"]]}, "l9": {"tag": "Challenge", "title": "9. Maze: right-wall following", "desc": "Keep a fixed distance to the right wall to escape the maze.", "file": "lesson-09-maze.ipynb", "cells": [["md", "# Lesson 9 · Escape the maze\nRight-hand rule: always keep a wall on your right. The goal is the **green** square in the bottom-right corner. Tune `DISTANCE` and `KP` for a smoother run."], ["code", "from jetbot import Robot, Lidar, Camera\nimport time\nrobot = Robot()\nlidar = Lidar()\ncamera = Camera()\n\nDISTANCE = 0.2\nKP = 1.2\nfor i in range(3000):\n    if camera.color() == \"green\":\n        print(\"Out of the maze!\")\n        break\n    front = lidar.min_distance(-20, 20)\n    right = lidar.min_distance(-100, -60)\n    if front < 0.22:\n        robot.left(0.3)\n    else:\n        err = max(-0.25, min(0.25, right - DISTANCE))\n        robot.set_motors(0.3 + KP * err, 0.3 - KP * err)\n    time.sleep(0.03)\nrobot.stop()"]]}, "l10": {"tag": "Projects", "title": "10. OLED: show sensor data", "desc": "Print sensor values on the robot's OLED screen.", "file": "lesson-10-oled.ipynb", "cells": [["md", "# Lesson 10 · OLED display\nThe 128×32 OLED has 4 lines (`0` to `3`). Turn on **Drive** mode and steer the robot to watch the numbers change."], ["code", "from jetbot import OLED, IMU, Encoder, Lidar\nimport time\noled = OLED()\nimu = IMU()\nenc = Encoder()\nlidar = Lidar()\n\nfor i in range(300):\n    oled.text(\"Yaw: \" + str(round(imu.yaw())) + \" deg\", 0)\n    oled.text(\"Enc: \" + str(enc.left()) + \"/\" + str(enc.right()), 1)\n    oled.text(\"Front: \" + str(lidar.distance(0)) + \" m\", 2)\n    oled.text(\"t = \" + str(round(time.time(), 1)) + \" s\", 3)\n    time.sleep(0.1)"]]}};
+const LESSONS_EN = {"l1": {"tag": "Basics", "title": "1. Getting started: drive, turn, stop", "desc": "Create a Robot and control it with forward / left / stop.", "file": "lesson-01-getting-started.ipynb", "cells": [["md", "# Lesson 1 · Meet JetBot\nCreate the robot, then drive forward, turn and stop.\n- Select a cell and press **Shift + Enter** to run it and move to the next one.\n- Motor speed goes from `-1.0` (full reverse) to `1.0` (full forward)."], ["code", "from jetbot import Robot\nimport time\n\nrobot = Robot()\nprint(\"JetBot is ready!\")"], ["code", "robot.forward(0.4)   # drive forward at 40% speed\ntime.sleep(1.5)\nrobot.stop()"], ["code", "robot.left(0.3)      # spin left in place\ntime.sleep(0.74)     # ≈ 90°\nrobot.stop()"], ["md", "> The motors keep their last command until you call `robot.stop()`, just like the real robot. Press **Stop** if the robot keeps going."]]}, "l2": {"tag": "Loops", "title": "2. Loops: drive a square", "desc": "Use for to repeat 4 sides. Turn on Trail to see the shape.", "file": "lesson-02-square.ipynb", "cells": [["md", "# Lesson 2 · Drive a square\nRepeat 4 times: drive straight, then turn right. Turn on **Trail** and **Axes** to see the path and the robot's heading.\n\nTime to spin 90° in place: `t = (π/2 · d/2) / (speed · v_max)` with wheel spacing `d = 0.17 m`, `v_max = 0.6 m/s`. For `right(0.3)`: `t = 0.1335 / 0.18 ≈ 0.74 s`."], ["code", "from jetbot import Robot\nimport time\nrobot = Robot()\n\nfor side in range(4):\n    robot.forward(0.4)\n    time.sleep(1.2)\n    robot.right(0.3)\n    time.sleep(0.74)   # 0.74 s ≈ 90°\nrobot.stop()\nprint(\"Square done\")"]]}, "l3": {"tag": "Motors", "title": "3. Controlling each motor", "desc": "set_motors and left_motor.value to drive along an arc.", "file": "lesson-03-motors.ipynb", "cells": [["md", "# Lesson 3 · Differential drive\nWhen the two wheels spin at different speeds, the robot follows an arc. It turns away from the faster wheel."], ["code", "from jetbot import Robot\nimport time\nrobot = Robot()\n\nrobot.set_motors(0.5, 0.25)   # left is faster → turn right\ntime.sleep(3)\nrobot.stop()"], ["code", "# Same style as the original JetBot library\nrobot.left_motor.value = 0.25\nrobot.right_motor.value = 0.5\ntime.sleep(3)\nrobot.stop()"]]}, "l4": {"tag": "Encoder", "title": "4. Encoder: drive exactly 50 cm", "desc": "Count encoder ticks to measure distance instead of guessing time.", "file": "lesson-04-encoder.ipynb", "cells": [["md", "# Lesson 4 · Measuring distance with encoders\nOne wheel turn gives `1320` ticks. The wheel is `6.5 cm` across, so 1 tick ≈ `0.155 mm`. `enc.distance()` already converts to metres."], ["code", "from jetbot import Robot, Encoder\nimport time\nrobot = Robot()\nenc = Encoder()\nenc.reset()\n\nrobot.forward(0.35)\nwhile True:\n    left_m, right_m = enc.distance()\n    if (left_m + right_m) / 2 >= 0.50:\n        break\n    time.sleep(0.01)\nrobot.stop()\n\nprint(\"Encoder ticks (left, right):\", enc.read())\nprint(\"Distance:\", round((left_m + right_m) / 2 * 100, 1), \"cm\")"], ["md", "**Challenge:** write a function `drive_straight(cm)` and drive a 60 × 30 cm rectangle."]]}, "l5": {"tag": "IMU", "title": "5. IMU: turn exactly 90°", "desc": "Read the yaw angle from the IMU, then add a P controller.", "file": "lesson-05-imu.ipynb", "cells": [["md", "# Lesson 5 · Turning with the IMU\n`imu.yaw()` returns the angle turned (degrees) since the last `reset()`. Turning left is positive."], ["code", "from jetbot import Robot, IMU\nimport time\nrobot = Robot()\nimu = IMU()\nimu.reset()\n\nrobot.left(0.25)\nwhile imu.yaw() < 90:\n    time.sleep(0.01)\nrobot.stop()\ntime.sleep(0.3)\nprint(\"Final angle:\", imu.yaw(), \"degrees\")"], ["code", "# P controller: the closer to the target, the slower it turns\ntarget = imu.yaw() + 90\nKP = 0.012\nwhile True:\n    error = target - imu.yaw()\n    if abs(error) < 0.5:\n        break\n    speed = max(-0.4, min(0.4, KP * error))\n    robot.set_motors(-speed, speed)\n    time.sleep(0.02)\nrobot.stop()\nprint(\"Error:\", round(target - imu.yaw(), 2), \"degrees\")"]]}, "l6": {"tag": "Lidar", "title": "6. Lidar: read a 360° scan", "desc": "Each item is the distance (m) at one angle.", "file": "lesson-06-lidar.ipynb", "cells": [["md", "# Lesson 6 · Reading the Lidar\n`lidar.scan()` returns a list of 360 distances (metres). The index is the angle: `0` front, `90` left, `180` back, `270` right."], ["code", "from jetbot import Lidar\nlidar = Lidar()\n\nscan = lidar.scan()\nprint(\"Points:\", len(scan))\nprint(\"Front (0°):  \", scan[0], \"m\")\nprint(\"Left  (90°): \", scan[90], \"m\")\nprint(\"Back  (180°):\", scan[180], \"m\")\nprint(\"Right (270°):\", scan[270], \"m\")\nprint(\"Closest within ±30° in front:\", lidar.min_distance(-30, 30), \"m\")"]]}, "l7": {"tag": "Lidar", "title": "7. Lidar: avoid obstacles", "desc": "Detect obstacles ahead and turn toward the clearer side.", "file": "lesson-07-obstacles.ipynb", "cells": [["md", "# Lesson 7 · Obstacle avoidance\nIf something is closer than `0.25 m` ahead, compare both sides and turn toward the clearer one. Goal: reach the **green** square in the top-right corner."], ["code", "from jetbot import Robot, Lidar, Camera\nimport time\nrobot = Robot()\nlidar = Lidar()\ncamera = Camera()\n\nfor step in range(800):\n    if camera.color() == \"green\":\n        print(\"Reached the goal after\", step, \"steps\")\n        break\n    front = lidar.min_distance(-25, 25)\n    if front < 0.25:\n        left = lidar.min_distance(30, 90)\n        right = lidar.min_distance(-90, -30)\n        if left > right:\n            robot.left(0.3)\n        else:\n            robot.right(0.3)\n    else:\n        robot.forward(0.35)\n    time.sleep(0.05)\nrobot.stop()"]]}, "l8": {"tag": "Camera", "title": "8. Camera: line following", "desc": "A P controller that follows the black line on the field.", "file": "lesson-08-line-following.ipynb", "cells": [["md", "# Lesson 8 · Line following with the camera\n`camera.line_position()` tells you how far the black line is off centre: `-1` left, `0` centre, `+1` right, `None` if no line is seen."], ["code", "from jetbot import Robot, Camera\nimport time\nrobot = Robot()\ncamera = Camera()\nprint(\"Current line offset:\", camera.line_position())"], ["code", "SPEED = 0.3\nKP = 0.35\nfor i in range(1200):\n    offset = camera.line_position()\n    if offset is None:\n        robot.set_motors(0.15, -0.15)   # line lost: spin to search\n    else:\n        robot.set_motors(SPEED + KP * offset, SPEED - KP * offset)\n    if camera.color() == \"red\" and i > 100:\n        print(\"Back at the red mark, one lap done!\")\n        break\n    time.sleep(0.03)\nrobot.stop()"], ["md", "**Challenge:** raise `SPEED` to `0.5`. Does the robot still follow the line? How should you change `KP`?"]]}, "l9": {"tag": "Challenge", "title": "9. Maze: right-wall following", "desc": "Keep a fixed distance to the right wall to escape the maze.", "file": "lesson-09-maze.ipynb", "cells": [["md", "# Lesson 9 · Escape the maze\nRight-hand rule: always keep a wall on your right. The goal is the **green** square in the bottom-right corner. Tune `DISTANCE` and `KP` for a smoother run."], ["code", "from jetbot import Robot, Lidar, Camera\nimport time\nrobot = Robot()\nlidar = Lidar()\ncamera = Camera()\n\nDISTANCE = 0.2\nKP = 1.2\nfor i in range(3000):\n    if camera.color() == \"green\":\n        print(\"Out of the maze!\")\n        break\n    front = lidar.min_distance(-20, 20)\n    right = lidar.min_distance(-100, -60)\n    if front < 0.22:\n        robot.left(0.3)\n    else:\n        err = max(-0.25, min(0.25, right - DISTANCE))\n        robot.set_motors(0.3 + KP * err, 0.3 - KP * err)\n    time.sleep(0.03)\nrobot.stop()"]]}, "l10": {"tag": "Projects", "title": "10. OLED: show sensor data", "desc": "Print sensor values on the robot's OLED screen.", "file": "lesson-10-oled.ipynb", "cells": [["md", "# Lesson 10 · OLED display\nThe 128×32 OLED has 4 lines (`0` to `3`). Turn on **Drive** mode and steer the robot to watch the numbers change."], ["code", "from jetbot import OLED, IMU, Encoder, Lidar\nimport time\noled = OLED()\nimu = IMU()\nenc = Encoder()\nlidar = Lidar()\n\nfor i in range(300):\n    oled.text(\"Yaw: \" + str(round(imu.yaw())) + \" deg\", 0)\n    oled.text(\"Enc: \" + str(enc.left()) + \"/\" + str(enc.right()), 1)\n    oled.text(\"Front: \" + str(lidar.distance(0)) + \" m\", 2)\n    oled.text(\"t = \" + str(round(time.time(), 1)) + \" s\", 3)\n    time.sleep(0.1)"]]}, "l11": {"tag": "AI", "title": "11. AI obstacle avoidance ①: data collection", "desc": "Take camera snapshots and label them free / blocked.", "file": "lesson-11-data-collection.ipynb", "cells": [["md", "# Lesson 11 · AI obstacle avoidance ①: Data collection\nThe robot uses only its **camera** to avoid obstacles and **stay inside the black line**. Like JetBot's *collision_avoidance* notebooks, the job has 3 steps:\n1. **Data collection** (this lesson): take snapshots and label them `free` / `blocked`.\n2. **Training** (lesson 12): teach a neural network to classify the images.\n3. **Run the model** (lesson 13): the robot drives by itself.\n\nThe idea: imagine a **safety bubble** around the robot. If an obstacle or the black line is inside it, label `blocked`; if the robot can still drive forward a bit, label `free`.\n> When JetBot spins in place it turns about the **point between the two wheels** (the Oxyz origin), not the centre of the chassis. If in doubt, choose `blocked` (a bigger bubble)."], ["md", "### See the camera image\nThe network takes **224×224** images. Run the cell below to see what the robot sees."], ["code", "from jetbot import Camera, Dataset\n\ncamera = Camera.instance(width=224, height=224)\ncamera.value.show()"], ["md", "### Create the dataset\nThe `dataset` has 2 folders: `free` and `blocked`. Images are kept in the browser, so they survive a page reload."], ["code", "dataset = Dataset('dataset')\nprint('free:', dataset.count('free'), '· blocked:', dataset.count('blocked'))"], ["md", "### Take and label snapshots\nRun the cell below to show the live camera and two buttons, then repeat:\n1. Put the robot where it is **blocked** (close to an obstacle or the black line), press **add blocked**.\n2. Put the robot where it is **free**, press **add free**.\n\nTo place the robot: **drag it with the left mouse button**, **scroll while dragging** to rotate it, or turn on **Drive**.\n\nTips: try many headings and distances, obstacles on the left and right, the line along edges and in corners. Aim for at least **50 images per class**, roughly balanced."], ["code", "dataset.widget()"], ["md", "> Labelled one wrong? Press **Remove last image**. To start over: `dataset.clear()`.\n\nOnce you have enough images, go to **Lesson 12** to train."]]}, "l12": {"tag": "AI", "title": "12. AI obstacle avoidance ②: training", "desc": "Train a neural network to classify free / blocked images.", "file": "lesson-12-train-model.ipynb", "cells": [["md", "# Lesson 12 · AI obstacle avoidance ②: Train the model\nWe teach a **neural network** to look at a camera image and decide `blocked` or `free`.\n\nThe real JetBot uses *PyTorch* with a **resnet18** on a GPU. The browser has no GPU, so the simulator uses a smaller network: the image is reduced to **16×16 colour pixels** (768 numbers) → **1 hidden layer of 32 neurons** → **2 outputs**: `blocked`, `free`. The training recipe is the same: split train / test, repeat for several *epochs*, keep the best model."], ["md", "### 1. Load the dataset"], ["code", "from jetbot import Dataset, CollisionModel\n\ndataset = Dataset('dataset')\nprint('free:', dataset.count('free'), '· blocked:', dataset.count('blocked'))\ndataset.show(16)    # the 16 newest images"], ["md", "### 2. Create the network\nThe weights start as random numbers, so the model knows nothing yet."], ["code", "model = CollisionModel(hidden=32)"], ["md", "### 3. Train\nEach *epoch* the network sees every training image once (with random brightness changes and horizontal flips, like `ColorJitter`). After each epoch it prints the **test accuracy** (0 to 1). The best model is kept."], ["code", "NUM_EPOCHS = 30\nBEST_MODEL_PATH = 'collision_model.pth'\n\nbest_accuracy = model.train(dataset, epochs=NUM_EPOCHS, test_size=0.2)\nmodel.save(BEST_MODEL_PATH)\nprint('Best accuracy:', best_accuracy)"], ["md", "**Challenge:** low accuracy? Collect more images where the robot gets it wrong, try `hidden=64` or more `NUM_EPOCHS`.\n\nNext: **Lesson 13** lets the robot drive with the saved model."]]}, "l13": {"tag": "AI", "title": "13. AI obstacle avoidance ③: run the model", "desc": "The robot avoids obstacles and stays inside the line using only the camera.", "file": "lesson-13-run-model.ipynb", "cells": [["md", "# Lesson 13 · AI obstacle avoidance ③: Run the model\nUse the trained model to drive. For every frame the network predicts the **probability of being blocked**, `prob_blocked`:\n- `prob_blocked < 0.5`: drive forward.\n- otherwise: turn left.\n\nThe **blocked** bar above the Camera view shows this probability live."], ["md", "### 1. Load the model"], ["code", "from jetbot import Robot, Camera, CollisionModel\nimport time\n\nrobot = Robot()\ncamera = Camera.instance(width=224, height=224)\n\nmodel = CollisionModel()\nmodel.load('collision_model.pth')\nprint('current prob_blocked =', model.predict(camera.value))"], ["md", "### 2. Run\n> The robot will move! Press **Stop** to stop it. The field warns you if the robot leaves the black line."], ["code", "speed = 0.25\n\nfor i in range(1500):\n    prob_blocked = model.predict(camera.value)\n    if prob_blocked < 0.5:\n        robot.forward(speed)\n    else:\n        robot.left(speed)\n    time.sleep(0.05)\n\nrobot.stop()"], ["md", "### Conclusion\nStill bumping or leaving the line? Watch **where it fails**, go back to **Lesson 11** to collect images of exactly those situations, then train again. More varied data makes a better robot.\n\n**Challenge:** raise `speed` to `0.4`. What extra data keeps the robot safe?"]]}};
 const lessonIn = (l, lang) => lang === "en" ? Object.assign({}, l, LESSONS_EN[l.id]) : l;
-const API_EN = {"robot = Robot()": "Two DCGM-370 motors with encoders, Ø 65 mm wheels, 17 cm apart.", "robot.forward(0.4)": "Drive forward. Optional duration=seconds stops automatically.", "robot.backward(0.4)": "Drive backward.", "robot.left(0.3)": "Spin left in place (left wheel back, right wheel forward).", "robot.right(0.3)": "Spin right in place.", "robot.set_motors(0.4, 0.2)": "Set left and right speeds separately (-1.0 … 1.0).", "robot.left_motor.value = 0.3": "Read / write each motor's speed.", "robot.stop()": "Stop both motors.", "robot.bumped()": "True if the robot just hit something.", "enc = Encoder()": "Optical encoder, 1320 ticks per wheel turn, Ø 65 mm wheel.", "enc.read()": "(left ticks, right ticks).", "enc.distance()": "(left metres, right metres) since the last reset.", "enc.speed()": "Wheel speed (m/s).", "enc.reset()": "Reset the counters to 0.", "imu = IMU()": "9-axis attitude sensor on the driver board.", "imu.yaw()": "Angle turned (degrees), left is positive, does not wrap back to 0.", "imu.heading()": "Heading 0 … 360 degrees.", "imu.gyro()": "Turn rate around the z axis (degrees/s).", "imu.accel()": "Acceleration (ax, ay, az) m/s².", "imu.reset()": "Set yaw to 0.", "lidar = Lidar()": "360° scanning Lidar, 12 m range.", "lidar.scan()": "List of 360 distances (m), index = angle, 0 is the front.", "lidar.distance(90)": "Distance at one angle (90 = left, -90 = right).", "lidar.min_distance(-30, 30)": "Smallest distance within an arc of angles.", "camera = Camera()": "CSI camera at the front of the robot.", "camera.line_position()": "Black line offset: -1 left … +1 right, None if the line is lost.", "camera.sees_line()": "True if the line is visible.", "camera.color()": "Colour of the square under the camera: \"red\", \"green\", \"blue\", \"yellow\" or None.", "oled = OLED()": "4-line OLED screen on the robot.", "oled.text(\"Xin chao\", 0)": "Write text on line 0 … 3.", "oled.clear()": "Clear the screen.", "time.sleep(0.5)": "Wait in simulated time (seconds).", "time.time()": "Simulated time (seconds), reset by Restart or Back to start."};
-const MAP_EN = {"open": "Open field · 10 cm grid", "line": "Line track", "obst": "Obstacles · Lidar", "maze": "Maze · wall following"};
+const API_EN = {"robot = Robot()": "Two DCGM-370 motors with encoders, Ø 65 mm wheels, 17 cm apart.", "robot.forward(0.4)": "Drive forward. Optional duration=seconds stops automatically.", "robot.backward(0.4)": "Drive backward.", "robot.left(0.3)": "Spin left in place (left wheel back, right wheel forward).", "robot.right(0.3)": "Spin right in place.", "robot.set_motors(0.4, 0.2)": "Set left and right speeds separately (-1.0 … 1.0).", "robot.left_motor.value = 0.3": "Read / write each motor's speed.", "robot.stop()": "Stop both motors.", "robot.bumped()": "True if the robot just hit something.", "enc = Encoder()": "Optical encoder, 1320 ticks per wheel turn, Ø 65 mm wheel.", "enc.read()": "(left ticks, right ticks).", "enc.distance()": "(left metres, right metres) since the last reset.", "enc.speed()": "Wheel speed (m/s).", "enc.reset()": "Reset the counters to 0.", "imu = IMU()": "9-axis attitude sensor on the driver board.", "imu.yaw()": "Angle turned (degrees), left is positive, does not wrap back to 0.", "imu.heading()": "Heading 0 … 360 degrees.", "imu.gyro()": "Turn rate around the z axis (degrees/s).", "imu.accel()": "Acceleration (ax, ay, az) m/s².", "imu.reset()": "Set yaw to 0.", "lidar = Lidar()": "360° scanning Lidar, 12 m range.", "lidar.scan()": "List of 360 distances (m), index = angle, 0 is the front.", "lidar.distance(90)": "Distance at one angle (90 = left, -90 = right).", "lidar.min_distance(-30, 30)": "Smallest distance within an arc of angles.", "camera = Camera()": "CSI camera at the front of the robot.", "camera.line_position()": "Black line offset: -1 left … +1 right, None if the line is lost.", "camera.sees_line()": "True if the line is visible.", "camera.color()": "Colour of the square under the camera: \"red\", \"green\", \"blue\", \"yellow\" or None.", "oled = OLED()": "4-line OLED screen on the robot.", "oled.text(\"Xin chao\", 0)": "Write text on line 0 … 3.", "oled.clear()": "Clear the screen.", "camera.value": "Take a 224×224 snapshot from the robot camera.", "camera.value.show()": "Show the camera image in the output.", "dataset = Dataset('dataset')": "Image dataset with two folders, free and blocked, kept in the browser.", "dataset.widget()": "Show the live camera and the add free / add blocked buttons.", "dataset.add_free()": "Take a snapshot and label it free.", "dataset.add_blocked()": "Take a snapshot and label it blocked.", "dataset.count('free')": "Number of images with a label (empty: all).", "dataset.show(12)": "Show the newest images.", "dataset.clear()": "Delete every image.", "model = CollisionModel()": "Neural network 768 → 32 → 2 that classifies blocked / free.", "model.train(dataset, epochs=30)": "Train, print accuracy per epoch, return the best accuracy.", "model.save('collision_model.pth')": "Save the model in the browser.", "model.load('collision_model.pth')": "Load a saved model.", "model.predict(camera.value)": "Probability of being blocked, 0 to 1.", "time.sleep(0.5)": "Wait in simulated time (seconds).", "time.time()": "Simulated time (seconds), reset by Restart or Back to start."};
+const MAP_EN = {"open": "Open field · 10 cm grid", "line": "Line track", "obst": "Obstacles · Lidar", "maze": "Maze · wall following", "arena": "AI obstacle avoidance · camera"};
 const mapName = id => LANG === "en" ? MAP_EN[id] : MAPS[id].name;
 const ANCHOR_EN = {"Camera góc rộng": "Wide-angle camera", "trên mạch Waveshare": "on Waveshare board", "Động cơ + encoder": "Motor + encoder", "trái": "left", "phải": "right", "Pin 3×18650": "3×18650 battery", "Bánh tự do": "Caster", "trước": "front", "sau": "rear"};
 const tA = s => LANG === "en" ? (ANCHOR_EN[s] || s) : s;
@@ -388,6 +496,7 @@ const API = [
   ["oled = OLED()", "Màn hình OLED 4 dòng trên robot."],
   ["oled.text(\"Xin chao\", 0)", "Ghi chữ lên dòng 0 … 3."],
   ["oled.clear()", "Xoá màn hình."]]],
+ ["AI", "from jetbot import Dataset, CollisionModel", [["camera.value", "Chụp ảnh 224×224 từ camera robot."], ["camera.value.show()", "Hiện ảnh camera trong ô kết quả."], ["dataset = Dataset('dataset')", "Bộ dữ liệu ảnh gồm 2 thư mục free và blocked, lưu trong trình duyệt."], ["dataset.widget()", "Hiện camera trực tiếp và nút add free / add blocked."], ["dataset.add_free()", "Chụp ảnh hiện tại, gán nhãn free."], ["dataset.add_blocked()", "Chụp ảnh hiện tại, gán nhãn blocked."], ["dataset.count('free')", "Số ảnh của một nhãn (bỏ trống: tất cả)."], ["dataset.show(12)", "Xem các ảnh mới nhất."], ["dataset.clear()", "Xoá toàn bộ ảnh."], ["model = CollisionModel()", "Mạng nơ-ron 768 → 32 → 2 phân loại blocked / free."], ["model.train(dataset, epochs=30)", "Huấn luyện, in độ chính xác mỗi epoch, trả về độ chính xác tốt nhất."], ["model.save('collision_model.pth')", "Lưu mô hình vào trình duyệt."], ["model.load('collision_model.pth')", "Nạp mô hình đã lưu."], ["model.predict(camera.value)", "Xác suất bị chặn, từ 0 đến 1."]]],
  ["time", "import time", [
   ["time.sleep(0.5)", "Chờ theo thời gian mô phỏng (giây)."],
   ["time.time()", "Thời gian mô phỏng (giây), về 0 khi Khởi động lại hoặc Về xuất phát."]]]
@@ -1221,7 +1330,7 @@ function renderMapSel(){ mapSel.innerHTML = Object.keys(MAPS).map(k => `<option 
 renderMapSel();
 function setMap(id){
   if (!MAPS[id]) id = "open";
-  MAPID = id; MAP = MAPS[id]; BOXES = allBoxes(); mapSel.value = id;
+  MAPID = id; MAP = MAPS[id]; BOXES = allBoxes(); mapSel.value = id; AI.inside = true;
   if (K.running) stopAll(); else SIM.setMotors(0, 0);
   SIM.place(MAP.start, true); SIM.resetClock(); clearTrail();
   if (renderer) buildField();
@@ -1230,16 +1339,192 @@ function setMap(id){
 mapSel.onchange = () => setMap(mapSel.value);
 let SPEED = 1; $("#speedSel").onchange = e => SPEED = Number(e.target.value);
 
+/* ---------- AI tránh vật cản: ảnh camera, bộ dữ liệu free/blocked, mạng nơ-ron ---------- */
+// Thay cho resnet18 + GPU của bản gốc: mạng 2 lớp (16×16×3 → 32 → 2) huấn luyện ngay trong trình duyệt.
+const AI = { N: 16, S: 112, sets: {}, models: [], frames: new Map(), fid: 0, prob: null, probT: -1e9, inside: true };
+const AI_MEAN = [0.485, 0.456, 0.406], AI_STD = [0.229, 0.224, 0.225];
+let aiRT, aiCam, aiBuf;
+const b64e = u8 => { let s = ""; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000)); return btoa(s); };
+const b64d = s => { const b = atob(s), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; };
+const f32e = a => b64e(new Uint8Array(a.buffer, a.byteOffset, a.byteLength));
+const f32d = s => { const u = b64d(s); return new Float32Array(u.buffer, 0, u.length >> 2); };
+function aiRender(){
+  if (!renderer) throw new Error(t("aiNoScene"));
+  const S = AI.S, N = AI.N, B = S / N;
+  if (!aiRT){ aiRT = new THREE.WebGLRenderTarget(S, S); aiCam = new THREE.PerspectiveCamera(64, 1, 0.01, 8); aiBuf = new Uint8Array(S*S*4); }
+  robot3d.g.position.set(SIM.x, 0, -SIM.y); robot3d.g.rotation.y = SIM.th; robot3d.g.updateMatrixWorld(true);
+  const cp = new THREE.Vector3(0.021, 0, 0).applyMatrix4(robot3d.camG.matrixWorld), lt = new THREE.Vector3(0.5, 0, 0).applyMatrix4(robot3d.camG.matrixWorld);
+  aiCam.position.copy(cp); aiCam.up.set(0, 1, 0); aiCam.lookAt(lt);
+  const hide = [lidarPts, lidarPts.rays, trail, robot3d.axes], vis = hide.map(o => o.visible); hide.forEach(o => o.visible = false);
+  renderer.setRenderTarget(aiRT); renderer.setScissorTest(false); renderer.clear(); renderer.render(scene, aiCam);
+  renderer.readRenderTargetPixels(aiRT, 0, 0, S, S, aiBuf); renderer.setRenderTarget(null);
+  hide.forEach((o, i) => o.visible = vis[i]);
+  const img = new ImageData(S, S);
+  for (let y = 0; y < S; y++) img.data.set(aiBuf.subarray((S-1-y)*S*4, (S-y)*S*4), y*S*4);   // GL đọc từ dưới lên
+  const feat = new Uint8Array(N*N*3);
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) for (let c = 0; c < 3; c++){
+    let s = 0; for (let j = 0; j < B; j++) for (let i = 0; i < B; i++) s += img.data[((y*B + j)*S + x*B + i)*4 + c];
+    feat[(y*N + x)*3 + c] = Math.round(s / (B*B));
+  }
+  return { img, feat };
+}
+function aiCapture(){
+  const id = ++AI.fid; AI.frames.set(id, aiRender());
+  if (AI.frames.size > 40) AI.frames.delete(AI.frames.keys().next().value);
+  return id;
+}
+function aiFrame(id){ if (id < 0) return AI.frames.get(aiCapture()); const f = AI.frames.get(id); if (!f) throw new Error(t("aiOldFrame")); return f; }
+function aiCanvas(img, px, cls){ const c = document.createElement("canvas"); c.width = img.width; c.height = img.height; c.getContext("2d").putImageData(img, 0, 0); c.style.width = c.style.height = px + "px"; if (cls) c.className = cls; return c; }
+function aiThumb(img){ const c = aiCanvas(img, 0); const s = document.createElement("canvas"); s.width = s.height = 64; s.getContext("2d").drawImage(c, 0, 0, 64, 64); return s.toDataURL("image/jpeg", 0.8); }
+function aiPixels(feat){ const N = AI.N, im = new ImageData(N, N); for (let i = 0; i < N*N; i++){ im.data[i*4] = feat[i*3]; im.data[i*4+1] = feat[i*3+1]; im.data[i*4+2] = feat[i*3+2]; im.data[i*4+3] = 255; } return im; }
+function aiOut(el){ if (K.cur) K.cur.out.appendChild(el); }
+function aiSet(name){
+  if (!AI.sets[name]){
+    const raw = store.get("jetbotlab.ds.v1." + name);
+    AI.sets[name] = Array.isArray(raw) ? raw.filter(r => r && (r.l === "free" || r.l === "blocked") && typeof r.f === "string").map(r => ({ l: r.l, f: b64d(r.f), t: String(r.t || "") })).filter(r => r.f.length === AI.N*AI.N*3) : [];
+  }
+  return AI.sets[name];
+}
+const aiSaveT = {};
+function aiPersist(name){ clearTimeout(aiSaveT[name]); aiSaveT[name] = setTimeout(() => store.set("jetbotlab.ds.v1." + name, aiSet(name).map(r => ({ l: r.l, f: b64e(r.f), t: r.t }))), 300); }
+function aiAdd(name, label, id){ const fr = aiFrame(id), set = aiSet(name); set.push({ l: label, f: fr.feat, t: aiThumb(fr.img) }); aiPersist(name); return set.filter(r => r.l === label).length; }
+function aiCount(name, label){ const s = aiSet(name); return label ? s.filter(r => r.l === label).length : s.length; }
+function aiGalleryEl(name, n){
+  const g = document.createElement("div"); g.className = "aig"; const s = aiSet(name).slice(-Math.max(1, n));
+  if (!s.length){ g.textContent = t("aiEmpty"); return g; }
+  for (const r of s){ const f = document.createElement("figure"); f.className = r.l; f.innerHTML = `<img alt="" src="${r.t}"><figcaption>${r.l}</figcaption>`; g.appendChild(f); }
+  return g;
+}
+function aiWidget(name){
+  const w = document.createElement("div"); w.className = "aiw";
+  w.innerHTML = `<div class="aiw-cam"><figure><canvas class="live" width="${AI.S}" height="${AI.S}"></canvas><figcaption>Camera 224×224</figcaption></figure>`
+    + `<figure><canvas class="px" width="${AI.N}" height="${AI.N}"></canvas><figcaption>${esc(t("aiNetSees"))}</figcaption></figure></div>`
+    + `<div class="aiw-btns"><button class="free" data-l="free"><b></b>add free</button><button class="blocked" data-l="blocked"><b></b>add blocked</button><button class="undo">${esc(t("aiUndo"))}</button></div><div class="aiw-gal"></div>`;
+  const live = w.querySelector(".live").getContext("2d"), px = w.querySelector(".px").getContext("2d");
+  const sync = () => {
+    w.querySelector(".free b").textContent = aiCount(name, "free"); w.querySelector(".blocked b").textContent = aiCount(name, "blocked");
+    w.querySelector(".aiw-gal").replaceChildren(aiGalleryEl(name, 8));
+  };
+  const draw = () => { try { const fr = aiRender(); live.putImageData(fr.img, 0, 0); px.putImageData(aiPixels(fr.feat), 0, 0); } catch (e) {} };
+  w.addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.l){ try { aiAdd(name, b.dataset.l, -1); } catch (x){ toast(x.message); } }
+    else if (b.classList.contains("undo")){ aiSet(name).pop(); aiPersist(name); }
+    sync(); draw();
+  });
+  sync(); draw();
+  const iv = setInterval(() => { if (!w.isConnected){ clearInterval(iv); return; } draw(); }, 250);
+  aiOut(w);
+}
+function aiRand(){ let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+function aiNewModel(H){
+  H = Math.max(4, Math.min(128, H|0)); const D = AI.N*AI.N*3;
+  const m = { H, D, W1: new Float32Array(H*D), b1: new Float32Array(H), W2: new Float32Array(2*H), b2: new Float32Array(2), ready: false };
+  for (let i = 0; i < m.W1.length; i++) m.W1[i] = aiRand()*Math.sqrt(2/D);
+  for (let i = 0; i < m.W2.length; i++) m.W2[i] = aiRand()*Math.sqrt(2/H);
+  return m;
+}
+function aiInput(feat, flip, br, ct){
+  const N = AI.N, x = new Float32Array(N*N*3);
+  for (let y = 0; y < N; y++) for (let i = 0; i < N; i++) for (let c = 0; c < 3; c++){
+    let v = feat[(y*N + (flip ? N-1-i : i))*3 + c]/255;
+    if (ct !== 1 || br) v = Math.max(0, Math.min(1, (v - 0.5)*ct + 0.5 + br));
+    x[(y*N + i)*3 + c] = (v - AI_MEAN[c]) / AI_STD[c];
+  }
+  return x;
+}
+function aiForward(m, x){
+  const { H, D, W1, b1, W2, b2 } = m, z = new Float32Array(H), h = new Float32Array(H);
+  for (let j = 0; j < H; j++){ let s = b1[j]; const o = j*D; for (let k = 0; k < D; k++) s += W1[o + k]*x[k]; z[j] = s; h[j] = s > 0 ? s : 0; }
+  const o0 = b2[0] + h.reduce((a, v, j) => a + v*W2[j], 0), o1 = b2[1] + h.reduce((a, v, j) => a + v*W2[H + j], 0);
+  const mx = Math.max(o0, o1), e0 = Math.exp(o0 - mx), e1 = Math.exp(o1 - mx);
+  return { z, h, p: [e0/(e0 + e1), e1/(e0 + e1)] };   // lớp 0 = blocked, lớp 1 = free (ImageFolder xếp theo ABC)
+}
+function aiModel(h){ const m = AI.models[h]; if (!m) throw new Error(t("aiNotTrained")); return m; }
+async function aiTrain(h, name, epochs, testSize, lr){
+  const m = aiModel(h), set = aiSet(name).slice(), cell = K.cur, print = s => { if (cell) outText(cell, s); };
+  const nb = set.filter(r => r.l === "blocked").length, nf = set.length - nb;
+  if (nb < 4 || nf < 4) throw new Error(t("aiNeedData") + ` (free: ${nf}, blocked: ${nb})`);
+  epochs = Math.max(1, Math.min(200, epochs|0)); lr = Math.max(1e-5, Math.min(0.5, lr || 0.001));
+  for (let i = set.length - 1; i > 0; i--){ const j = Math.floor(Math.random()*(i + 1)); [set[i], set[j]] = [set[j], set[i]]; }
+  const nTest = Math.max(2, Math.min(set.length - 4, Math.round(set.length*(testSize > 0 && testSize < 1 ? testSize : 0.2))));
+  const test = set.slice(0, nTest), train = set.slice(nTest), testX = test.map(r => aiInput(r.f, false, 0, 1));
+  print(t("aiTrainHead").replace("{tr}", train.length).replace("{te}", test.length) + "\n");
+  const { H, D } = m, BATCH = 8, MOM = 0.9, WD = 1e-4;
+  const gW1 = new Float32Array(H*D), gb1 = new Float32Array(H), gW2 = new Float32Array(2*H), gb2 = new Float32Array(2);
+  const vW1 = new Float32Array(H*D), vb1 = new Float32Array(H), vW2 = new Float32Array(2*H), vb2 = new Float32Array(2);
+  let best = -1, bestW = null;
+  for (let ep = 0; ep < epochs; ep++){
+    if (K.stop) break;
+    for (let i = train.length - 1; i > 0; i--){ const j = Math.floor(Math.random()*(i + 1)); [train[i], train[j]] = [train[j], train[i]]; }
+    for (let s = 0; s < train.length; s += BATCH){
+      gW1.fill(0); gb1.fill(0); gW2.fill(0); gb2.fill(0);
+      const batch = train.slice(s, s + BATCH);
+      for (const r of batch){
+        // ColorJitter + lật ngang để mô hình không học thuộc từng ảnh
+        const x = aiInput(r.f, Math.random() < 0.5, (Math.random() - 0.5)*0.2, 1 + (Math.random() - 0.5)*0.2), f = aiForward(m, x);
+        const d = [f.p[0] - (r.l === "blocked" ? 1 : 0), f.p[1] - (r.l === "free" ? 1 : 0)];
+        for (let j = 0; j < H; j++){
+          gW2[j] += d[0]*f.h[j]; gW2[H + j] += d[1]*f.h[j];
+          if (f.z[j] <= 0) continue;
+          const dz = d[0]*m.W2[j] + d[1]*m.W2[H + j], o = j*D; gb1[j] += dz;
+          for (let k = 0; k < D; k++) gW1[o + k] += dz*x[k];
+        }
+        gb2[0] += d[0]; gb2[1] += d[1];
+      }
+      const n = batch.length, upd = (W, g, v) => { for (let i = 0; i < W.length; i++){ v[i] = MOM*v[i] - lr*(g[i]/n + WD*W[i]); W[i] += v[i]; } };
+      upd(m.W1, gW1, vW1); upd(m.b1, gb1, vb1); upd(m.W2, gW2, vW2); upd(m.b2, gb2, vb2);
+    }
+    let ok = 0; test.forEach((r, i) => { const p = aiForward(m, testX[i]).p; if ((p[0] >= 0.5) === (r.l === "blocked")) ok++; });
+    const acc = ok / test.length; print(ep + ": " + acc.toFixed(6) + "\n");
+    if (acc > best){ best = acc; bestW = [m.W1.slice(), m.b1.slice(), m.W2.slice(), m.b2.slice()]; }
+    await new Promise(r => setTimeout(r, 0));
+  }
+  if (bestW) [m.W1, m.b1, m.W2, m.b2] = bestW;
+  m.ready = true; m.acc = best;
+  return Math.max(0, best);
+}
+function aiSave(h, path){
+  const m = aiModel(h); if (!m.ready) throw new Error(t("aiNotTrained"));
+  try { localStorage.setItem("jetbotlab.model.v1." + path, JSON.stringify({ H: m.H, D: m.D, acc: m.acc, W1: f32e(m.W1), b1: f32e(m.b1), W2: f32e(m.W2), b2: f32e(m.b2) })); }
+  catch (e){ throw new Error(t("aiSaveFail")); }
+  if (K.cur) outText(K.cur, t("aiSaved") + path + "\n");
+}
+function aiLoad(h, path){
+  const r = store.get("jetbotlab.model.v1." + path);
+  if (!r || r.D !== AI.N*AI.N*3) throw new Error(t("aiNoModel").replace("{p}", path));
+  const m = { H: r.H, D: r.D, acc: r.acc, W1: f32d(r.W1), b1: f32d(r.b1), W2: f32d(r.W2), b2: f32d(r.b2), ready: true };
+  if (m.W1.length !== m.H*m.D || m.W2.length !== 2*m.H) throw new Error(t("aiNoModel").replace("{p}", path));
+  AI.models[h] = m;
+}
+function aiPredict(h, id){
+  const m = aiModel(h); if (!m.ready) throw new Error(t("aiNotTrained"));
+  const p = aiForward(m, aiInput(aiFrame(id).feat, false, 0, 1)).p[0];
+  AI.prob = p; AI.probT = performance.now();
+  return Math.round(p*10000)/10000;
+}
+window.AIJS = {
+  capture: aiCapture, add: aiAdd, count: aiCount, train: aiTrain, save: aiSave, load: aiLoad, predict: aiPredict, widget: aiWidget,
+  show(id){ const fr = aiFrame(id); aiOut(aiCanvas(fr.img, 224, "aishot")); },
+  pop(name){ aiSet(name).pop(); aiPersist(name); },
+  clear(name){ aiSet(name).length = 0; aiPersist(name); },
+  gallery(name, n){ aiOut(aiGalleryEl(name, n)); },
+  newModel(H){ AI.models.push(aiNewModel(H)); return AI.models.length - 1; }
+};
+function inPoly(x, y, p){ let c = false; for (let i = 0, j = p.length - 1; i < p.length; j = i++){ const [xi, yi] = p[i], [xj, yj] = p[j]; if ((yi > y) !== (yj > y) && x < (xj - xi)*(y - yi)/(yj - yi) + xi) c = !c; } return c; }
+
 /* ---------- loop ---------- */
 let lastT = performance.now(), teleT = 0, lidT = 0, simDebt = 0, pumping = false;
 // Dừng đúng lúc time.sleep() hết hạn và nhường cho Python chạy tiếp trước khi mô phỏng thêm,
 // để lệnh động cơ kế tiếp có hiệu lực đúng thời điểm (không trễ cả một khung hình).
+// MessageChannel thay cho setTimeout(0): không bị trình duyệt kẹp tối thiểu 4 ms mỗi lần gọi lồng nhau.
+const pumpCh = new MessageChannel(); pumpCh.port1.onmessage = () => simPump();
 function simPump(){
   pumping = false;
   while (simDebt > 1e-9){
     const h = Math.min(simDebt, 1/240, Math.max(1e-4, SIM.nextWake() - SIM.t));
     SIM.step(h); simDebt -= h;
-    if (SIM.woke){ SIM.woke = false; if (simDebt > 1e-9){ pumping = true; setTimeout(simPump, 0); } return; }
+    if (SIM.woke){ SIM.woke = false; if (simDebt > 1e-9){ pumping = true; pumpCh.port2.postMessage(0); } return; }
   }
 }
 function loop(now){
@@ -1303,6 +1588,12 @@ function loop(now){
   }
   const pf = $("#pipFrame"), pl = $("#pipLabel"); pf.hidden = pl.hidden = !TG.cam;
   if (TG.cam){ Object.assign(pf.style, { left: pipX - 1 + "px", bottom: pipY - 1 + "px", width: pipW + 2 + "px", height: pipH + 2 + "px" }); Object.assign(pl.style, { left: pipX + 6 + "px", bottom: pipY + pipH - 22 + "px" }); }
+  const ap = $("#aiProb"), showP = now - AI.probT < 700; ap.hidden = !showP;
+  if (showP){
+    Object.assign(ap.style, { left: pipX + "px", bottom: (TG.cam ? pipY + pipH + 8 : pipY) + "px", width: pipW + "px" });
+    ap.querySelector("i").style.width = (AI.prob*100).toFixed(1) + "%"; ap.querySelector("b").textContent = AI.prob.toFixed(2); ap.classList.toggle("hi", AI.prob >= 0.5);
+  }
+  if (MAP.fence){ const ins = inPoly(SIM.x, SIM.y, MAP.line); if (!ins && AI.inside && !SIM.dragging) toast(t("aiOut")); AI.inside = ins; }
   // gizmo
   const gs = 92; gizmo.cam.position.copy(camera.position).sub(controls.target).setLength(4); gizmo.cam.lookAt(0, 0, 0);
   renderer.setScissorTest(true); renderer.setScissor(w - gs - 6, h - gs - 6, gs, gs); renderer.setViewport(w - gs - 6, h - gs - 6, gs, gs);
