@@ -202,7 +202,7 @@ body.reordering,body.reordering *{cursor:grabbing!important;user-select:none}
 .lbl{position:absolute;transform:translate(-50%,-100%);font-size:11px;font-weight:600;white-space:nowrap;background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:2px 6px;box-shadow:0 1px 4px rgb(0 0 0 / .12)}
 .lbl::after{content:"";position:absolute;left:50%;bottom:-7px;width:1px;height:6px;background:var(--fg);opacity:.5}
 .lbl small{color:var(--muted);font-weight:500;margin-left:4px}
-.toast{position:absolute;left:50%;top:14px;transform:translateX(-50%);background:var(--fg);color:var(--panel);padding:7px 14px;border-radius:99px;font-size:12.5px;font-weight:500;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+.toast{position:fixed;z-index:1000;left:50%;top:62px;max-width:calc(100vw - 32px);white-space:normal;text-align:center;transform:translateX(-50%);background:var(--fg);color:var(--panel);padding:7px 14px;border-radius:99px;font-size:12.5px;font-weight:500;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
 .teleop{position:absolute;left:10px;top:10px;font-size:11.5px;background:var(--accent);color:var(--on-accent);border-radius:var(--r);padding:4px 9px;font-weight:600;pointer-events:none}
 
@@ -286,3 +286,4 @@ input[type=file]{display:none}
 .md th,.md td{border:1px solid color-mix(in srgb, var(--fg) 18%, transparent);padding:6px 12px;vertical-align:top;text-align:left}
 .md th{font-weight:700;background:color-mix(in srgb, var(--fg) 5%, var(--panel))}
 .md tbody tr:nth-child(even) td{background:color-mix(in srgb, var(--fg) 2.5%, transparent)}
+.md img{max-width:100%;height:auto;border-radius:4px;display:inline-block;vertical-align:top}

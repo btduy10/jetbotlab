@@ -6,7 +6,7 @@ const store = {
 };
 
 /* ---------- ngôn ngữ / language ---------- */
-const I18N = {"vi": {"brandSub": "ROS AI Kit · mô phỏng", "nbAria": "Tên notebook", "kLoad": "Đang tải Python…", "kFail": "Không tải được Python", "kIdle": "Python 3 · Sẵn sàng", "kBusy": "Đang chạy…", "map": "Sa bàn", "speed": "Tốc độ", "langAria": "Ngôn ngữ", "rail": "Thanh bên", "rNb": "Bài mẫu", "rApi": "Tra cứu API", "rOpen": "Mở tệp .ipynb / .py", "aiNoScene": "Sa bàn 3D chưa sẵn sàng.", "hideField": "Ẩn sa bàn", "hideFieldT": "Ẩn sa bàn để xem bài học toàn màn hình", "showField": "Hiện sa bàn", "showFieldT": "Hiện lại sa bàn 3D", "aiPose": "Di chuyển robot:", "aiBump": "Robot vướng vật cản, không dịch được.", "tEdit": "Sửa vật cản", "tEditT": "Đặt / xoá khối vuông: bấm vào nền để đặt, bấm vào khối để xoá", "editToast": "Bấm vào nền để đặt khối, bấm vào khối để xoá", "boxReset": "Khôi phục", "boxResetT": "Khôi phục vật cản gốc của sa bàn này", "boxResetDone": "Đã khôi phục vật cản gốc", "boxOnRobot": "Không đặt khối đè lên robot", "aiOldFrame": "Ảnh này đã cũ, hãy chụp lại bằng camera.value.", "aiEmpty": "Bộ dữ liệu đang trống.", "aiNetSees": "Mạng nơ-ron thấy (16×16)", "aiUndo": "Xoá ảnh vừa thêm", "aiNotTrained": "Mô hình chưa được huấn luyện. Hãy gọi model.train(dataset) hoặc model.load('collision_model.pth').", "aiNeedData": "Cần ít nhất 4 ảnh mỗi loại để huấn luyện", "aiTrainHead": "Ảnh huấn luyện: {tr} · ảnh kiểm tra: {te}", "aiSaved": "Đã lưu mô hình: ", "aiSaveFail": "Không lưu được mô hình (bộ nhớ trình duyệt đầy?).", "aiNoModel": "Chưa có mô hình '{p}'. Hãy chạy bài 12 để huấn luyện và lưu mô hình.", "aiOut": "Robot đã ra ngoài vạch đen!", "rSave": "Lưu notebook về máy (.ipynb) · Ctrl+S", "rNew": "Tạo notebook mới", "saved": "Đã lưu ", "newConfirm": "Tạo notebook mới? Nội dung hiện tại sẽ bị thay thế. Hãy bấm Lưu trước nếu muốn giữ lại.", "newDone": "Đã tạo notebook mới", "run": "Chạy", "runT": "Chạy tất cả các ô (Shift+Enter: chạy ô đang chọn)", "stop": "Dừng", "stopT": "Dừng chương trình và động cơ (Esc Esc)", "restart": "Khởi động lại", "restartT": "Khởi động lại kernel: xoá mọi biến, đồng hồ về 0", "addCode": "Code", "addCodeT": "Thêm ô code bên dưới", "addMd": "Ghi chú", "addMdT": "Thêm ô ghi chú bên dưới", "clear": "Xoá kết quả", "clearT": "Xoá kết quả của mọi ô", "copy": "Sao chép code", "copyT": "Sao chép toàn bộ code", "splitAria": "Kéo để đổi kích thước", "vIso": "3D", "vTop": "Trên", "vFront": "Trước", "vSide": "Cạnh", "vFollow": "Theo robot", "tLidar": "Lidar", "tTrail": "Vết", "tCam": "Camera", "tAxis": "Trục Oxyz", "tAxisT": "Hệ trục gắn với robot: x mũi robot, y bên trái, z hướng lên", "tLbl": "Linh kiện", "tKey": "Lái phím", "tKeyT": "Lái bằng phím mũi tên / WASD", "home": "Về xuất phát", "homeT": "Đặt robot về vị trí xuất phát, xoá encoder, IMU và đồng hồ", "sceneLoading": "Đang dựng sa bàn 3D…", "sceneFail": "Không tải được thư viện 3D. Kiểm tra kết nối mạng.", "pip": "CAMERA CSI · GÓC RỘNG", "teleop": "Lái phím: ↑ ↓ ← → hoặc W A S D", "hint": "<kbd>Chuột phải</kbd> xoay 3D · <kbd>Shift</kbd>+<kbd>Chuột phải</kbd> hoặc <kbd>Chuột trái</kbd> vào nền: dời khung nhìn · <kbd>Cuộn</kbd> phóng to<br><kbd>Chuột trái</kbd> kéo robot, <kbd>Cuộn</kbd> khi đang kéo để xoay robot · thả gần ô START để về vị trí xuất phát", "telePos": "Vị trí x, y (cm)", "teleYaw": "Hướng (yaw)", "teleMot": "Động cơ T / P", "teleEnc": "Encoder T / P", "teleLid": "Lidar 0°", "teleLine": "Camera line", "teleTime": "Thời gian chạy", "noLine": "không thấy", "stopped": " · dừng", "pyLoading": "Python đang tải, chờ một chút…", "restarted": "Đã khởi động lại kernel: biến đã xoá, đồng hồ về 0", "copied": "Đã sao chép code", "opened": "Đã mở ", "openFail": "Không đọc được tệp: cần .ipynb hợp lệ hoặc .py", "teleopToast": "Bấm vào sa bàn rồi dùng phím mũi tên để lái", "homeToast": "Robot đã về vị trí xuất phát · encoder, IMU và đồng hồ về 0", "drawerLessons": "Bài mẫu", "drawerApi": "Thư viện jetbot", "insert": "Chèn", "cellCode": "Ô code", "cellMd": "Ô ghi chú", "cRun": "Chạy ô (Shift+Enter)", "cStop": "Dừng", "cUp": "Chuyển lên", "cDown": "Chuyển xuống", "cType": "Đổi Code / Ghi chú", "cDel": "Xoá ô", "grip": "Kéo để đổi thứ tự ô", "addRowCode": "+ Ô code", "addRowMd": "+ Ô ghi chú", "mdEmpty": "Nhấp đúp để viết ghi chú…", "trimmed": "…(đã lược bớt)", "interrupted": "chương trình đã được dừng. Động cơ đã tắt.", "line": "dòng", "inputAria": "Nhập dữ liệu", "goal": "ĐÍCH", "editNote": "Sửa ghi chú (hoặc nhấp đúp vào ghi chú)", "doneNote": "Xong, hiển thị ghi chú", "step": "Chạy từng ô", "stepT": "Mỗi lần bấm chạy ô code kế tiếp (bỏ qua ghi chú)", "stepDone": "Đã chạy hết các ô, lần bấm tới sẽ chạy lại từ ô đầu", "stepBusy": "Ô trước đang chạy, chờ xong hoặc bấm Dừng", "noFiles": "Mô phỏng không cho phép đọc / ghi tệp.", "blockedMod": "Thư viện này bị chặn trong mô phỏng vì lý do an toàn.", "fileTooBig": "Tệp quá lớn (tối đa 2 MB).", "badNotebook": "Notebook không hợp lệ hoặc quá nhiều ô (tối đa 300)."}, "en": {"brandSub": "ROS AI Kit · simulator", "nbAria": "Notebook name", "kLoad": "Loading Python…", "kFail": "Python failed to load", "kIdle": "Python 3 · Ready", "kBusy": "Running…", "map": "Field", "speed": "Speed", "langAria": "Language", "rail": "Sidebar", "rNb": "Sample lessons", "rApi": "API reference", "rOpen": "Open .ipynb / .py file", "aiNoScene": "The 3D field is not ready.", "hideField": "Hide field", "hideFieldT": "Hide the field to see the lesson full width", "showField": "Show field", "showFieldT": "Show the 3D field again", "aiPose": "Move robot:", "aiBump": "Blocked by an obstacle, cannot move there.", "tEdit": "Edit obstacles", "tEditT": "Add / remove blocks: click the floor to add, click a block to remove", "editToast": "Click the floor to add a block, click a block to remove it", "boxReset": "Reset", "boxResetT": "Restore this field's original obstacles", "boxResetDone": "Original obstacles restored", "boxOnRobot": "Cannot place a block on the robot", "aiOldFrame": "This image is too old, take a new one with camera.value.", "aiEmpty": "The dataset is empty.", "aiNetSees": "What the network sees (16×16)", "aiUndo": "Remove last image", "aiNotTrained": "The model is not trained. Call model.train(dataset) or model.load('collision_model.pth').", "aiNeedData": "Need at least 4 images of each class to train", "aiTrainHead": "Training images: {tr} · test images: {te}", "aiSaved": "Model saved: ", "aiSaveFail": "Could not save the model (browser storage full?).", "aiNoModel": "No model '{p}' yet. Run lesson 12 to train and save one.", "aiOut": "The robot left the black line!", "rSave": "Save notebook to your computer (.ipynb) · Ctrl+S", "rNew": "New notebook", "saved": "Saved ", "newConfirm": "Create a new notebook? The current one will be replaced. Save it first if you want to keep it.", "newDone": "New notebook created", "run": "Run", "runT": "Run every cell (Shift+Enter: run selected cell)", "stop": "Stop", "stopT": "Stop the program and motors (Esc Esc)", "restart": "Restart", "restartT": "Restart kernel: clear all variables, reset the clock", "addCode": "Code", "addCodeT": "Add a code cell below", "addMd": "Note", "addMdT": "Add a note cell below", "clear": "Clear outputs", "clearT": "Clear the output of every cell", "copy": "Copy code", "copyT": "Copy all code", "splitAria": "Drag to resize", "vIso": "3D", "vTop": "Top", "vFront": "Front", "vSide": "Side", "vFollow": "Follow", "tLidar": "Lidar", "tTrail": "Trail", "tCam": "Camera", "tAxis": "Axes", "tAxisT": "Robot frame: x forward, y left, z up", "tLbl": "Parts", "tKey": "Drive", "tKeyT": "Drive with arrow keys / WASD", "home": "Back to start", "homeT": "Put the robot back at START and reset encoders, IMU and clock", "sceneLoading": "Building the 3D field…", "sceneFail": "The 3D library failed to load. Check your internet connection.", "pip": "CSI CAMERA · WIDE ANGLE", "teleop": "Drive: ↑ ↓ ← → or W A S D", "hint": "<kbd>Right-drag</kbd> rotate 3D · <kbd>Shift</kbd>+<kbd>Right-drag</kbd> or <kbd>Left-drag</kbd> on the floor: pan · <kbd>Scroll</kbd> zoom<br><kbd>Left-drag</kbd> the robot to move it, <kbd>Scroll</kbd> while dragging to rotate it · drop it near START to reset", "telePos": "Position x, y (cm)", "teleYaw": "Heading (yaw)", "teleMot": "Motors L / R", "teleEnc": "Encoder L / R", "teleLid": "Lidar 0°", "teleLine": "Camera line", "teleTime": "Run time", "noLine": "not seen", "stopped": " · idle", "pyLoading": "Python is still loading, one moment…", "restarted": "Kernel restarted: variables cleared, clock reset", "copied": "Code copied", "opened": "Opened ", "openFail": "Could not read the file: use a valid .ipynb or .py", "teleopToast": "Click the field, then drive with the arrow keys", "homeToast": "Robot is back at START · encoders, IMU and clock reset", "drawerLessons": "Sample lessons", "drawerApi": "jetbot library", "insert": "Insert", "cellCode": "Code cell", "cellMd": "Note cell", "cRun": "Run cell (Shift+Enter)", "cStop": "Stop", "cUp": "Move up", "cDown": "Move down", "cType": "Switch Code / Note", "cDel": "Delete cell", "grip": "Drag to reorder", "addRowCode": "+ Code cell", "addRowMd": "+ Note cell", "mdEmpty": "Double-click to write a note…", "trimmed": "…(truncated)", "interrupted": "the program was stopped. Motors are off.", "line": "line", "inputAria": "Input", "goal": "GOAL", "editNote": "Edit note (or double-click the note)", "doneNote": "Done, show the note", "step": "Step", "stepT": "Each click runs the next code cell (notes are skipped)", "stepDone": "All cells done, the next click starts again from the first cell", "stepBusy": "The previous cell is still running, wait or press Stop", "noFiles": "Reading or writing files is not allowed in the simulator.", "blockedMod": "This library is blocked in the simulator for safety.", "fileTooBig": "File too large (2 MB max).", "badNotebook": "Invalid notebook or too many cells (300 max)."}};
+const I18N = {"vi": {"brandSub": "ROS AI Kit · mô phỏng", "nbAria": "Tên notebook", "kLoad": "Đang tải Python…", "kFail": "Không tải được Python", "kIdle": "Python 3 · Sẵn sàng", "kBusy": "Đang chạy…", "map": "Sa bàn", "speed": "Tốc độ", "langAria": "Ngôn ngữ", "rail": "Thanh bên", "rNb": "Bài mẫu", "rApi": "Tra cứu API", "rOpen": "Mở tệp .ipynb / .py", "aiNoScene": "Sa bàn 3D chưa sẵn sàng.", "hideField": "Ẩn sa bàn", "hideFieldT": "Ẩn sa bàn để xem bài học toàn màn hình", "showField": "Hiện sa bàn", "showFieldT": "Hiện lại sa bàn 3D", "aiPose": "Di chuyển robot:", "aiBump": "Robot vướng vật cản, không dịch được.", "tEdit": "Sửa vật cản", "tEditT": "Đặt / xoá khối vuông: bấm vào nền để đặt, bấm vào khối để xoá", "editToast": "Bấm vào nền để đặt khối, bấm vào khối để xoá", "boxReset": "Khôi phục", "boxResetT": "Khôi phục vật cản gốc của sa bàn này", "boxResetDone": "Đã khôi phục vật cản gốc", "boxOnRobot": "Không đặt khối đè lên robot", "aiOldFrame": "Ảnh này đã cũ, hãy chụp lại bằng camera.value.", "aiEmpty": "Bộ dữ liệu đang trống.", "aiNetSees": "Mạng nơ-ron thấy (16×16)", "aiUndo": "Xoá ảnh vừa thêm", "aiNotTrained": "Mô hình chưa được huấn luyện. Hãy gọi model.train(dataset) hoặc model.load('collision_model.pth').", "aiNeedData": "Cần ít nhất 4 ảnh mỗi loại để huấn luyện", "aiTrainHead": "Ảnh huấn luyện: {tr} · ảnh kiểm tra: {te}", "aiSaved": "Đã lưu mô hình: ", "aiSaveFail": "Không lưu được mô hình (bộ nhớ trình duyệt đầy?).", "aiNoModel": "Chưa có mô hình '{p}'. Hãy chạy bài 12 để huấn luyện và lưu mô hình.", "aiOut": "Robot đã ra ngoài vạch đen!", "rSave": "Lưu notebook về máy (.ipynb) · Ctrl+S", "rNew": "Tạo notebook mới", "saved": "Đã lưu ", "newConfirm": "Tạo notebook mới? Nội dung hiện tại sẽ bị thay thế. Hãy bấm Lưu trước nếu muốn giữ lại.", "newDone": "Đã tạo notebook mới", "run": "Chạy", "runT": "Chạy tất cả các ô (Shift+Enter: chạy ô đang chọn)", "stop": "Dừng", "stopT": "Dừng chương trình và động cơ (Esc Esc)", "restart": "Khởi động lại", "restartT": "Khởi động lại kernel: xoá mọi biến, đồng hồ về 0", "addCode": "Code", "addCodeT": "Thêm ô code bên dưới", "addMd": "Ghi chú", "addMdT": "Thêm ô ghi chú bên dưới", "clear": "Xoá kết quả", "clearT": "Xoá kết quả của mọi ô", "copy": "Sao chép code", "copyT": "Sao chép toàn bộ code", "splitAria": "Kéo để đổi kích thước", "vIso": "3D", "vTop": "Trên", "vFront": "Trước", "vSide": "Cạnh", "vFollow": "Theo robot", "tLidar": "Lidar", "tTrail": "Vết", "tCam": "Camera", "tAxis": "Trục Oxyz", "tAxisT": "Hệ trục gắn với robot: x mũi robot, y bên trái, z hướng lên", "tLbl": "Linh kiện", "tKey": "Lái phím", "tKeyT": "Lái bằng phím mũi tên / WASD", "home": "Về xuất phát", "homeT": "Đặt robot về vị trí xuất phát, xoá encoder, IMU và đồng hồ", "sceneLoading": "Đang dựng sa bàn 3D…", "sceneFail": "Không tải được thư viện 3D. Kiểm tra kết nối mạng.", "pip": "CAMERA CSI · GÓC RỘNG", "teleop": "Lái phím: ↑ ↓ ← → hoặc W A S D", "hint": "<kbd>Chuột phải</kbd> xoay 3D · <kbd>Shift</kbd>+<kbd>Chuột phải</kbd> hoặc <kbd>Chuột trái</kbd> vào nền: dời khung nhìn · <kbd>Cuộn</kbd> phóng to<br><kbd>Chuột trái</kbd> kéo robot, <kbd>Cuộn</kbd> khi đang kéo để xoay robot · thả gần ô START để về vị trí xuất phát", "telePos": "Vị trí x, y (cm)", "teleYaw": "Hướng (yaw)", "teleMot": "Động cơ T / P", "teleEnc": "Encoder T / P", "teleLid": "Lidar 0°", "teleLine": "Camera line", "teleTime": "Thời gian chạy", "noLine": "không thấy", "stopped": " · dừng", "pyLoading": "Python đang tải, chờ một chút…", "restarted": "Đã khởi động lại kernel: biến đã xoá, đồng hồ về 0", "copied": "Đã sao chép code", "opened": "Đã mở ", "openFail": "Không đọc được tệp: cần .ipynb hợp lệ hoặc .py", "teleopToast": "Bấm vào sa bàn rồi dùng phím mũi tên để lái", "homeToast": "Robot đã về vị trí xuất phát · encoder, IMU và đồng hồ về 0", "drawerLessons": "Bài mẫu", "drawerApi": "Thư viện jetbot", "insert": "Chèn", "cellCode": "Ô code", "cellMd": "Ô ghi chú", "cRun": "Chạy ô (Shift+Enter)", "cStop": "Dừng", "cUp": "Chuyển lên", "cDown": "Chuyển xuống", "cType": "Đổi Code / Ghi chú", "cDel": "Xoá ô", "grip": "Kéo để đổi thứ tự ô", "addRowCode": "+ Ô code", "addRowMd": "+ Ô ghi chú", "mdEmpty": "Nhấp đúp để viết ghi chú…", "trimmed": "…(đã lược bớt)", "interrupted": "chương trình đã được dừng. Động cơ đã tắt.", "line": "dòng", "inputAria": "Nhập dữ liệu", "goal": "ĐÍCH", "editNote": "Sửa ghi chú (hoặc nhấp đúp vào ghi chú)", "doneNote": "Xong, hiển thị ghi chú", "step": "Chạy từng ô", "stepT": "Mỗi lần bấm chạy ô code kế tiếp (bỏ qua ghi chú)", "stepDone": "Đã chạy hết các ô, lần bấm tới sẽ chạy lại từ ô đầu", "stepBusy": "Ô trước đang chạy, chờ xong hoặc bấm Dừng", "noFiles": "Mô phỏng không cho phép đọc / ghi tệp.", "blockedMod": "Thư viện này bị chặn trong mô phỏng vì lý do an toàn.", "fileTooBig": "Tệp quá lớn (tối đa 20 MB).", "autosaveNoImg": "Ảnh trong notebook quá lớn để tự lưu vào trình duyệt. Hãy bấm Lưu tệp (Ctrl+S) để giữ ảnh.", "badNotebook": "Notebook không hợp lệ hoặc quá nhiều ô (tối đa 300)."}, "en": {"brandSub": "ROS AI Kit · simulator", "nbAria": "Notebook name", "kLoad": "Loading Python…", "kFail": "Python failed to load", "kIdle": "Python 3 · Ready", "kBusy": "Running…", "map": "Field", "speed": "Speed", "langAria": "Language", "rail": "Sidebar", "rNb": "Sample lessons", "rApi": "API reference", "rOpen": "Open .ipynb / .py file", "aiNoScene": "The 3D field is not ready.", "hideField": "Hide field", "hideFieldT": "Hide the field to see the lesson full width", "showField": "Show field", "showFieldT": "Show the 3D field again", "aiPose": "Move robot:", "aiBump": "Blocked by an obstacle, cannot move there.", "tEdit": "Edit obstacles", "tEditT": "Add / remove blocks: click the floor to add, click a block to remove", "editToast": "Click the floor to add a block, click a block to remove it", "boxReset": "Reset", "boxResetT": "Restore this field's original obstacles", "boxResetDone": "Original obstacles restored", "boxOnRobot": "Cannot place a block on the robot", "aiOldFrame": "This image is too old, take a new one with camera.value.", "aiEmpty": "The dataset is empty.", "aiNetSees": "What the network sees (16×16)", "aiUndo": "Remove last image", "aiNotTrained": "The model is not trained. Call model.train(dataset) or model.load('collision_model.pth').", "aiNeedData": "Need at least 4 images of each class to train", "aiTrainHead": "Training images: {tr} · test images: {te}", "aiSaved": "Model saved: ", "aiSaveFail": "Could not save the model (browser storage full?).", "aiNoModel": "No model '{p}' yet. Run lesson 12 to train and save one.", "aiOut": "The robot left the black line!", "rSave": "Save notebook to your computer (.ipynb) · Ctrl+S", "rNew": "New notebook", "saved": "Saved ", "newConfirm": "Create a new notebook? The current one will be replaced. Save it first if you want to keep it.", "newDone": "New notebook created", "run": "Run", "runT": "Run every cell (Shift+Enter: run selected cell)", "stop": "Stop", "stopT": "Stop the program and motors (Esc Esc)", "restart": "Restart", "restartT": "Restart kernel: clear all variables, reset the clock", "addCode": "Code", "addCodeT": "Add a code cell below", "addMd": "Note", "addMdT": "Add a note cell below", "clear": "Clear outputs", "clearT": "Clear the output of every cell", "copy": "Copy code", "copyT": "Copy all code", "splitAria": "Drag to resize", "vIso": "3D", "vTop": "Top", "vFront": "Front", "vSide": "Side", "vFollow": "Follow", "tLidar": "Lidar", "tTrail": "Trail", "tCam": "Camera", "tAxis": "Axes", "tAxisT": "Robot frame: x forward, y left, z up", "tLbl": "Parts", "tKey": "Drive", "tKeyT": "Drive with arrow keys / WASD", "home": "Back to start", "homeT": "Put the robot back at START and reset encoders, IMU and clock", "sceneLoading": "Building the 3D field…", "sceneFail": "The 3D library failed to load. Check your internet connection.", "pip": "CSI CAMERA · WIDE ANGLE", "teleop": "Drive: ↑ ↓ ← → or W A S D", "hint": "<kbd>Right-drag</kbd> rotate 3D · <kbd>Shift</kbd>+<kbd>Right-drag</kbd> or <kbd>Left-drag</kbd> on the floor: pan · <kbd>Scroll</kbd> zoom<br><kbd>Left-drag</kbd> the robot to move it, <kbd>Scroll</kbd> while dragging to rotate it · drop it near START to reset", "telePos": "Position x, y (cm)", "teleYaw": "Heading (yaw)", "teleMot": "Motors L / R", "teleEnc": "Encoder L / R", "teleLid": "Lidar 0°", "teleLine": "Camera line", "teleTime": "Run time", "noLine": "not seen", "stopped": " · idle", "pyLoading": "Python is still loading, one moment…", "restarted": "Kernel restarted: variables cleared, clock reset", "copied": "Code copied", "opened": "Opened ", "openFail": "Could not read the file: use a valid .ipynb or .py", "teleopToast": "Click the field, then drive with the arrow keys", "homeToast": "Robot is back at START · encoders, IMU and clock reset", "drawerLessons": "Sample lessons", "drawerApi": "jetbot library", "insert": "Insert", "cellCode": "Code cell", "cellMd": "Note cell", "cRun": "Run cell (Shift+Enter)", "cStop": "Stop", "cUp": "Move up", "cDown": "Move down", "cType": "Switch Code / Note", "cDel": "Delete cell", "grip": "Drag to reorder", "addRowCode": "+ Code cell", "addRowMd": "+ Note cell", "mdEmpty": "Double-click to write a note…", "trimmed": "…(truncated)", "interrupted": "the program was stopped. Motors are off.", "line": "line", "inputAria": "Input", "goal": "GOAL", "editNote": "Edit note (or double-click the note)", "doneNote": "Done, show the note", "step": "Step", "stepT": "Each click runs the next code cell (notes are skipped)", "stepDone": "All cells done, the next click starts again from the first cell", "stepBusy": "The previous cell is still running, wait or press Stop", "noFiles": "Reading or writing files is not allowed in the simulator.", "blockedMod": "This library is blocked in the simulator for safety.", "fileTooBig": "File too large (20 MB max).", "autosaveNoImg": "The images in this notebook are too big to auto-save in the browser. Use Save (Ctrl+S) to keep them.", "badNotebook": "Invalid notebook or too many cells (300 max)."}};
 let LANG = (() => { const v = store.get("jetbotlab.lang"); return v === "en" || v === "vi" ? v : "vi"; })();
 const t = k => (I18N[LANG] && I18N[LANG][k] !== undefined ? I18N[LANG][k] : (I18N.vi[k] !== undefined ? I18N.vi[k] : k));
 
@@ -531,26 +531,65 @@ function highlight(src){
 }
 // Markdown kiểu Jupyter / Colab: đoạn văn gộp dòng, `code` và ``code``, **đậm**, *nghiêng*, _nghiêng_, [liên kết](https://…),
 // tiêu đề #…######, danh sách - / 1., trích dẫn > nhiều dòng, khối ``` có tô màu Python.
+// HTML trong ghi chú (như Jupyter): chỉ giữ thẻ / thuộc tính / CSS an toàn, không script, không url(), không sự kiện on*.
+const HTML_TAGS = new Set("div span p br hr b strong i em u s sub sup small mark code pre ul ol li table thead tbody tr th td center details summary h1 h2 h3 h4 h5 h6 blockquote img".split(" "));
+const HTML_VOID = new Set(["br", "hr", "img"]);
+const CSS_OK = /^(color|background|background-color|border(-(left|right|top|bottom))?(-(color|width|style|radius))?|border-radius|padding(-(left|right|top|bottom))?|margin(-(left|right|top|bottom))?|text-align|font-(weight|style|size)|text-decoration|width|max-width|min-width|height|display|gap|align-items|justify-content|line-height|vertical-align|list-style(-type)?)$/;
+let MD_ATT = null;
+const attr = v => esc(String(v)).replace(/"/g, "&quot;");
+function imgSrc(src){
+  const m = /^attachment:(.+)$/.exec(src);
+  if (m){ const d = MD_ATT && MD_ATT[decodeURIComponent(m[1])]; if (!d) return null; const mime = Object.keys(d)[0]; return `data:${mime};base64,${d[mime]}`; }
+  return /^data:image\/(png|jpeg|gif|webp);base64,[A-Za-z0-9+/]+=*$/.test(src) ? src : null;
+}
+function cleanTag(tag){
+  const m = /^<\s*(\/)?\s*([a-zA-Z][a-zA-Z0-9]*)([^>]*?)\/?\s*>$/.exec(tag); if (!m) return null;
+  const name = m[2].toLowerCase(); if (!HTML_TAGS.has(name)) return null;
+  if (m[1]) return HTML_VOID.has(name) ? "" : `</${name}>`;
+  let out = "<" + name; const re = /([a-zA-Z][a-zA-Z0-9-]*)\s*=\s*("([^"]*)"|'([^']*)'|([^\s"'>]+))/g; let a;
+  while ((a = re.exec(m[3]))){
+    const k = a[1].toLowerCase(), v = a[3] ?? a[4] ?? a[5] ?? "";
+    if (k === "style"){
+      const css = v.split(";").map(d => d.split(":")).filter(([p, val]) => p && val !== undefined && CSS_OK.test(p.trim().toLowerCase()) && !/url\s*\(|expression|javascript:|@import|[<>\\]/i.test(val)).map(([p, ...val]) => p.trim().toLowerCase() + ":" + val.join(":").trim()).join(";");
+      if (css) out += ` style="${attr(css)}"`;
+    } else if (["align", "colspan", "rowspan", "width", "height", "alt", "title"].includes(k)) out += ` ${k}="${attr(v)}"`;
+    else if (k === "src" && name === "img"){ const s = imgSrc(v); if (s) out += ` src="${attr(s)}"`; else return null; }
+  }
+  if (name === "img" && !/ src="/.test(out)) return null;
+  return out + ">";
+}
 function mdInline(s){
   const keep = [], hold = h => "\u0000" + (keep.push(h) - 1) + "\u0000";
   s = s.replace(/``(.+?)``|`([^`]+)`/g, (_, a, b) => hold("<code>" + esc(a ?? b) + "</code>"));
-  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, txt, url) => hold(`<a href="${esc(url).replace(/"/g, "&quot;")}" target="_blank" rel="noopener noreferrer">${esc(txt)}</a>`));
+  s = s.replace(/!\[([^\]]*)\]\(\s*([^)\s]+)(?:\s+"[^"]*")?\s*\)/g, (_, alt, src) => {
+    const u = imgSrc(src); if (u) return hold(`<img src="${attr(u)}" alt="${attr(alt)}">`);
+    return /^https?:\/\//.test(src) ? hold(`<a href="${attr(src)}" target="_blank" rel="noopener noreferrer">${esc(alt || src)}</a>`) : hold(esc(alt));
+  });
+  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, txt, url) => hold(`<a href="${attr(url)}" target="_blank" rel="noopener noreferrer">${esc(txt)}</a>`));
+  s = s.replace(/&(#\d{1,7}|#x[0-9a-fA-F]{1,6}|[a-zA-Z][a-zA-Z0-9]{1,31});/g, m => hold(m));
+  s = s.replace(/<\/?[a-zA-Z][^<>]*>/g, m => { const c = cleanTag(m); return c === null ? m : hold(c); });
   s = esc(s)
     .replace(/\*\*\*([^*]+)\*\*\*/g, "<b><em>$1</em></b>")
     .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/__([^_]+)__/g, "<b>$1</b>")
     .replace(/\*([^*\s][^*]*)\*/g, "<em>$1</em>").replace(/(^|[^\w])_([^_\s][^_]*)_(?!\w)/g, "$1<em>$2</em>");
   return s.replace(/\u0000(\d+)\u0000/g, (_, i) => keep[i]);
 }
-function mdRender(src){
+function mdRender(src, att){
+  const prevAtt = MD_ATT; MD_ATT = att || null;
+  try { return mdBlocks(src); } finally { MD_ATT = prevAtt; }
+}
+function mdBlocks(src){
   const lines = src.replace(/\r/g, "").split("\n"); let html = "", i = 0;
+  const HTML_LINE = /^\s*(<\/?[a-zA-Z][^<>]*>\s*)+$/;
   const SEP = /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/;
   const cellsOf = l => { let s = l.trim(); if (s.startsWith("|")) s = s.slice(1); if (s.endsWith("|") && !s.endsWith("\\|")) s = s.slice(0, -1); return s.split(/(?<!\\)\|/).map(c => c.trim().replace(/\\\|/g, "|")); };
   const isTable = j => j + 1 < lines.length && lines[j].includes("|") && SEP.test(lines[j + 1]) && cellsOf(lines[j]).length === cellsOf(lines[j + 1]).length;
-  const isBlock = l => /^\s*(#{1,6} |[-*+] |\d+[.)] |>|```)/.test(l);
+  const isBlock = l => /^\s*(#{1,6} |[-*+] |\d+[.)] |>|```)/.test(l) || HTML_LINE.test(l);
   const startsBlock = j => isBlock(lines[j]) || isTable(j);
   while (i < lines.length){
     const l = lines[i];
     if (!l.trim()){ i++; continue; }
+    if (HTML_LINE.test(l)){ html += l.match(/<\/?[a-zA-Z][^<>]*>/g).map(tg => cleanTag(tg) ?? esc(tg)).join(""); i++; continue; }
     if (/^\s*```/.test(l)){
       const body = []; i++;
       while (i < lines.length && !/^\s*```/.test(lines[i])) body.push(lines[i++]);
@@ -560,7 +599,7 @@ function mdRender(src){
     if (h){ html += `<h${h[1].length}>${mdInline(h[2])}</h${h[1].length}>`; i++; continue; }
     if (/^\s*>/.test(l)){
       const q = []; while (i < lines.length && /^\s*>/.test(lines[i])) q.push(lines[i++].replace(/^\s*> ?/, ""));
-      html += "<blockquote>" + mdRender(q.join("\n")) + "</blockquote>"; continue;
+      html += "<blockquote>" + mdBlocks(q.join("\n")) + "</blockquote>"; continue;
     }
     if (isTable(i)){
       const head = cellsOf(lines[i]), al = cellsOf(lines[i + 1]).map(c => /^:-+:$/.test(c) ? "center" : /-:$/.test(c) ? "right" : ""); i += 2;
@@ -593,8 +632,8 @@ const ICON = {
   type:'<svg width="13" height="12" viewBox="0 0 13 12"><text x="0" y="10" font-size="10" font-family="monospace" fill="currentColor">M↓</text></svg>',
   del:'<svg width="12" height="12" viewBox="0 0 12 12"><path d="M2.5 3.5h7M5 3.5V2h2v1.5M3.5 3.5l.5 7h4l.5-7" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>'
 };
-function makeCell(type, src){
-  const c = { id: ++uid, type, src: src || "", count: null, state: "", errLine: 0 };
+function makeCell(type, src, att){
+  const c = { id: ++uid, type, src: src || "", att: att || null, count: null, state: "", errLine: 0 };
   const el = document.createElement("div");
   el.className = "cell" + (type === "md" ? " mdc" : "");
   el.innerHTML = `<div class="gut"><span class="pr"></span><button class="grip" title="${t("grip")}" aria-label="${t("grip")}"><svg width="10" height="16" viewBox="0 0 10 16"><g fill="currentColor"><circle cx="2.5" cy="3" r="1.4"/><circle cx="7.5" cy="3" r="1.4"/><circle cx="2.5" cy="8" r="1.4"/><circle cx="7.5" cy="8" r="1.4"/><circle cx="2.5" cy="13" r="1.4"/><circle cx="7.5" cy="13" r="1.4"/></g></svg></button></div><div class="cbody"><div class="ed"><div class="errbar" hidden></div><pre class="hl" aria-hidden="true"></pre><textarea id="cell-${c.id}" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="${t(type === "md" ? "cellMd" : "cellCode")}"></textarea></div>${type === "md" ? '<div class="md"></div>' : ""}<div class="out" aria-live="polite"></div></div>
@@ -627,7 +666,7 @@ function makeCell(type, src){
     if (a === "run"){ if (c.state === "running") stopAll(); else runCells([c]); }
     if (a === "up" && i > 0){ CELLS.splice(i,1); CELLS.splice(i-1,0,c); cellsEl.insertBefore(el, CELLS[i].el); save(); }
     if (a === "down" && i < CELLS.length-1){ CELLS.splice(i,1); CELLS.splice(i+1,0,c); cellsEl.insertBefore(el, CELLS[i+1].el.nextSibling); save(); }
-    if (a === "type"){ const n = makeCell(c.type === "md" ? "code" : "md", c.src); replaceCell(c, n); }
+    if (a === "type"){ const n = makeCell(c.type === "md" ? "code" : "md", c.src, c.att); replaceCell(c, n); }
     if (a === "del"){ removeCell(c); }
   });
   paint(c); gutter(c);
@@ -673,7 +712,7 @@ function bindGrip(c, grip){
 }
 function paint(c){
   c.hl.innerHTML = c.type === "md" ? esc(c.src) + "\n" : highlight(c.src);
-  if (c.md) c.md.innerHTML = mdRender(c.src);
+  if (c.md) c.md.innerHTML = mdRender(c.src, c.att);
 }
 function gutter(c){
   if (c.type === "md"){ c.gut.textContent = "✎"; const ed = c.el.classList.contains("editing"); c.gut.title = t(ed ? "doneNote" : "editNote"); c.gut.setAttribute("aria-label", c.gut.title); c.gut.setAttribute("aria-pressed", ed); return; }
@@ -744,7 +783,7 @@ addRow.addEventListener("click", e => { const b = e.target.closest("button"); if
 function loadCells(list, title){
   if (K.running) stopAll();
   cellsEl.innerHTML = ""; CELLS = []; ACTIVE = null;
-  list.forEach(([t, s]) => { const c = makeCell(t, s); CELLS.push(c); cellsEl.appendChild(c.el); });
+  list.forEach(([t, s, a]) => { const c = makeCell(t, s, a); CELLS.push(c); cellsEl.appendChild(c.el); });
   cellsEl.appendChild(addRow);
   if (title) $("#nbTitle").value = title;
   setActive(CELLS.find(c => c.type === "code") || CELLS[0]);
@@ -752,7 +791,19 @@ function loadCells(list, title){
   cellsEl.scrollTop = 0; save();
 }
 let saveT;
-function save(){ clearTimeout(saveT); saveT = setTimeout(() => store.set("jetbotlab.nb.v1", { title: $("#nbTitle").value, map: MAPID, cells: CELLS.map(c => [c.type, c.src]) }), 300); }
+let saveNoImgWarned = false;
+function save(){
+  clearTimeout(saveT);
+  saveT = setTimeout(() => {
+    const d = { title: $("#nbTitle").value, map: MAPID, cells: CELLS.map(c => c.att ? [c.type, c.src, c.att] : [c.type, c.src]) };
+    try { localStorage.setItem("jetbotlab.nb.v1", JSON.stringify(d)); }
+    catch (e) {
+      // ảnh nhúng vượt dung lượng bộ nhớ trình duyệt: vẫn tự lưu chữ, ảnh thì nhắc dùng Lưu tệp
+      d.cells = d.cells.map(x => x.slice(0, 2)); store.set("jetbotlab.nb.v1", d);
+      if (!saveNoImgWarned){ saveNoImgWarned = true; toast(t("autosaveNoImg")); }
+    }
+  }, 300);
+}
 $("#nbTitle").addEventListener("input", save);
 
 /* ---------- outputs ---------- */
@@ -942,12 +993,27 @@ drawer.addEventListener("click", e => {
 document.addEventListener("pointerdown", e => {
   if (DRAWER && !drawer.contains(e.target) && !e.target.closest(".rail")) closeDrawer();
 });
+// Ảnh nhúng của ô ghi chú (chuẩn Jupyter): { "p1.png": { "image/png": "<base64>" } }. Chỉ nhận ảnh raster base64.
+function sanitizeAtt(a){
+  if (!a || typeof a !== "object" || Array.isArray(a)) return null;
+  const out = {}; let n = 0;
+  for (const name of Object.keys(a).slice(0, 50)){
+    const d = a[name]; if (!d || typeof d !== "object") continue;
+    for (const mime of Object.keys(d)){
+      if (!/^image\/(png|jpeg|gif|webp)$/.test(mime)) continue;
+      const v = (Array.isArray(d[mime]) ? d[mime].join("") : String(d[mime] || "")).replace(/\s+/g, "");
+      if (v && v.length < 15e6 && /^[A-Za-z0-9+/]+=*$/.test(v)){ out[String(name).slice(0, 200)] = { [mime]: v }; n++; break; }
+    }
+  }
+  return n ? out : null;
+}
 function sanitizeCells(list){
   if (!Array.isArray(list) || list.length > 300) return null;
   const out = [];
   for (const c of list){
     if (!Array.isArray(c) || (c[0] !== "code" && c[0] !== "md")) return null;
-    out.push([c[0], String(c[1] == null ? "" : c[1]).slice(0, 100000)]);
+    const att = c[0] === "md" ? sanitizeAtt(c[2]) : null;
+    out.push(att ? [c[0], String(c[1] == null ? "" : c[1]).slice(0, 100000), att] : [c[0], String(c[1] == null ? "" : c[1]).slice(0, 100000)]);
   }
   return out;
 }
@@ -960,7 +1026,7 @@ function saveFile(){
   const nb = {
     cells: CELLS.map(c => c.type === "code"
       ? { cell_type: "code", execution_count: null, metadata: {}, outputs: [], source: lines(c.src) }
-      : { cell_type: "markdown", metadata: {}, source: lines(c.src) }),
+      : Object.assign({ cell_type: "markdown", metadata: {}, source: lines(c.src) }, c.att ? { attachments: c.att } : {})),
     metadata: { kernelspec: { display_name: "Python 3", language: "python", name: "python3" }, language_info: { name: "python" }, jetbotlab: { map: MAPID } },
     nbformat: 4, nbformat_minor: 5
   };
@@ -980,14 +1046,14 @@ document.addEventListener("keydown", e => {
 });
 $("#fileIn").addEventListener("change", e => {
   const f = e.target.files[0]; if (!f) return;
-  if (f.size > 2*1024*1024){ toast(t("fileTooBig")); e.target.value = ""; return; }
+  if (f.size > 20*1024*1024){ toast(t("fileTooBig")); e.target.value = ""; return; }
   const r = new FileReader();
   r.onload = () => {
     try {
       if (/\.ipynb$/i.test(f.name)){
         const nb = JSON.parse(r.result);
         const list = sanitizeCells((Array.isArray(nb.cells) ? nb.cells : []).filter(x => x && (x.cell_type === "code" || x.cell_type === "markdown"))
-          .map(x => [x.cell_type === "code" ? "code" : "md", Array.isArray(x.source) ? x.source.join("") : String(x.source || "")]));
+          .map(x => [x.cell_type === "code" ? "code" : "md", Array.isArray(x.source) ? x.source.join("") : String(x.source || ""), x.attachments]));
         if (!list){ toast(t("badNotebook")); e.target.value = ""; return; }
         const m = nb.metadata && nb.metadata.jetbotlab && nb.metadata.jetbotlab.map;
         if (typeof m === "string" && Object.prototype.hasOwnProperty.call(MAPS, m)) setMap(m);
