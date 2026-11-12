@@ -398,7 +398,7 @@ const LESSONS = [
  { id:"l0", tag:"Bài giảng", title:"0. Bài giảng: Tránh vật cản với JetBot", desc:"Bài học song ngữ Anh – Việt, có nút loa nghe từ vựng giọng Anh.", map:"arena", file:"00_lesson_collision_avoidance.ipynb", cells:[
   ["md", "# Lesson: Collision Avoidance with JetBot\nScroll down to read the lesson. Write your answers in the cells marked ✍️ (double-click a cell to type, then press **Shift + Enter**).  \n*Kéo xuống để đọc bài. Viết câu trả lời vào các ô có dấu ✍️ (nhấp đúp vào ô để gõ, rồi bấm **Shift + Enter**).*"],
   ["md", "![p1](/lessons/collision-avoidance/p1.png)"],
-  ["md", "![p2](/lessons/collision-avoidance/p2.png \"say:obstacle@23.9,44.6|collision@46.8,44.6|dataset@69.6,44.6|label@92.5,44.6|train@23.9,65.2|model@46.8,65.2|predict@69.6,65.2|motor@92.5,65.2|obstacle, collision, dataset, label, train, model, predict, motor@67.8,36.6\")"],
+  ["md", "![p2](/lessons/collision-avoidance/p2.png \"say:obstacle@23.9,44.6|collision@46.8,44.6|dataset@69.6,44.6|label@92.5,44.6|train@23.9,65.2|model@46.8,65.2|predict@69.6,65.2|motor@92.5,65.2\")"],
   ["md", "![p3](/lessons/collision-avoidance/p3.png)"],
   ["md", "![p4](/lessons/collision-avoidance/p4.png)"],
   ["md", "<div style=\"border-left:6px solid #E97132;padding:4px 14px\">\n\n**✍️ Exercise 3 – Think about it | Suy ngẫm**\n\na. \n\nb. \n\nc. \n\nd. \n\n| free images | blocked images | best accuracy | FPS | Did it hit anything? |\n|---|---|---|---|---|\n|  |  |  % |  |  |\n\n</div>"],
@@ -551,6 +551,8 @@ const HTML_TAGS = new Set("div span p br hr b strong i em u s sub sup small mark
 const HTML_VOID = new Set(["br", "hr", "img"]);
 const CSS_OK = /^(color|background|background-color|border(-(left|right|top|bottom))?(-(color|width|style|radius))?|border-radius|padding(-(left|right|top|bottom))?|margin(-(left|right|top|bottom))?|text-align|font-(weight|style|size)|text-decoration|width|max-width|min-width|height|display|gap|align-items|justify-content|line-height|vertical-align|list-style(-type)?)$/;
 let MD_ATT = null;
+// CSP (style-src không có unsafe-inline) chặn thuộc tính style trong HTML, nhưng cho phép gán qua element.style.
+function applyCss(root){ root.querySelectorAll("[data-css]").forEach(el => { el.style.cssText = el.dataset.css; el.removeAttribute("data-css"); }); }
 const SPEAKER = '<svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2.5 6h2.5l3.5-3v10l-3.5-3H2.5z" fill="currentColor"/><path d="M10.6 5.4a3.6 3.6 0 0 1 0 5.2M12.4 3.6a6.1 6.1 0 0 1 0 8.8" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>';
 // Đọc từ vựng bằng giọng Anh (en-GB) qua Web Speech API của trình duyệt.
 function speak(text, btn){
@@ -580,7 +582,7 @@ function cleanTag(tag){
     const k = a[1].toLowerCase(), v = a[3] ?? a[4] ?? a[5] ?? "";
     if (k === "style"){
       const css = v.split(";").map(d => d.split(":")).filter(([p, val]) => p && val !== undefined && CSS_OK.test(p.trim().toLowerCase()) && !/url\s*\(|expression|javascript:|@import|[<>\\]/i.test(val)).map(([p, ...val]) => p.trim().toLowerCase() + ":" + val.join(":").trim()).join(";");
-      if (css) out += ` style="${attr(css)}"`;
+      if (css) out += ` data-css="${attr(css)}"`;
     } else if (["align", "colspan", "rowspan", "width", "height", "alt", "title"].includes(k)) out += ` ${k}="${attr(v)}"`;
     else if (k === "src" && name === "img"){ const s = imgSrc(v); if (s) out += ` src="${attr(s)}"`; else return null; }
   }
@@ -595,7 +597,7 @@ function mdInline(s){
     const u = imgSrc(src);
     if (u && title && title.startsWith("say:")){
       const spots = title.slice(4).split("|").map(p => /^(.{1,200})@(\d{1,3}(?:\.\d+)?),(\d{1,3}(?:\.\d+)?)$/.exec(p.trim())).filter(m => m && +m[2] <= 100 && +m[3] <= 100);
-      return hold(`<span class="imgsay"><img src="${attr(u)}" alt="${attr(alt)}">` + spots.map(m => `<button type="button" class="say spot" style="left:${+m[2]}%;top:${+m[3]}%" data-say="${attr(m[1].trim())}" title="${attr(t("sayT") + ": " + m[1].trim())}" aria-label="${attr(t("sayT") + ": " + m[1].trim())}">${SPEAKER}</button>`).join("") + "</span>");
+      return hold(`<span class="imgsay"><img src="${attr(u)}" alt="${attr(alt)}">` + spots.map(m => `<button type="button" class="say spot" data-css="left:${+m[2]}%;top:${+m[3]}%" data-say="${attr(m[1].trim())}" title="${attr(t("sayT") + ": " + m[1].trim())}" aria-label="${attr(t("sayT") + ": " + m[1].trim())}">${SPEAKER}</button>`).join("") + "</span>");
     }
     if (u) return hold(`<img src="${attr(u)}" alt="${attr(alt)}">`);
     return /^https?:\/\//.test(src) ? hold(`<a href="${attr(src)}" target="_blank" rel="noopener noreferrer">${esc(alt || src)}</a>`) : hold(esc(alt));
@@ -643,7 +645,7 @@ function mdBlocks(src){
     }
     if (isTable(i)){
       const head = cellsOf(lines[i]), al = cellsOf(lines[i + 1]).map(c => /^:-+:$/.test(c) ? "center" : /-:$/.test(c) ? "right" : ""); i += 2;
-      const cell = (c, k, tag) => `<${tag}${al[k] ? ` style="text-align:${al[k]}"` : ""}>${mdInline(c)}</${tag}>`;
+      const cell = (c, k, tag) => `<${tag}${al[k] ? ` data-css="text-align:${al[k]}"` : ""}>${mdInline(c)}</${tag}>`;
       let body = "";
       while (i < lines.length && lines[i].trim() && lines[i].includes("|")){ const r = cellsOf(lines[i++]); body += "<tr>" + head.map((_, k) => cell(r[k] ?? "", k, "td")).join("") + "</tr>"; }
       html += `<div class="mdtable"><table><thead><tr>${head.map((c, k) => cell(c, k, "th")).join("")}</tr></thead><tbody>${body}</tbody></table></div>`; continue;
@@ -752,7 +754,7 @@ function bindGrip(c, grip){
 }
 function paint(c){
   c.hl.innerHTML = c.type === "md" ? esc(c.src) + "\n" : highlight(c.src);
-  if (c.md) c.md.innerHTML = mdRender(c.src, c.att);
+  if (c.md){ c.md.innerHTML = mdRender(c.src, c.att); applyCss(c.md); }
 }
 function gutter(c){
   if (c.type === "md"){ c.gut.textContent = "✎"; const ed = c.el.classList.contains("editing"); c.gut.title = t(ed ? "doneNote" : "editNote"); c.gut.setAttribute("aria-label", c.gut.title); c.gut.setAttribute("aria-pressed", ed); return; }
@@ -1486,7 +1488,7 @@ $("#bHome").onclick = () => { if (K.running) stopAll(); else SIM.setMotors(0, 0)
 const TG = { lidar: true, trail: true, cam: true, axis: true, edit: false, lbl: false, key: false };
 function bindToggle(id, key, after){ const b = $(id); b.onclick = () => { TG[key] = !TG[key]; b.setAttribute("aria-pressed", TG[key]); after && after(); }; }
 bindToggle("#tLidar", "lidar"); bindToggle("#tTrail", "trail"); bindToggle("#tCam", "cam"); bindToggle("#tAxis", "axis");
-bindToggle("#tEdit", "edit", () => { $("#bBoxReset").style.display = TG.edit ? "" : "none"; stage.classList.toggle("editing", TG.edit); if (TG.edit) toast(t("editToast")); });
+bindToggle("#tEdit", "edit", () => { $("#bBoxReset").hidden = !TG.edit; stage.classList.toggle("editing", TG.edit); if (TG.edit) toast(t("editToast")); });
 bindToggle("#tLbl", "lbl", () => { $("#labels").innerHTML = ""; if (TG.lbl && VIEW !== "follow") setView("follow"); });
 bindToggle("#tKey", "key", () => { $("#teleopTag").hidden = !TG.key; if (!TG.key) SIM.setMotors(0, 0); else { document.activeElement && document.activeElement.blur && document.activeElement.blur(); toast(t("teleopToast")); } });
 const keys = new Set();

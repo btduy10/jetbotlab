@@ -204,6 +204,7 @@ body.reordering,body.reordering *{cursor:grabbing!important;user-select:none}
 .lbl small{color:var(--muted);font-weight:500;margin-left:4px}
 .toast{position:fixed;z-index:1000;left:50%;top:62px;max-width:calc(100vw - 32px);white-space:normal;text-align:center;transform:translateX(-50%);background:var(--fg);color:var(--panel);padding:7px 14px;border-radius:99px;font-size:12.5px;font-weight:500;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
+#bBoxReset[hidden]{display:none}
 .teleop{position:absolute;left:10px;top:10px;font-size:11.5px;background:var(--accent);color:var(--on-accent);border-radius:var(--r);padding:4px 9px;font-weight:600;pointer-events:none}
 
 .tele{display:grid;grid-template-columns:repeat(auto-fit,minmax(104px,1fr));background:var(--panel);border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
