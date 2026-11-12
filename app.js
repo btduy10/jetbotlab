@@ -398,8 +398,7 @@ const LESSONS = [
  { id:"l0", tag:"Bài giảng", title:"0. Bài giảng: Tránh vật cản với JetBot", desc:"Bài học song ngữ Anh – Việt, có nút loa nghe từ vựng giọng Anh.", map:"arena", file:"00_lesson_collision_avoidance.ipynb", cells:[
   ["md", "# Lesson: Collision Avoidance with JetBot\nScroll down to read the lesson. Write your answers in the cells marked ✍️ (double-click a cell to type, then press **Shift + Enter**).  \n*Kéo xuống để đọc bài. Viết câu trả lời vào các ô có dấu ✍️ (nhấp đúp vào ô để gõ, rồi bấm **Shift + Enter**).*"],
   ["md", "![p1](/lessons/collision-avoidance/p1.png)"],
-  ["md", "![p2](/lessons/collision-avoidance/p2.png)"],
-  ["md", "### 🔊 Listen and repeat · Nghe và nhắc lại\nClick the speaker to hear each word in British English, then say it aloud.  \n*Bấm nút loa để nghe từ đọc giọng Anh, rồi đọc to theo.*\n\n| Nghe | Word | IPA | Nghĩa |\n|:---:|---|---|---|\n| [🔊](say:obstacle) | **obstacle** | /ˈɒbstəkl/ | vật cản |\n| [🔊](say:collision) | **collision** | /kəˈlɪʒn/ | sự va chạm |\n| [🔊](say:dataset) | **dataset** | /ˈdeɪtəset/ | bộ dữ liệu |\n| [🔊](say:label) | **label** | /ˈleɪbl/ | nhãn; gán nhãn |\n| [🔊](say:train) | **train** | /treɪn/ | huấn luyện |\n| [🔊](say:model) | **model** | /ˈmɒdl/ | mô hình (AI) |\n| [🔊](say:predict) | **predict** | /prɪˈdɪkt/ | dự đoán |\n| [🔊](say:motor) | **motor** | /ˈməʊtə(r)/ | động cơ |\n\n[🔊 Listen to all 8 words · Nghe cả 8 từ](say:obstacle, collision, dataset, label, train, model, predict, motor)"],
+  ["md", "![p2](/lessons/collision-avoidance/p2.png \"say:obstacle@23.9,44.6|collision@46.8,44.6|dataset@69.6,44.6|label@92.5,44.6|train@23.9,65.2|model@46.8,65.2|predict@69.6,65.2|motor@92.5,65.2|obstacle, collision, dataset, label, train, model, predict, motor@67.8,36.6\")"],
   ["md", "![p3](/lessons/collision-avoidance/p3.png)"],
   ["md", "![p4](/lessons/collision-avoidance/p4.png)"],
   ["md", "<div style=\"border-left:6px solid #E97132;padding:4px 14px\">\n\n**✍️ Exercise 3 – Think about it | Suy ngẫm**\n\na. \n\nb. \n\nc. \n\nd. \n\n| free images | blocked images | best accuracy | FPS | Did it hit anything? |\n|---|---|---|---|---|\n|  |  |  % |  |  |\n\n</div>"],
@@ -591,8 +590,14 @@ function cleanTag(tag){
 function mdInline(s){
   const keep = [], hold = h => "\u0000" + (keep.push(h) - 1) + "\u0000";
   s = s.replace(/``(.+?)``|`([^`]+)`/g, (_, a, b) => hold("<code>" + esc(a ?? b) + "</code>"));
-  s = s.replace(/!\[([^\]]*)\]\(\s*([^)\s]+)(?:\s+"[^"]*")?\s*\)/g, (_, alt, src) => {
-    const u = imgSrc(src); if (u) return hold(`<img src="${attr(u)}" alt="${attr(alt)}">`);
+  // ![alt](src "say:obstacle@24,44.5|collision@46.9,44.5") → ảnh có nút loa nổi tại toạ độ % (x, y) trên ảnh
+  s = s.replace(/!\[([^\]]*)\]\(\s*([^)\s]+)(?:\s+"([^"]*)")?\s*\)/g, (_, alt, src, title) => {
+    const u = imgSrc(src);
+    if (u && title && title.startsWith("say:")){
+      const spots = title.slice(4).split("|").map(p => /^(.{1,200})@(\d{1,3}(?:\.\d+)?),(\d{1,3}(?:\.\d+)?)$/.exec(p.trim())).filter(m => m && +m[2] <= 100 && +m[3] <= 100);
+      return hold(`<span class="imgsay"><img src="${attr(u)}" alt="${attr(alt)}">` + spots.map(m => `<button type="button" class="say spot" style="left:${+m[2]}%;top:${+m[3]}%" data-say="${attr(m[1].trim())}" title="${attr(t("sayT") + ": " + m[1].trim())}" aria-label="${attr(t("sayT") + ": " + m[1].trim())}">${SPEAKER}</button>`).join("") + "</span>");
+    }
+    if (u) return hold(`<img src="${attr(u)}" alt="${attr(alt)}">`);
     return /^https?:\/\//.test(src) ? hold(`<a href="${attr(src)}" target="_blank" rel="noopener noreferrer">${esc(alt || src)}</a>`) : hold(esc(alt));
   });
   // [🔊](say:obstacle) → nút loa đọc từ bằng giọng Anh

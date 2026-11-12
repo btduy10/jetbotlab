@@ -296,3 +296,10 @@ input[type=file]{display:none}
 @keyframes sayPulse{from{opacity:.55}to{opacity:1}}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .md .say{color:#f39a63}}
 :root[data-theme="dark"] .md .say{color:#f39a63}
+/* ảnh có nút loa nổi (từ vựng trong ảnh) */
+.md .imgsay{position:relative;display:inline-block;max-width:100%;vertical-align:top}
+.md .imgsay img{display:block}
+.md .say.spot{position:absolute;transform:translate(-50%,-50%);width:clamp(26px,3.2vw,38px);height:clamp(26px,3.2vw,38px);min-width:0;min-height:0;padding:0;border-radius:50%;border:1.5px solid #E97132;background:#fff;color:#E97132;box-shadow:0 1px 4px rgb(0 0 0 / .18)}
+.md .say.spot:hover{background:#fff4ec;transform:translate(-50%,-50%) scale(1.08)}
+.md .say.spot.speaking{background:#E97132;color:#fff}
+.md .say.spot svg{width:55%;height:55%}
