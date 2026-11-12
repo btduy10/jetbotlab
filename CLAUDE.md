@@ -22,6 +22,7 @@ Hằng số ở `RB` trong `app.js`; mô hình 3D ở `buildRobot()`.
 - Song ngữ: mọi chữ mới phải thêm key vào cả `I18N.vi` và `I18N.en`, dùng `t("key")`. Bài mẫu mới thêm cả bản `LESSONS_EN`.
 - Không chèn HTML chưa qua `esc()` vào `innerHTML`. Không dùng thuộc tính `style="..."` trong HTML (CSP chặn) – dùng class.
 - Không thêm thư viện từ CDN; nếu cần, tải bản cố định vào `vendor/`.
+- Nút nghe phát âm trong ô ghi chú: `<button data-say="text" data-rate="0.5" data-lang="en-GB">Listen</button>` (`data-say=""` = nút dừng). `cleanTag()` chỉ giữ 3 thuộc tính này, `sayButton()` đọc bằng Web Speech API của trình duyệt.
 - Bài mẫu đã chạy thử; đổi thông số vật lý (`RB`) thì chạy lại bài 2, 4, 5, 8.
 
 ## Bảo mật sandbox Python (không được nới lỏng)
