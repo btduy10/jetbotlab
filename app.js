@@ -543,7 +543,11 @@ function mdInline(s){
 }
 function mdRender(src){
   const lines = src.replace(/\r/g, "").split("\n"); let html = "", i = 0;
+  const SEP = /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?\s*$/;
+  const cellsOf = l => { let s = l.trim(); if (s.startsWith("|")) s = s.slice(1); if (s.endsWith("|") && !s.endsWith("\\|")) s = s.slice(0, -1); return s.split(/(?<!\\)\|/).map(c => c.trim().replace(/\\\|/g, "|")); };
+  const isTable = j => j + 1 < lines.length && lines[j].includes("|") && SEP.test(lines[j + 1]) && cellsOf(lines[j]).length === cellsOf(lines[j + 1]).length;
   const isBlock = l => /^\s*(#{1,6} |[-*+] |\d+[.)] |>|```)/.test(l);
+  const startsBlock = j => isBlock(lines[j]) || isTable(j);
   while (i < lines.length){
     const l = lines[i];
     if (!l.trim()){ i++; continue; }
@@ -558,18 +562,25 @@ function mdRender(src){
       const q = []; while (i < lines.length && /^\s*>/.test(lines[i])) q.push(lines[i++].replace(/^\s*> ?/, ""));
       html += "<blockquote>" + mdRender(q.join("\n")) + "</blockquote>"; continue;
     }
+    if (isTable(i)){
+      const head = cellsOf(lines[i]), al = cellsOf(lines[i + 1]).map(c => /^:-+:$/.test(c) ? "center" : /-:$/.test(c) ? "right" : ""); i += 2;
+      const cell = (c, k, tag) => `<${tag}${al[k] ? ` style="text-align:${al[k]}"` : ""}>${mdInline(c)}</${tag}>`;
+      let body = "";
+      while (i < lines.length && lines[i].trim() && lines[i].includes("|")){ const r = cellsOf(lines[i++]); body += "<tr>" + head.map((_, k) => cell(r[k] ?? "", k, "td")).join("") + "</tr>"; }
+      html += `<div class="mdtable"><table><thead><tr>${head.map((c, k) => cell(c, k, "th")).join("")}</tr></thead><tbody>${body}</tbody></table></div>`; continue;
+    }
     const li = l.match(/^\s*([-*+]|\d+[.)]) /);
     if (li){
       const ol = /\d/.test(li[1]), re = ol ? /^\s*\d+[.)] / : /^\s*[-*+] /; let items = "";
       while (i < lines.length && re.test(lines[i])){
         let it = lines[i++].replace(re, "");
-        while (i < lines.length && lines[i].trim() && !isBlock(lines[i])) it += " " + lines[i++].trim();
+        while (i < lines.length && lines[i].trim() && !startsBlock(i)) it += " " + lines[i++].trim();
         items += "<li>" + mdInline(it) + "</li>";
       }
       html += ol ? `<ol>${items}</ol>` : `<ul>${items}</ul>`; continue;
     }
     const p = [l.trim()]; i++;
-    while (i < lines.length && lines[i].trim() && !isBlock(lines[i])) p.push(lines[i++].trim());
+    while (i < lines.length && lines[i].trim() && !startsBlock(i)) p.push(lines[i++].trim());
     html += "<p>" + p.map(mdInline).join(" ") + "</p>";
   }
   return html || '<p class="md-empty">' + esc(t("mdEmpty")) + '</p>';

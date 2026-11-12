@@ -277,3 +277,12 @@ input[type=file]{display:none}
 .tb#bField[aria-pressed="true"] .fill{opacity:0}
 .main.nofield{grid-template-columns:1fr}
 .main.nofield .split,.main.nofield .right{display:none}
+/* Ẩn sa bàn: bài học canh giữa, rộng tối đa 1100px */
+.main.nofield .cells{padding-inline:max(14px, calc((100% - 1100px) / 2))}
+.main.nofield .md{max-width:none}
+/* bảng markdown kiểu Colab */
+.md .mdtable{overflow-x:auto;margin:8px 0}
+.md table{border-collapse:collapse;font-size:13.5px;line-height:1.5}
+.md th,.md td{border:1px solid color-mix(in srgb, var(--fg) 18%, transparent);padding:6px 12px;vertical-align:top;text-align:left}
+.md th{font-weight:700;background:color-mix(in srgb, var(--fg) 5%, var(--panel))}
+.md tbody tr:nth-child(even) td{background:color-mix(in srgb, var(--fg) 2.5%, transparent)}
