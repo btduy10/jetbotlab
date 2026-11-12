@@ -529,20 +529,49 @@ function highlight(src){
   }
   return out + esc(src.slice(last)) + "\n";
 }
+// Markdown kiểu Jupyter / Colab: đoạn văn gộp dòng, `code` và ``code``, **đậm**, *nghiêng*, _nghiêng_, [liên kết](https://…),
+// tiêu đề #…######, danh sách - / 1., trích dẫn > nhiều dòng, khối ``` có tô màu Python.
+function mdInline(s){
+  const keep = [], hold = h => "\u0000" + (keep.push(h) - 1) + "\u0000";
+  s = s.replace(/``(.+?)``|`([^`]+)`/g, (_, a, b) => hold("<code>" + esc(a ?? b) + "</code>"));
+  s = s.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, (_, txt, url) => hold(`<a href="${esc(url).replace(/"/g, "&quot;")}" target="_blank" rel="noopener noreferrer">${esc(txt)}</a>`));
+  s = esc(s)
+    .replace(/\*\*\*([^*]+)\*\*\*/g, "<b><em>$1</em></b>")
+    .replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/__([^_]+)__/g, "<b>$1</b>")
+    .replace(/\*([^*\s][^*]*)\*/g, "<em>$1</em>").replace(/(^|[^\w])_([^_\s][^_]*)_(?!\w)/g, "$1<em>$2</em>");
+  return s.replace(/\u0000(\d+)\u0000/g, (_, i) => keep[i]);
+}
 function mdRender(src){
-  const inl = s => esc(s).replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\*\*([^*]+)\*\*/g,"<b>$1</b>").replace(/\*([^*]+)\*/g,"<em>$1</em>");
-  let html = "", list = false;
-  for (const raw of src.split("\n")){
-    const l = raw.trimEnd();
-    if (/^\s*[-*] /.test(l)){ if (!list){ html += "<ul>"; list = true; } html += "<li>" + inl(l.replace(/^\s*[-*] /,"")) + "</li>"; continue; }
-    if (list){ html += "</ul>"; list = false; }
-    if (!l.trim()) continue;
-    const h = l.match(/^(#{1,3}) (.*)/);
-    if (h) html += `<h${h[1].length}>${inl(h[2])}</h${h[1].length}>`;
-    else if (l.startsWith("> ")) html += "<blockquote>" + inl(l.slice(2)) + "</blockquote>";
-    else html += "<p>" + inl(l) + "</p>";
+  const lines = src.replace(/\r/g, "").split("\n"); let html = "", i = 0;
+  const isBlock = l => /^\s*(#{1,6} |[-*+] |\d+[.)] |>|```)/.test(l);
+  while (i < lines.length){
+    const l = lines[i];
+    if (!l.trim()){ i++; continue; }
+    if (/^\s*```/.test(l)){
+      const body = []; i++;
+      while (i < lines.length && !/^\s*```/.test(lines[i])) body.push(lines[i++]);
+      i++; html += `<pre class="mdpre"><code>${highlight(body.join("\n")).replace(/\n$/, "")}</code></pre>`; continue;
+    }
+    const h = l.match(/^\s*(#{1,6}) (.*)/);
+    if (h){ html += `<h${h[1].length}>${mdInline(h[2])}</h${h[1].length}>`; i++; continue; }
+    if (/^\s*>/.test(l)){
+      const q = []; while (i < lines.length && /^\s*>/.test(lines[i])) q.push(lines[i++].replace(/^\s*> ?/, ""));
+      html += "<blockquote>" + mdRender(q.join("\n")) + "</blockquote>"; continue;
+    }
+    const li = l.match(/^\s*([-*+]|\d+[.)]) /);
+    if (li){
+      const ol = /\d/.test(li[1]), re = ol ? /^\s*\d+[.)] / : /^\s*[-*+] /; let items = "";
+      while (i < lines.length && re.test(lines[i])){
+        let it = lines[i++].replace(re, "");
+        while (i < lines.length && lines[i].trim() && !isBlock(lines[i])) it += " " + lines[i++].trim();
+        items += "<li>" + mdInline(it) + "</li>";
+      }
+      html += ol ? `<ol>${items}</ol>` : `<ul>${items}</ul>`; continue;
+    }
+    const p = [l.trim()]; i++;
+    while (i < lines.length && lines[i].trim() && !isBlock(lines[i])) p.push(lines[i++].trim());
+    html += "<p>" + p.map(mdInline).join(" ") + "</p>";
   }
-  if (list) html += "</ul>";
   return html || '<p class="md-empty">' + esc(t("mdEmpty")) + '</p>';
 }
 const ICON = {
