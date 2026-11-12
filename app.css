@@ -85,7 +85,7 @@ select{background:var(--panel-2);border:1px solid var(--line);border-radius:var(
 .api button.ins{border:1px solid var(--line);background:var(--panel-2);border-radius:4px;font-size:11px;padding:1px 6px;color:var(--muted)}
 .api button.ins:hover{color:var(--accent-ink);border-color:var(--accent)}
 
-.nb{min-width:0;min-height:0;display:grid;grid-template-rows:auto 1fr}
+.nb{grid-column:3;grid-row:1;min-width:0;min-height:0;display:grid;grid-template-rows:auto 1fr}
 .nbbar{display:flex;align-items:center;gap:2px;flex-wrap:wrap;padding:5px 8px;border-bottom:1px solid var(--line);background:var(--panel)}
 .tb{border:0;background:transparent;border-radius:var(--r);height:30px;padding:0 9px;display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--fg)}
 .tb:hover{background:var(--panel-2)}
