@@ -304,3 +304,11 @@ input[type=file]{display:none}
 .md .say.spot:hover{background:#fff4ec;transform:translate(-50%,-50%) scale(1.08)}
 .md .say.spot.speaking{background:#E97132;color:#fff}
 .md .say.spot svg{width:55%;height:55%}
+/* ô bị khoá (metadata editable / deletable = false) */
+.ctools button:disabled{opacity:.3;cursor:not-allowed}
+.ctools button:disabled:hover{background:transparent;color:var(--muted)}
+.ctools button[data-a="lock"][aria-pressed="true"]{color:#c2561c}
+.cell.locked .ed{background:color-mix(in srgb, var(--fg) 3.5%, var(--code-bg));border-style:dashed}
+.cell.locked textarea{cursor:default}
+.cell.locked .grip{visibility:hidden}
+.cell.locked:not(.mdc) .gut .pr::after{content:"🔒";display:block;font-size:11px;line-height:1;margin-top:4px;text-align:right}

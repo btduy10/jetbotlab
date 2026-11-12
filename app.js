@@ -6,7 +6,7 @@ const store = {
 };
 
 /* ---------- ngôn ngữ / language ---------- */
-const I18N = {"vi": {"brandSub": "ROS AI Kit · mô phỏng", "nbAria": "Tên notebook", "kLoad": "Đang tải Python…", "kFail": "Không tải được Python", "kIdle": "Python 3 · Sẵn sàng", "kBusy": "Đang chạy…", "map": "Sa bàn", "speed": "Tốc độ", "langAria": "Ngôn ngữ", "rail": "Thanh bên", "rNb": "Bài mẫu", "rApi": "Tra cứu API", "rOpen": "Mở tệp .ipynb / .py", "aiNoScene": "Sa bàn 3D chưa sẵn sàng.", "sayT": "Nghe đọc", "sayNone": "Trình duyệt này không hỗ trợ đọc thành tiếng.", "hideField": "Ẩn sa bàn", "hideFieldT": "Ẩn sa bàn để xem bài học toàn màn hình", "showField": "Hiện sa bàn", "showFieldT": "Hiện lại sa bàn 3D", "aiPose": "Di chuyển robot:", "aiBump": "Robot vướng vật cản, không dịch được.", "tEdit": "Sửa vật cản", "tEditT": "Đặt / xoá khối vuông: bấm vào nền để đặt, bấm vào khối để xoá", "editToast": "Bấm vào nền để đặt khối, bấm vào khối để xoá", "boxReset": "Khôi phục", "boxResetT": "Khôi phục vật cản gốc của sa bàn này", "boxResetDone": "Đã khôi phục vật cản gốc", "boxOnRobot": "Không đặt khối đè lên robot", "aiOldFrame": "Ảnh này đã cũ, hãy chụp lại bằng camera.value.", "aiEmpty": "Bộ dữ liệu đang trống.", "aiNetSees": "Mạng nơ-ron thấy (16×16)", "aiUndo": "Xoá ảnh vừa thêm", "aiNotTrained": "Mô hình chưa được huấn luyện. Hãy gọi model.train(dataset) hoặc model.load('collision_model.pth').", "aiNeedData": "Cần ít nhất 4 ảnh mỗi loại để huấn luyện", "aiTrainHead": "Ảnh huấn luyện: {tr} · ảnh kiểm tra: {te}", "aiSaved": "Đã lưu mô hình: ", "aiSaveFail": "Không lưu được mô hình (bộ nhớ trình duyệt đầy?).", "aiNoModel": "Chưa có mô hình '{p}'. Hãy chạy bài 12 để huấn luyện và lưu mô hình.", "aiOut": "Robot đã ra ngoài vạch đen!", "rSave": "Lưu notebook về máy (.ipynb) · Ctrl+S", "rNew": "Tạo notebook mới", "saved": "Đã lưu ", "newConfirm": "Tạo notebook mới? Nội dung hiện tại sẽ bị thay thế. Hãy bấm Lưu trước nếu muốn giữ lại.", "newDone": "Đã tạo notebook mới", "run": "Chạy", "runT": "Chạy tất cả các ô (Shift+Enter: chạy ô đang chọn)", "stop": "Dừng", "stopT": "Dừng chương trình và động cơ (Esc Esc)", "restart": "Khởi động lại", "restartT": "Khởi động lại kernel: xoá mọi biến, đồng hồ về 0", "addCode": "Code", "addCodeT": "Thêm ô code bên dưới", "addMd": "Ghi chú", "addMdT": "Thêm ô ghi chú bên dưới", "clear": "Xoá kết quả", "clearT": "Xoá kết quả của mọi ô", "copy": "Sao chép code", "copyT": "Sao chép toàn bộ code", "splitAria": "Kéo để đổi kích thước", "vIso": "3D", "vTop": "Trên", "vFront": "Trước", "vSide": "Cạnh", "vFollow": "Theo robot", "tLidar": "Lidar", "tTrail": "Vết", "tCam": "Camera", "tAxis": "Trục Oxyz", "tAxisT": "Hệ trục gắn với robot: x mũi robot, y bên trái, z hướng lên", "tLbl": "Linh kiện", "tKey": "Lái phím", "tKeyT": "Lái bằng phím mũi tên / WASD", "home": "Về xuất phát", "homeT": "Đặt robot về vị trí xuất phát, xoá encoder, IMU và đồng hồ", "sceneLoading": "Đang dựng sa bàn 3D…", "sceneFail": "Không tải được thư viện 3D. Kiểm tra kết nối mạng.", "pip": "CAMERA CSI · GÓC RỘNG", "teleop": "Lái phím: ↑ ↓ ← → hoặc W A S D", "hint": "<kbd>Chuột phải</kbd> xoay 3D · <kbd>Shift</kbd>+<kbd>Chuột phải</kbd> hoặc <kbd>Chuột trái</kbd> vào nền: dời khung nhìn · <kbd>Cuộn</kbd> phóng to<br><kbd>Chuột trái</kbd> kéo robot, <kbd>Cuộn</kbd> khi đang kéo để xoay robot · thả gần ô START để về vị trí xuất phát", "telePos": "Vị trí x, y (cm)", "teleYaw": "Hướng (yaw)", "teleMot": "Động cơ T / P", "teleEnc": "Encoder T / P", "teleLid": "Lidar 0°", "teleLine": "Camera line", "teleTime": "Thời gian chạy", "noLine": "không thấy", "stopped": " · dừng", "pyLoading": "Python đang tải, chờ một chút…", "restarted": "Đã khởi động lại kernel: biến đã xoá, đồng hồ về 0", "copied": "Đã sao chép code", "opened": "Đã mở ", "openFail": "Không đọc được tệp: cần .ipynb hợp lệ hoặc .py", "teleopToast": "Bấm vào sa bàn rồi dùng phím mũi tên để lái", "homeToast": "Robot đã về vị trí xuất phát · encoder, IMU và đồng hồ về 0", "drawerLessons": "Bài mẫu", "drawerApi": "Thư viện jetbot", "insert": "Chèn", "cellCode": "Ô code", "cellMd": "Ô ghi chú", "cRun": "Chạy ô (Shift+Enter)", "cStop": "Dừng", "cUp": "Chuyển lên", "cDown": "Chuyển xuống", "cType": "Đổi Code / Ghi chú", "cDel": "Xoá ô", "grip": "Kéo để đổi thứ tự ô", "addRowCode": "+ Ô code", "addRowMd": "+ Ô ghi chú", "mdEmpty": "Nhấp đúp để viết ghi chú…", "trimmed": "…(đã lược bớt)", "interrupted": "chương trình đã được dừng. Động cơ đã tắt.", "line": "dòng", "inputAria": "Nhập dữ liệu", "goal": "ĐÍCH", "editNote": "Sửa ghi chú (hoặc nhấp đúp vào ghi chú)", "doneNote": "Xong, hiển thị ghi chú", "step": "Chạy từng ô", "stepT": "Mỗi lần bấm chạy ô code kế tiếp (bỏ qua ghi chú)", "stepDone": "Đã chạy hết các ô, lần bấm tới sẽ chạy lại từ ô đầu", "stepBusy": "Ô trước đang chạy, chờ xong hoặc bấm Dừng", "noFiles": "Mô phỏng không cho phép đọc / ghi tệp.", "blockedMod": "Thư viện này bị chặn trong mô phỏng vì lý do an toàn.", "fileTooBig": "Tệp quá lớn (tối đa 20 MB).", "autosaveNoImg": "Ảnh trong notebook quá lớn để tự lưu vào trình duyệt. Hãy bấm Lưu tệp (Ctrl+S) để giữ ảnh.", "badNotebook": "Notebook không hợp lệ hoặc quá nhiều ô (tối đa 300)."}, "en": {"brandSub": "ROS AI Kit · simulator", "nbAria": "Notebook name", "kLoad": "Loading Python…", "kFail": "Python failed to load", "kIdle": "Python 3 · Ready", "kBusy": "Running…", "map": "Field", "speed": "Speed", "langAria": "Language", "rail": "Sidebar", "rNb": "Sample lessons", "rApi": "API reference", "rOpen": "Open .ipynb / .py file", "aiNoScene": "The 3D field is not ready.", "sayT": "Listen", "sayNone": "This browser cannot read text aloud.", "hideField": "Hide field", "hideFieldT": "Hide the field to see the lesson full width", "showField": "Show field", "showFieldT": "Show the 3D field again", "aiPose": "Move robot:", "aiBump": "Blocked by an obstacle, cannot move there.", "tEdit": "Edit obstacles", "tEditT": "Add / remove blocks: click the floor to add, click a block to remove", "editToast": "Click the floor to add a block, click a block to remove it", "boxReset": "Reset", "boxResetT": "Restore this field's original obstacles", "boxResetDone": "Original obstacles restored", "boxOnRobot": "Cannot place a block on the robot", "aiOldFrame": "This image is too old, take a new one with camera.value.", "aiEmpty": "The dataset is empty.", "aiNetSees": "What the network sees (16×16)", "aiUndo": "Remove last image", "aiNotTrained": "The model is not trained. Call model.train(dataset) or model.load('collision_model.pth').", "aiNeedData": "Need at least 4 images of each class to train", "aiTrainHead": "Training images: {tr} · test images: {te}", "aiSaved": "Model saved: ", "aiSaveFail": "Could not save the model (browser storage full?).", "aiNoModel": "No model '{p}' yet. Run lesson 12 to train and save one.", "aiOut": "The robot left the black line!", "rSave": "Save notebook to your computer (.ipynb) · Ctrl+S", "rNew": "New notebook", "saved": "Saved ", "newConfirm": "Create a new notebook? The current one will be replaced. Save it first if you want to keep it.", "newDone": "New notebook created", "run": "Run", "runT": "Run every cell (Shift+Enter: run selected cell)", "stop": "Stop", "stopT": "Stop the program and motors (Esc Esc)", "restart": "Restart", "restartT": "Restart kernel: clear all variables, reset the clock", "addCode": "Code", "addCodeT": "Add a code cell below", "addMd": "Note", "addMdT": "Add a note cell below", "clear": "Clear outputs", "clearT": "Clear the output of every cell", "copy": "Copy code", "copyT": "Copy all code", "splitAria": "Drag to resize", "vIso": "3D", "vTop": "Top", "vFront": "Front", "vSide": "Side", "vFollow": "Follow", "tLidar": "Lidar", "tTrail": "Trail", "tCam": "Camera", "tAxis": "Axes", "tAxisT": "Robot frame: x forward, y left, z up", "tLbl": "Parts", "tKey": "Drive", "tKeyT": "Drive with arrow keys / WASD", "home": "Back to start", "homeT": "Put the robot back at START and reset encoders, IMU and clock", "sceneLoading": "Building the 3D field…", "sceneFail": "The 3D library failed to load. Check your internet connection.", "pip": "CSI CAMERA · WIDE ANGLE", "teleop": "Drive: ↑ ↓ ← → or W A S D", "hint": "<kbd>Right-drag</kbd> rotate 3D · <kbd>Shift</kbd>+<kbd>Right-drag</kbd> or <kbd>Left-drag</kbd> on the floor: pan · <kbd>Scroll</kbd> zoom<br><kbd>Left-drag</kbd> the robot to move it, <kbd>Scroll</kbd> while dragging to rotate it · drop it near START to reset", "telePos": "Position x, y (cm)", "teleYaw": "Heading (yaw)", "teleMot": "Motors L / R", "teleEnc": "Encoder L / R", "teleLid": "Lidar 0°", "teleLine": "Camera line", "teleTime": "Run time", "noLine": "not seen", "stopped": " · idle", "pyLoading": "Python is still loading, one moment…", "restarted": "Kernel restarted: variables cleared, clock reset", "copied": "Code copied", "opened": "Opened ", "openFail": "Could not read the file: use a valid .ipynb or .py", "teleopToast": "Click the field, then drive with the arrow keys", "homeToast": "Robot is back at START · encoders, IMU and clock reset", "drawerLessons": "Sample lessons", "drawerApi": "jetbot library", "insert": "Insert", "cellCode": "Code cell", "cellMd": "Note cell", "cRun": "Run cell (Shift+Enter)", "cStop": "Stop", "cUp": "Move up", "cDown": "Move down", "cType": "Switch Code / Note", "cDel": "Delete cell", "grip": "Drag to reorder", "addRowCode": "+ Code cell", "addRowMd": "+ Note cell", "mdEmpty": "Double-click to write a note…", "trimmed": "…(truncated)", "interrupted": "the program was stopped. Motors are off.", "line": "line", "inputAria": "Input", "goal": "GOAL", "editNote": "Edit note (or double-click the note)", "doneNote": "Done, show the note", "step": "Step", "stepT": "Each click runs the next code cell (notes are skipped)", "stepDone": "All cells done, the next click starts again from the first cell", "stepBusy": "The previous cell is still running, wait or press Stop", "noFiles": "Reading or writing files is not allowed in the simulator.", "blockedMod": "This library is blocked in the simulator for safety.", "fileTooBig": "File too large (20 MB max).", "autosaveNoImg": "The images in this notebook are too big to auto-save in the browser. Use Save (Ctrl+S) to keep them.", "badNotebook": "Invalid notebook or too many cells (300 max)."}};
+const I18N = {"vi": {"brandSub": "ROS AI Kit · mô phỏng", "nbAria": "Tên notebook", "kLoad": "Đang tải Python…", "kFail": "Không tải được Python", "kIdle": "Python 3 · Sẵn sàng", "kBusy": "Đang chạy…", "map": "Sa bàn", "speed": "Tốc độ", "langAria": "Ngôn ngữ", "rail": "Thanh bên", "rNb": "Bài mẫu", "rApi": "Tra cứu API", "rOpen": "Mở tệp .ipynb / .py", "aiNoScene": "Sa bàn 3D chưa sẵn sàng.", "cLock": "Khoá ô: không sửa, không xoá (vẫn chạy được)", "cUnlock": "Mở khoá ô", "cellLocked": "Ô này đã khoá, không sửa được. Bấm biểu tượng ổ khoá ở góc ô để mở.", "cellLockedDel": "Ô này đã khoá, không xoá được.", "sayT": "Nghe đọc", "sayNone": "Trình duyệt này không hỗ trợ đọc thành tiếng.", "hideField": "Ẩn sa bàn", "hideFieldT": "Ẩn sa bàn để xem bài học toàn màn hình", "showField": "Hiện sa bàn", "showFieldT": "Hiện lại sa bàn 3D", "aiPose": "Di chuyển robot:", "aiBump": "Robot vướng vật cản, không dịch được.", "tEdit": "Sửa vật cản", "tEditT": "Đặt / xoá khối vuông: bấm vào nền để đặt, bấm vào khối để xoá", "editToast": "Bấm vào nền để đặt khối, bấm vào khối để xoá", "boxReset": "Khôi phục", "boxResetT": "Khôi phục vật cản gốc của sa bàn này", "boxResetDone": "Đã khôi phục vật cản gốc", "boxOnRobot": "Không đặt khối đè lên robot", "aiOldFrame": "Ảnh này đã cũ, hãy chụp lại bằng camera.value.", "aiEmpty": "Bộ dữ liệu đang trống.", "aiNetSees": "Mạng nơ-ron thấy (16×16)", "aiUndo": "Xoá ảnh vừa thêm", "aiNotTrained": "Mô hình chưa được huấn luyện. Hãy gọi model.train(dataset) hoặc model.load('collision_model.pth').", "aiNeedData": "Cần ít nhất 4 ảnh mỗi loại để huấn luyện", "aiTrainHead": "Ảnh huấn luyện: {tr} · ảnh kiểm tra: {te}", "aiSaved": "Đã lưu mô hình: ", "aiSaveFail": "Không lưu được mô hình (bộ nhớ trình duyệt đầy?).", "aiNoModel": "Chưa có mô hình '{p}'. Hãy chạy bài 12 để huấn luyện và lưu mô hình.", "aiOut": "Robot đã ra ngoài vạch đen!", "rSave": "Lưu notebook về máy (.ipynb) · Ctrl+S", "rNew": "Tạo notebook mới", "saved": "Đã lưu ", "newConfirm": "Tạo notebook mới? Nội dung hiện tại sẽ bị thay thế. Hãy bấm Lưu trước nếu muốn giữ lại.", "newDone": "Đã tạo notebook mới", "run": "Chạy", "runT": "Chạy tất cả các ô (Shift+Enter: chạy ô đang chọn)", "stop": "Dừng", "stopT": "Dừng chương trình và động cơ (Esc Esc)", "restart": "Khởi động lại", "restartT": "Khởi động lại kernel: xoá mọi biến, đồng hồ về 0", "addCode": "Code", "addCodeT": "Thêm ô code bên dưới", "addMd": "Ghi chú", "addMdT": "Thêm ô ghi chú bên dưới", "clear": "Xoá kết quả", "clearT": "Xoá kết quả của mọi ô", "copy": "Sao chép code", "copyT": "Sao chép toàn bộ code", "splitAria": "Kéo để đổi kích thước", "vIso": "3D", "vTop": "Trên", "vFront": "Trước", "vSide": "Cạnh", "vFollow": "Theo robot", "tLidar": "Lidar", "tTrail": "Vết", "tCam": "Camera", "tAxis": "Trục Oxyz", "tAxisT": "Hệ trục gắn với robot: x mũi robot, y bên trái, z hướng lên", "tLbl": "Linh kiện", "tKey": "Lái phím", "tKeyT": "Lái bằng phím mũi tên / WASD", "home": "Về xuất phát", "homeT": "Đặt robot về vị trí xuất phát, xoá encoder, IMU và đồng hồ", "sceneLoading": "Đang dựng sa bàn 3D…", "sceneFail": "Không tải được thư viện 3D. Kiểm tra kết nối mạng.", "pip": "CAMERA CSI · GÓC RỘNG", "teleop": "Lái phím: ↑ ↓ ← → hoặc W A S D", "hint": "<kbd>Chuột phải</kbd> xoay 3D · <kbd>Shift</kbd>+<kbd>Chuột phải</kbd> hoặc <kbd>Chuột trái</kbd> vào nền: dời khung nhìn · <kbd>Cuộn</kbd> phóng to<br><kbd>Chuột trái</kbd> kéo robot, <kbd>Cuộn</kbd> khi đang kéo để xoay robot · thả gần ô START để về vị trí xuất phát", "telePos": "Vị trí x, y (cm)", "teleYaw": "Hướng (yaw)", "teleMot": "Động cơ T / P", "teleEnc": "Encoder T / P", "teleLid": "Lidar 0°", "teleLine": "Camera line", "teleTime": "Thời gian chạy", "noLine": "không thấy", "stopped": " · dừng", "pyLoading": "Python đang tải, chờ một chút…", "restarted": "Đã khởi động lại kernel: biến đã xoá, đồng hồ về 0", "copied": "Đã sao chép code", "opened": "Đã mở ", "openFail": "Không đọc được tệp: cần .ipynb hợp lệ hoặc .py", "teleopToast": "Bấm vào sa bàn rồi dùng phím mũi tên để lái", "homeToast": "Robot đã về vị trí xuất phát · encoder, IMU và đồng hồ về 0", "drawerLessons": "Bài mẫu", "drawerApi": "Thư viện jetbot", "insert": "Chèn", "cellCode": "Ô code", "cellMd": "Ô ghi chú", "cRun": "Chạy ô (Shift+Enter)", "cStop": "Dừng", "cUp": "Chuyển lên", "cDown": "Chuyển xuống", "cType": "Đổi Code / Ghi chú", "cDel": "Xoá ô", "grip": "Kéo để đổi thứ tự ô", "addRowCode": "+ Ô code", "addRowMd": "+ Ô ghi chú", "mdEmpty": "Nhấp đúp để viết ghi chú…", "trimmed": "…(đã lược bớt)", "interrupted": "chương trình đã được dừng. Động cơ đã tắt.", "line": "dòng", "inputAria": "Nhập dữ liệu", "goal": "ĐÍCH", "editNote": "Sửa ghi chú (hoặc nhấp đúp vào ghi chú)", "doneNote": "Xong, hiển thị ghi chú", "step": "Chạy từng ô", "stepT": "Mỗi lần bấm chạy ô code kế tiếp (bỏ qua ghi chú)", "stepDone": "Đã chạy hết các ô, lần bấm tới sẽ chạy lại từ ô đầu", "stepBusy": "Ô trước đang chạy, chờ xong hoặc bấm Dừng", "noFiles": "Mô phỏng không cho phép đọc / ghi tệp.", "blockedMod": "Thư viện này bị chặn trong mô phỏng vì lý do an toàn.", "fileTooBig": "Tệp quá lớn (tối đa 20 MB).", "autosaveNoImg": "Ảnh trong notebook quá lớn để tự lưu vào trình duyệt. Hãy bấm Lưu tệp (Ctrl+S) để giữ ảnh.", "badNotebook": "Notebook không hợp lệ hoặc quá nhiều ô (tối đa 300)."}, "en": {"brandSub": "ROS AI Kit · simulator", "nbAria": "Notebook name", "kLoad": "Loading Python…", "kFail": "Python failed to load", "kIdle": "Python 3 · Ready", "kBusy": "Running…", "map": "Field", "speed": "Speed", "langAria": "Language", "rail": "Sidebar", "rNb": "Sample lessons", "rApi": "API reference", "rOpen": "Open .ipynb / .py file", "aiNoScene": "The 3D field is not ready.", "cLock": "Lock cell: no editing, no deleting (still runs)", "cUnlock": "Unlock cell", "cellLocked": "This cell is locked and cannot be edited. Click the lock icon on the cell to unlock it.", "cellLockedDel": "This cell is locked and cannot be deleted.", "sayT": "Listen", "sayNone": "This browser cannot read text aloud.", "hideField": "Hide field", "hideFieldT": "Hide the field to see the lesson full width", "showField": "Show field", "showFieldT": "Show the 3D field again", "aiPose": "Move robot:", "aiBump": "Blocked by an obstacle, cannot move there.", "tEdit": "Edit obstacles", "tEditT": "Add / remove blocks: click the floor to add, click a block to remove", "editToast": "Click the floor to add a block, click a block to remove it", "boxReset": "Reset", "boxResetT": "Restore this field's original obstacles", "boxResetDone": "Original obstacles restored", "boxOnRobot": "Cannot place a block on the robot", "aiOldFrame": "This image is too old, take a new one with camera.value.", "aiEmpty": "The dataset is empty.", "aiNetSees": "What the network sees (16×16)", "aiUndo": "Remove last image", "aiNotTrained": "The model is not trained. Call model.train(dataset) or model.load('collision_model.pth').", "aiNeedData": "Need at least 4 images of each class to train", "aiTrainHead": "Training images: {tr} · test images: {te}", "aiSaved": "Model saved: ", "aiSaveFail": "Could not save the model (browser storage full?).", "aiNoModel": "No model '{p}' yet. Run lesson 12 to train and save one.", "aiOut": "The robot left the black line!", "rSave": "Save notebook to your computer (.ipynb) · Ctrl+S", "rNew": "New notebook", "saved": "Saved ", "newConfirm": "Create a new notebook? The current one will be replaced. Save it first if you want to keep it.", "newDone": "New notebook created", "run": "Run", "runT": "Run every cell (Shift+Enter: run selected cell)", "stop": "Stop", "stopT": "Stop the program and motors (Esc Esc)", "restart": "Restart", "restartT": "Restart kernel: clear all variables, reset the clock", "addCode": "Code", "addCodeT": "Add a code cell below", "addMd": "Note", "addMdT": "Add a note cell below", "clear": "Clear outputs", "clearT": "Clear the output of every cell", "copy": "Copy code", "copyT": "Copy all code", "splitAria": "Drag to resize", "vIso": "3D", "vTop": "Top", "vFront": "Front", "vSide": "Side", "vFollow": "Follow", "tLidar": "Lidar", "tTrail": "Trail", "tCam": "Camera", "tAxis": "Axes", "tAxisT": "Robot frame: x forward, y left, z up", "tLbl": "Parts", "tKey": "Drive", "tKeyT": "Drive with arrow keys / WASD", "home": "Back to start", "homeT": "Put the robot back at START and reset encoders, IMU and clock", "sceneLoading": "Building the 3D field…", "sceneFail": "The 3D library failed to load. Check your internet connection.", "pip": "CSI CAMERA · WIDE ANGLE", "teleop": "Drive: ↑ ↓ ← → or W A S D", "hint": "<kbd>Right-drag</kbd> rotate 3D · <kbd>Shift</kbd>+<kbd>Right-drag</kbd> or <kbd>Left-drag</kbd> on the floor: pan · <kbd>Scroll</kbd> zoom<br><kbd>Left-drag</kbd> the robot to move it, <kbd>Scroll</kbd> while dragging to rotate it · drop it near START to reset", "telePos": "Position x, y (cm)", "teleYaw": "Heading (yaw)", "teleMot": "Motors L / R", "teleEnc": "Encoder L / R", "teleLid": "Lidar 0°", "teleLine": "Camera line", "teleTime": "Run time", "noLine": "not seen", "stopped": " · idle", "pyLoading": "Python is still loading, one moment…", "restarted": "Kernel restarted: variables cleared, clock reset", "copied": "Code copied", "opened": "Opened ", "openFail": "Could not read the file: use a valid .ipynb or .py", "teleopToast": "Click the field, then drive with the arrow keys", "homeToast": "Robot is back at START · encoders, IMU and clock reset", "drawerLessons": "Sample lessons", "drawerApi": "jetbot library", "insert": "Insert", "cellCode": "Code cell", "cellMd": "Note cell", "cRun": "Run cell (Shift+Enter)", "cStop": "Stop", "cUp": "Move up", "cDown": "Move down", "cType": "Switch Code / Note", "cDel": "Delete cell", "grip": "Drag to reorder", "addRowCode": "+ Code cell", "addRowMd": "+ Note cell", "mdEmpty": "Double-click to write a note…", "trimmed": "…(truncated)", "interrupted": "the program was stopped. Motors are off.", "line": "line", "inputAria": "Input", "goal": "GOAL", "editNote": "Edit note (or double-click the note)", "doneNote": "Done, show the note", "step": "Step", "stepT": "Each click runs the next code cell (notes are skipped)", "stepDone": "All cells done, the next click starts again from the first cell", "stepBusy": "The previous cell is still running, wait or press Stop", "noFiles": "Reading or writing files is not allowed in the simulator.", "blockedMod": "This library is blocked in the simulator for safety.", "fileTooBig": "File too large (20 MB max).", "autosaveNoImg": "The images in this notebook are too big to auto-save in the browser. Use Save (Ctrl+S) to keep them.", "badNotebook": "Invalid notebook or too many cells (300 max)."}};
 let LANG = (() => { const v = store.get("jetbotlab.lang"); return v === "en" || v === "vi" ? v : "vi"; })();
 const t = k => (I18N[LANG] && I18N[LANG][k] !== undefined ? I18N[LANG][k] : (I18N.vi[k] !== undefined ? I18N.vi[k] : k));
 
@@ -672,14 +672,30 @@ const ICON = {
   up:'<svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 8l4-4 4 4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>',
   down:'<svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>',
   type:'<svg width="13" height="12" viewBox="0 0 13 12"><text x="0" y="10" font-size="10" font-family="monospace" fill="currentColor">M↓</text></svg>',
-  del:'<svg width="12" height="12" viewBox="0 0 12 12"><path d="M2.5 3.5h7M5 3.5V2h2v1.5M3.5 3.5l.5 7h4l.5-7" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>'
+  del:'<svg width="12" height="12" viewBox="0 0 12 12"><path d="M2.5 3.5h7M5 3.5V2h2v1.5M3.5 3.5l.5 7h4l.5-7" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>',
+  lock:'<svg width="12" height="12" viewBox="0 0 12 12"><rect x="2.2" y="5.2" width="7.6" height="5.6" rx="1" fill="currentColor"/><path d="M3.9 5.2V3.8a2.1 2.1 0 0 1 4.2 0v1.4" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>',
+  unlock:'<svg width="12" height="12" viewBox="0 0 12 12"><rect x="2.2" y="5.2" width="7.6" height="5.6" rx="1" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M3.9 5.2V3.8a2.1 2.1 0 0 1 4.1-.6" fill="none" stroke="currentColor" stroke-width="1.3"/></svg>'
 };
-function makeCell(type, src, att){
-  const c = { id: ++uid, type, src: src || "", att: att || null, count: null, state: "", errLine: 0 };
+// Khoá ô như Jupyter: metadata "editable": false (không sửa) và "deletable": false (không xoá). Ô khoá vẫn chạy được.
+function cellMeta(m){ const o = {}; if (m && m.editable === false) o.editable = false; if (m && m.deletable === false) o.deletable = false; return Object.keys(o).length ? o : null; }
+const canEdit = c => !(c.meta && c.meta.editable === false), canDelete = c => !(c.meta && c.meta.deletable === false);
+let lockHintT = 0;
+function lockHint(key){ const n = Date.now(); if (n - lockHintT > 1500){ lockHintT = n; toast(t(key)); } }
+function applyLock(c){
+  const ed = canEdit(c), del = canDelete(c);
+  c.ta.readOnly = !ed; c.el.classList.toggle("locked", !ed); c.el.classList.toggle("nodel", !del);
+  if (!ed) c.el.classList.remove("editing");
+  const q = a => c.el.querySelector(`[data-a="${a}"]`);
+  q("del").disabled = !del; q("type").disabled = !ed; q("up").disabled = q("down").disabled = !ed;
+  const lb = q("lock"); lb.innerHTML = ed && del ? ICON.unlock : ICON.lock; lb.title = t(ed && del ? "cLock" : "cUnlock"); lb.setAttribute("aria-pressed", !(ed && del));
+}
+function setLock(c, locked){ c.meta = locked ? { editable: false, deletable: false } : null; applyLock(c); gutter(c); save(); }
+function makeCell(type, src, att, meta){
+  const c = { id: ++uid, type, src: src || "", att: att || null, meta: cellMeta(meta), count: null, state: "", errLine: 0 };
   const el = document.createElement("div");
   el.className = "cell" + (type === "md" ? " mdc" : "");
   el.innerHTML = `<div class="gut"><span class="pr"></span><button class="grip" title="${t("grip")}" aria-label="${t("grip")}"><svg width="10" height="16" viewBox="0 0 10 16"><g fill="currentColor"><circle cx="2.5" cy="3" r="1.4"/><circle cx="7.5" cy="3" r="1.4"/><circle cx="2.5" cy="8" r="1.4"/><circle cx="7.5" cy="8" r="1.4"/><circle cx="2.5" cy="13" r="1.4"/><circle cx="7.5" cy="13" r="1.4"/></g></svg></button></div><div class="cbody"><div class="ed"><div class="errbar" hidden></div><pre class="hl" aria-hidden="true"></pre><textarea id="cell-${c.id}" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="${t(type === "md" ? "cellMd" : "cellCode")}"></textarea></div>${type === "md" ? '<div class="md"></div>' : ""}<div class="out" aria-live="polite"></div></div>
-  <div class="ctools"><button class="r" data-a="run" title="${t("cRun")}">${ICON.run}</button><button data-a="up" title="${t("cUp")}">${ICON.up}</button><button data-a="down" title="${t("cDown")}">${ICON.down}</button><button data-a="type" title="${t("cType")}">${ICON.type}</button><button data-a="del" title="${t("cDel")}">${ICON.del}</button></div>`;
+  <div class="ctools"><button class="r" data-a="run" title="${t("cRun")}">${ICON.run}</button><button data-a="up" title="${t("cUp")}">${ICON.up}</button><button data-a="down" title="${t("cDown")}">${ICON.down}</button><button data-a="type" title="${t("cType")}">${ICON.type}</button><button data-a="lock">${ICON.unlock}</button><button data-a="del" title="${t("cDel")}">${ICON.del}</button></div>`;
   c.el = el; c.ta = el.querySelector("textarea"); c.hl = el.querySelector("pre"); c.out = el.querySelector(".out");
  c.gut = el.querySelector(".gut .pr"); el._cell = c; bindGrip(c, el.querySelector(".grip"));
   c.md = el.querySelector(".md"); c.errbar = el.querySelector(".errbar");
@@ -689,12 +705,13 @@ function makeCell(type, src, att){
   c.ta.addEventListener("focus", () => setActive(c));
   el.addEventListener("mousedown", () => setActive(c));
   if (c.md){
-    c.md.addEventListener("dblclick", () => { el.classList.add("editing"); c.ta.focus(); });
+    c.md.addEventListener("dblclick", () => { if (!canEdit(c)) return lockHint("cellLocked"); el.classList.add("editing"); c.ta.focus(); });
     c.ta.addEventListener("blur", () => { if (c.src.trim()) el.classList.remove("editing"); gutter(c); });
     c.ta.addEventListener("focus", () => gutter(c));
     // Bấm cây bút ✎ để sửa; bấm lần nữa để xong
     c.gut.setAttribute("role", "button"); c.gut.tabIndex = 0;
     const toggleEdit = () => {
+      if (!canEdit(c)) return lockHint("cellLocked");
       if (el.classList.contains("editing")){ el.classList.remove("editing"); c.ta.blur(); }
       else { setActive(c); el.classList.add("editing"); c.ta.focus(); c.ta.setSelectionRange(c.ta.value.length, c.ta.value.length); }
       gutter(c);
@@ -706,17 +723,19 @@ function makeCell(type, src, att){
   el.querySelector(".ctools").addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b) return; const a = b.dataset.a, i = CELLS.indexOf(c);
     if (a === "run"){ if (c.state === "running") stopAll(); else runCells([c]); }
+    if (a === "lock"){ setLock(c, canEdit(c) && canDelete(c)); return; }
+    if (b.disabled) return;
     if (a === "up" && i > 0){ CELLS.splice(i,1); CELLS.splice(i-1,0,c); cellsEl.insertBefore(el, CELLS[i].el); save(); }
     if (a === "down" && i < CELLS.length-1){ CELLS.splice(i,1); CELLS.splice(i+1,0,c); cellsEl.insertBefore(el, CELLS[i+1].el.nextSibling); save(); }
-    if (a === "type"){ const n = makeCell(c.type === "md" ? "code" : "md", c.src, c.att); replaceCell(c, n); }
+    if (a === "type"){ const n = makeCell(c.type === "md" ? "code" : "md", c.src, c.att, c.meta); replaceCell(c, n); }
     if (a === "del"){ removeCell(c); }
   });
-  paint(c); gutter(c);
+  paint(c); applyLock(c); gutter(c);
   return c;
 }
 function bindGrip(c, grip){
   grip.addEventListener("pointerdown", e => {
-    if (e.button !== 0) return;
+    if (e.button !== 0 || !canEdit(c)) return;
     e.preventDefault(); setActive(c);
     const line = document.createElement("div"); line.className = "dropline";
     const scroller = cellsEl.scrollHeight > cellsEl.clientHeight + 2 ? cellsEl : null;
@@ -757,7 +776,8 @@ function paint(c){
   if (c.md){ c.md.innerHTML = mdRender(c.src, c.att); applyCss(c.md); }
 }
 function gutter(c){
-  if (c.type === "md"){ c.gut.textContent = "✎"; const ed = c.el.classList.contains("editing"); c.gut.title = t(ed ? "doneNote" : "editNote"); c.gut.setAttribute("aria-label", c.gut.title); c.gut.setAttribute("aria-pressed", ed); return; }
+  c.el.classList.toggle("locked", !canEdit(c));
+  if (c.type === "md"){ c.gut.textContent = canEdit(c) ? "✎" : "🔒"; const ed = c.el.classList.contains("editing"); c.gut.title = t(ed ? "doneNote" : "editNote"); c.gut.setAttribute("aria-label", c.gut.title); c.gut.setAttribute("aria-pressed", ed); return; }
   c.gut.textContent = c.state === "running" ? "[*]:" : c.state === "queued" ? "[-]:" : `[${c.count ?? " "}]:`;
   c.el.classList.toggle("running", c.state === "running");
   const b = c.el.querySelector('[data-a="run"]'); b.innerHTML = c.state === "running" ? ICON.stop : ICON.run; b.title = t(c.state === "running" ? "cStop" : "cRun");
@@ -772,6 +792,7 @@ function insertAfter(ref, c){
 }
 function replaceCell(o, n){ const i = CELLS.indexOf(o); CELLS[i] = n; cellsEl.replaceChild(n.el, o.el); if (ACTIVE === o){ ACTIVE = null; setActive(n); } if (n.type === "md") n.el.classList.add("editing"); save(); }
 function removeCell(c){
+  if (!canDelete(c)) return lockHint("cellLockedDel");
   if (c.state === "running") stopAll();
   const i = CELLS.indexOf(c); CELLS.splice(i, 1); c.el.remove();
   if (!CELLS.length) insertAfter(null, makeCell("code", ""));
@@ -798,6 +819,10 @@ function onKey(e, c){
     return;
   }
   if (e.key === "Escape"){ ta.blur(); if (c.type === "md") c.el.classList.remove("editing"); return; }
+  if (!canEdit(c)){
+    if (!e.ctrlKey && !e.metaKey && !e.altKey && (e.key.length === 1 || ["Enter", "Backspace", "Delete", "Tab"].includes(e.key))){ e.preventDefault(); lockHint("cellLocked"); }
+    return;
+  }
   const s = ta.selectionStart, v = ta.value, ls = v.lastIndexOf("\n", s - 1) + 1, line = v.slice(ls, s);
   if (e.key === "Tab"){
     e.preventDefault();
@@ -825,7 +850,7 @@ addRow.addEventListener("click", e => { const b = e.target.closest("button"); if
 function loadCells(list, title){
   if (K.running) stopAll();
   cellsEl.innerHTML = ""; CELLS = []; ACTIVE = null;
-  list.forEach(([t, s, a]) => { const c = makeCell(t, s, a); CELLS.push(c); cellsEl.appendChild(c.el); });
+  list.forEach(([t, s, a, m]) => { const c = makeCell(t, s, a, m); CELLS.push(c); cellsEl.appendChild(c.el); });
   cellsEl.appendChild(addRow);
   if (title) $("#nbTitle").value = title;
   setActive(CELLS.find(c => c.type === "code") || CELLS[0]);
@@ -837,11 +862,11 @@ let saveNoImgWarned = false;
 function save(){
   clearTimeout(saveT);
   saveT = setTimeout(() => {
-    const d = { title: $("#nbTitle").value, map: MAPID, cells: CELLS.map(c => c.att ? [c.type, c.src, c.att] : [c.type, c.src]) };
+    const d = { title: $("#nbTitle").value, map: MAPID, cells: CELLS.map(c => c.meta ? [c.type, c.src, c.att, c.meta] : c.att ? [c.type, c.src, c.att] : [c.type, c.src]) };
     try { localStorage.setItem("jetbotlab.nb.v1", JSON.stringify(d)); }
     catch (e) {
       // ảnh nhúng vượt dung lượng bộ nhớ trình duyệt: vẫn tự lưu chữ, ảnh thì nhắc dùng Lưu tệp
-      d.cells = d.cells.map(x => x.slice(0, 2)); store.set("jetbotlab.nb.v1", d);
+      d.cells = d.cells.map(x => x[3] ? [x[0], x[1], null, x[3]] : x.slice(0, 2)); store.set("jetbotlab.nb.v1", d);
       if (!saveNoImgWarned){ saveNoImgWarned = true; toast(t("autosaveNoImg")); }
     }
   }, 300);
@@ -1025,7 +1050,7 @@ drawer.addEventListener("click", e => {
   if (l){ const L = lessonIn(LESSONS.find(x => x.id === l.dataset.id), LANG); setMap(L.map); loadCells(L.cells, L.file); if (innerWidth < 900) closeDrawer(); return; }
   const ins = e.target.closest(".ins");
   if (ins){
-    let c = ACTIVE; if (!c || c.type !== "code") c = insertAfter(ACTIVE, makeCell("code", ""));
+    let c = ACTIVE; if (!c || c.type !== "code" || !canEdit(c)) c = insertAfter(ACTIVE, makeCell("code", ""));
     const ta = c.ta, v = ta.value; ta.focus();
     if (ta.selectionStart === ta.selectionEnd && ta.selectionStart === 0 && v) ta.setSelectionRange(v.length, v.length);
     const pre = ta.selectionStart > 0 && v[ta.selectionStart - 1] !== "\n" ? "\n" : "";
@@ -1054,8 +1079,8 @@ function sanitizeCells(list){
   const out = [];
   for (const c of list){
     if (!Array.isArray(c) || (c[0] !== "code" && c[0] !== "md")) return null;
-    const att = c[0] === "md" ? sanitizeAtt(c[2]) : null;
-    out.push(att ? [c[0], String(c[1] == null ? "" : c[1]).slice(0, 100000), att] : [c[0], String(c[1] == null ? "" : c[1]).slice(0, 100000)]);
+    const att = c[0] === "md" ? sanitizeAtt(c[2]) : null, meta = cellMeta(c[3]), src = String(c[1] == null ? "" : c[1]).slice(0, 100000);
+    out.push(meta ? [c[0], src, att, meta] : att ? [c[0], src, att] : [c[0], src]);
   }
   return out;
 }
@@ -1067,8 +1092,8 @@ function saveFile(){
   const lines = s => s.split(/(?<=\n)/);
   const nb = {
     cells: CELLS.map(c => c.type === "code"
-      ? { cell_type: "code", execution_count: null, metadata: {}, outputs: [], source: lines(c.src) }
-      : Object.assign({ cell_type: "markdown", metadata: {}, source: lines(c.src) }, c.att ? { attachments: c.att } : {})),
+      ? { cell_type: "code", execution_count: null, metadata: Object.assign({}, c.meta), outputs: [], source: lines(c.src) }
+      : Object.assign({ cell_type: "markdown", metadata: Object.assign({}, c.meta), source: lines(c.src) }, c.att ? { attachments: c.att } : {})),
     metadata: { kernelspec: { display_name: "Python 3", language: "python", name: "python3" }, language_info: { name: "python" }, jetbotlab: { map: MAPID } },
     nbformat: 4, nbformat_minor: 5
   };
@@ -1095,7 +1120,7 @@ $("#fileIn").addEventListener("change", e => {
       if (/\.ipynb$/i.test(f.name)){
         const nb = JSON.parse(r.result);
         const list = sanitizeCells((Array.isArray(nb.cells) ? nb.cells : []).filter(x => x && (x.cell_type === "code" || x.cell_type === "markdown"))
-          .map(x => [x.cell_type === "code" ? "code" : "md", Array.isArray(x.source) ? x.source.join("") : String(x.source || ""), x.attachments]));
+          .map(x => [x.cell_type === "code" ? "code" : "md", Array.isArray(x.source) ? x.source.join("") : String(x.source || ""), x.attachments, x.metadata]));
         if (!list){ toast(t("badNotebook")); e.target.value = ""; return; }
         const m = nb.metadata && nb.metadata.jetbotlab && nb.metadata.jetbotlab.map;
         if (typeof m === "string" && Object.prototype.hasOwnProperty.call(MAPS, m)) setMap(m);
@@ -1848,7 +1873,7 @@ function applyLang(prev){
     c.ta.setAttribute("aria-label", t(c.type === "md" ? "cellMd" : "cellCode"));
     const g = c.el.querySelector(".grip"); g.title = t("grip"); g.setAttribute("aria-label", t("grip"));
     for (const [a, k] of [["up","cUp"],["down","cDown"],["type","cType"],["del","cDel"]]) c.el.querySelector(`[data-a="${a}"]`).title = t(k);
-    if (c.md) paint(c); gutter(c);
+    if (c.md) paint(c); applyLock(c); gutter(c);
   });
   if (DRAWER) renderDrawer(DRAWER);
   $("#labels").innerHTML = "";
