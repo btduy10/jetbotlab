@@ -150,6 +150,13 @@ body.reordering,body.reordering *{cursor:grabbing!important;user-select:none}
 .md li{margin:2px 0}
 .md em{font-style:italic}
 .md a{color:var(--kw);text-decoration:underline;text-underline-offset:2px}
+/* nút nghe phát âm trong ghi chú (<button data-say>) */
+.md button.say{display:inline-flex;align-items:center;gap:5px;font:600 12.5px/1 var(--f-ui);color:var(--fg);background:var(--panel-2);border:1px solid var(--line);border-radius:999px;padding:5px 11px 5px 9px;margin:2px 4px 2px 0;cursor:pointer;vertical-align:middle}
+.md button.say::before{content:"";width:14px;height:14px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 9v6h4l5 4V5L8 9z'/%3E%3Cpath d='M16.5 8.5a5 5 0 010 7M19 6a8.5 8.5 0 010 12'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 9v6h4l5 4V5L8 9z'/%3E%3Cpath d='M16.5 8.5a5 5 0 010 7M19 6a8.5 8.5 0 010 12'/%3E%3C/svg%3E") center/contain no-repeat}
+.md button.say:hover{border-color:var(--accent)}
+.md button.say:active{transform:scale(.96)}
+.md button.say.speaking{background:var(--accent-soft);border-color:var(--accent);color:var(--accent-ink)}
+.md button.say[data-say=""]::before{-webkit-mask:none;mask:none;width:9px;height:9px;border-radius:1px}
 /* từ khoá trong câu: ô viền xám bo tròn như Colab */
 .md code{font-family:var(--f-code);font-size:.9em;font-weight:500;color:var(--fg);background:color-mix(in srgb, var(--fg) 5%, var(--panel));border:1px solid color-mix(in srgb, var(--fg) 18%, transparent);border-radius:5px;padding:1px 5px;box-decoration-break:clone;-webkit-box-decoration-break:clone}
 .md blockquote{margin:8px 0;padding:0 0 0 14px;border-left:4px solid color-mix(in srgb, var(--fg) 16%, transparent);color:color-mix(in srgb, var(--fg) 85%, transparent)}
