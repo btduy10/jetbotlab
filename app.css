@@ -287,3 +287,12 @@ input[type=file]{display:none}
 .md th{font-weight:700;background:color-mix(in srgb, var(--fg) 5%, var(--panel))}
 .md tbody tr:nth-child(even) td{background:color-mix(in srgb, var(--fg) 2.5%, transparent)}
 .md img{max-width:100%;height:auto;border-radius:4px;display:inline-block;vertical-align:top}
+/* nút loa đọc từ vựng */
+.md .say{display:inline-flex;align-items:center;gap:6px;min-height:30px;min-width:30px;justify-content:center;padding:3px 9px;border-radius:99px;border:1px solid color-mix(in srgb, #E97132 45%, transparent);background:color-mix(in srgb, #E97132 10%, var(--panel));color:#c2561c;font:600 13px var(--f-ui);cursor:pointer;vertical-align:middle}
+.md .say:hover{background:color-mix(in srgb, #E97132 20%, var(--panel))}
+.md .say:focus-visible{outline:2px solid #E97132;outline-offset:2px}
+.md .say.speaking{background:#E97132;color:#fff;border-color:#E97132}
+.md .say.speaking svg{animation:sayPulse .8s ease-in-out infinite alternate}
+@keyframes sayPulse{from{opacity:.55}to{opacity:1}}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .md .say{color:#f39a63}}
+:root[data-theme="dark"] .md .say{color:#f39a63}
