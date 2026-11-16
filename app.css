@@ -312,3 +312,31 @@ input[type=file]{display:none}
 .cell.locked textarea{cursor:default}
 .cell.locked .grip{visibility:hidden}
 .cell.locked:not(.mdc) .gut .pr::after{content:"🔒";display:block;font-size:11px;line-height:1;margin-top:4px;text-align:right}
+/* từ khoá trong ghi chú: mỗi loại một màu */
+.md code.k-code{background:#e8f0fe;border-color:#c3d6fb;color:#1946a8}
+.md code.k-cls{background:#dcf3ee;border-color:#a8dccf;color:#0b6b59}
+.md code.k-name{background:#fde8ef;border-color:#f5bdd0;color:#a3214f}
+.md code.k-file{background:#fdf1d6;border-color:#f1d18f;color:#7f5300}
+.md code.k-ph{background:#efe6fb;border-color:#d4bdf3;color:#6a2fb0;font-style:italic}
+.md code.k-val{background:#e3f4e1;border-color:#b9e0b1;color:#2c6e1f}
+.md code.k-key{background:#f6f7f9;border-color:#c9ced6;border-bottom-width:2px;color:#24292f;font-weight:600}
+.md code .ph{color:#6a2fb0;font-style:italic;font-weight:600}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) .md code.k-code{background:rgb(90 140 240 / .18);border-color:rgb(120 160 250 / .4);color:#a9c7ff}
+  :root:not([data-theme="light"]) .md code.k-cls{background:rgb(40 180 150 / .16);border-color:rgb(80 200 170 / .38);color:#7fdcc6}
+  :root:not([data-theme="light"]) .md code.k-name{background:rgb(230 90 140 / .16);border-color:rgb(240 120 160 / .38);color:#f6a6c3}
+  :root:not([data-theme="light"]) .md code.k-file{background:rgb(230 170 40 / .16);border-color:rgb(240 190 80 / .38);color:#f3cd78}
+  :root:not([data-theme="light"]) .md code.k-ph{background:rgb(160 110 240 / .18);border-color:rgb(180 140 245 / .4);color:#cfb0f7}
+  :root:not([data-theme="light"]) .md code.k-val{background:rgb(90 190 80 / .16);border-color:rgb(120 200 110 / .38);color:#a5dc98}
+  :root:not([data-theme="light"]) .md code.k-key{background:rgb(255 255 255 / .07);border-color:rgb(255 255 255 / .25);color:#e6e9ee}
+  :root:not([data-theme="light"]) .md code .ph{color:#cfb0f7}
+}
+:root[data-theme="dark"] .md code.k-code{background:rgb(90 140 240 / .18);border-color:rgb(120 160 250 / .4);color:#a9c7ff}
+:root[data-theme="dark"] .md code.k-cls{background:rgb(40 180 150 / .16);border-color:rgb(80 200 170 / .38);color:#7fdcc6}
+:root[data-theme="dark"] .md code.k-name{background:rgb(230 90 140 / .16);border-color:rgb(240 120 160 / .38);color:#f6a6c3}
+:root[data-theme="dark"] .md code.k-file{background:rgb(230 170 40 / .16);border-color:rgb(240 190 80 / .38);color:#f3cd78}
+:root[data-theme="dark"] .md code.k-ph{background:rgb(160 110 240 / .18);border-color:rgb(180 140 245 / .4);color:#cfb0f7}
+:root[data-theme="dark"] .md code.k-val{background:rgb(90 190 80 / .16);border-color:rgb(120 200 110 / .38);color:#a5dc98}
+:root[data-theme="dark"] .md code.k-key{background:rgb(255 255 255 / .07);border-color:rgb(255 255 255 / .25);color:#e6e9ee}
+:root[data-theme="dark"] .md code .ph{color:#cfb0f7}
+.md code.k-key,.md code.k-val,.md code.k-cls,.md code.k-name,.md code.k-ph{white-space:nowrap}
