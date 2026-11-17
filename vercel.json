@@ -50,7 +50,7 @@
       ]
     },
     {
-      "source": "/(app.js|app.css|index.html)?",
+      "source": "/(app.js|app.css|index.html|admin|admin.html|admin.js|admin.css)?",
       "headers": [
         {
           "key": "Cache-Control",

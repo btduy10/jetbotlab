@@ -1,6 +1,6 @@
 # JetBot Lab — ghi chú cho Claude
 
-Trang web tĩnh (không build, không backend) dạy lập trình JetBot ROS AI Kit: notebook Python kiểu Jupyter
+Trang web (không build) dạy lập trình JetBot ROS AI Kit: notebook Python kiểu Jupyter
 bên trái, sa bàn 3D mô phỏng robot bên phải. Người dùng: giáo viên STEM-Robotics THPT FPT Cần Thơ và học sinh.
 Triển khai: Vercel tự deploy khi push lên `main`. Giao tiếp với chủ dự án bằng tiếng Việt.
 
@@ -12,6 +12,9 @@ Triển khai: Vercel tự deploy khi push lên `main`. Giao tiếp với chủ d
   4. Bài mẫu `LESSONS` (VI) + `LESSONS_EN` 5. Notebook (ô code / ghi chú, kéo đổi thứ tự) 6. Kernel Skulpt 7. Đồ hoạ Three.js 8. Khởi động
 - `vendor/` – Three.js 0.128.0, OrbitControls, Skulpt 1.2.0 (tự lưu, không dùng CDN).
 - `vercel.json` – header bảo mật (CSP…).
+- `admin.html`/`admin.css`/`admin.js` – trang `/admin` (chỉ tiếng Việt): thêm bài học (.ipynb) và sa bàn (ảnh nền + chỉnh bằng chuột).
+- `api/` – Vercel Functions (Node CommonJS, không thư viện ngoài). `_lib.js`: lưu trữ GitHub (`GITHUB_TOKEN`, `GITHUB_DATA_REPO`) hoặc thư mục `JBL_DATA_DIR` khi thử; phiên admin ký HMAC (`AUTH_SECRET`), tài khoản từ `ADMIN_USERNAME`/`ADMIN_PASSWORD`. `content.js` (content.json: bài học + sa bàn, ghi kèm sha chống ghi đè), `asset.js` (ảnh), `login/logout/me`.
+- Nội dung admin được app nạp ở phần 9 cuối `app.js` (`applyRemote`): mã bài / sa bàn có tiền tố `c-`; sa bàn ảnh dùng `MAP.px` để `camera.line_position()` / `color()` đọc màu trên ảnh; `FIELD` đổi theo kích thước sa bàn (`useField`).
 
 ## Thông số robot (theo robot thật)
 Hai bánh chủ động ở giữa, cách nhau 17 cm, bánh Ø 6.5 cm, động cơ DCGM-370 có encoder (giả định 1320 xung/vòng),
@@ -27,11 +30,11 @@ Hằng số ở `RB` trong `app.js`; mô hình 3D ở `buildRobot()`.
 ## Bảo mật sandbox Python (không được nới lỏng)
 - Đã gỡ `jseval`, `open`, `file`, `execfile` khỏi `Sk.builtins` trong `initKernel()`.
 - `pyRead()` chỉ cho import thư viện trong `PY_ALLOWED`; `document`, `urllib`, `webgl`, `processing`, `image`, `turtle` bị chặn.
-- Tệp `.ipynb` mở vào: tối đa 2 MB, 300 ô, 100.000 ký tự/ô (`sanitizeCells`).
+- Tệp `.ipynb` mở vào: tối đa 20 MB, 300 ô, 100.000 ký tự/ô (`sanitizeCells`). Ảnh nhúng (attachments) giữ trong ô; ô khoá theo metadata `editable`/`deletable`.
 - CSP cần `'unsafe-eval'` vì Skulpt biên dịch Python sang JS – đừng thêm `'unsafe-inline'` cho script.
 
 ## Chạy thử
-`npx serve .` rồi mở http://localhost:3000. Kiểm tra cả giao diện sáng/tối, VI/EN, và màn hình điện thoại (~400 px).
+`npx serve .` rồi mở http://localhost:3000. Thử giao diện phải có header CSP như `vercel.json` (server thường không có CSP nên che lỗi `style=`). Thử `/api` + `/admin` bằng server Node gọi các hàm `api/` với `JBL_DATA_DIR`. Kiểm tra cả giao diện sáng/tối, VI/EN, và màn hình điện thoại (~400 px).
 
 ## Việc đang chờ
 - Phần lắp ráp robot ảo (chủ dự án sẽ yêu cầu sau).

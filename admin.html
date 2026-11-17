@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>JetBot Lab · Quản trị</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="/app.css">
+<link rel="stylesheet" href="/admin.css">
+</head>
+<body class="adm">
+<header class="adm-top">
+  <a class="adm-brand" href="/">
+    <svg width="24" height="24" viewBox="0 0 26 26" aria-hidden="true"><rect x="3" y="8" width="20" height="10" rx="2" fill="var(--fg)"/><circle cx="7" cy="20" r="3.4" fill="var(--accent)"/><circle cx="19" cy="20" r="3.4" fill="var(--accent)"/><rect x="9" y="3" width="8" height="5" rx="2.5" fill="var(--fg)"/></svg>
+    JetBot Lab <small>Quản trị</small>
+  </a>
+  <nav class="adm-tabs" id="tabs" hidden>
+    <button data-tab="lessons" aria-pressed="true">Bài học</button>
+    <button data-tab="maps" aria-pressed="false">Sa bàn</button>
+  </nav>
+  <div class="adm-right">
+    <a class="btn ghost" href="/" target="_blank" rel="noopener">Mở trang học ↗</a>
+    <button class="btn ghost" id="bLogout" hidden>Đăng xuất</button>
+  </div>
+</header>
+
+<main class="adm-main">
+  <section id="vLogin" class="card login" hidden>
+    <h1>Đăng nhập quản trị</h1>
+    <form id="fLogin">
+      <label>Tên đăng nhập<input name="username" autocomplete="username" required></label>
+      <label>Mật khẩu<input name="password" type="password" autocomplete="current-password" required></label>
+      <button class="btn primary" type="submit">Đăng nhập</button>
+      <p class="msg" id="loginMsg" role="alert"></p>
+    </form>
+  </section>
+
+  <section id="vLessons" hidden>
+    <div class="a-bar"><h1>Bài học</h1><button class="btn primary" id="bNewLesson">+ Thêm bài học</button></div>
+    <p class="a-hint">Bài học thêm ở đây hiện ở đầu danh sách <b>Bài mẫu</b> của trang học, không cần sửa mã nguồn. Kéo thứ tự bằng nút ↑ ↓.</p>
+    <div id="lessonList" class="list"></div>
+  </section>
+
+  <section id="vMaps" hidden>
+    <div class="a-bar"><h1>Sa bàn</h1><button class="btn primary" id="bNewMap">+ Thêm sa bàn</button></div>
+    <p class="a-hint">Tải ảnh mặt sa bàn, nhập kích thước thật rồi đặt điểm xuất phát, vật cản và ô màu bằng chuột. Camera của robot đọc màu trực tiếp trên ảnh để dò line.</p>
+    <div id="mapList" class="list"></div>
+  </section>
+
+  <!-- Soạn bài học -->
+  <section id="vLessonEdit" class="card" hidden>
+    <div class="a-bar"><h1 id="leTitle">Bài học</h1><button class="btn ghost" data-close>✕ Đóng</button></div>
+    <form id="fLesson" class="grid2">
+      <label>Tiêu đề (tiếng Việt)<input name="title" maxlength="200" required></label>
+      <label>Title (English)<input name="titleEn" maxlength="200"></label>
+      <label>Nhãn ngắn<input name="tag" maxlength="40" placeholder="VD: Camera"></label>
+      <label>Tag (English)<input name="tagEn" maxlength="40"></label>
+      <label class="wide">Mô tả<input name="desc" maxlength="500"></label>
+      <label class="wide">Description (English)<input name="descEn" maxlength="500"></label>
+      <label>Sa bàn dùng cho bài<select name="map" id="leMap"></select></label>
+      <label>Mã bài (dùng trong đường link)<input name="id" maxlength="40" pattern="[a-z0-9][a-z0-9-]*" required></label>
+      <div class="wide drop">
+        <label class="btn" for="leFile">Chọn tệp notebook .ipynb</label>
+        <input type="file" id="leFile" accept=".ipynb" hidden>
+        <span id="leFileInfo" class="muted">Chưa có nội dung</span>
+      </div>
+      <label class="check wide"><input type="checkbox" name="hidden"> Ẩn bài này với học sinh</label>
+      <div class="wide actions">
+        <button class="btn primary" type="submit">Lưu bài học</button>
+        <a class="btn ghost" id="lePreview" target="_blank" rel="noopener" hidden>Xem thử ↗</a>
+        <span class="msg" id="leMsg" role="status"></span>
+      </div>
+    </form>
+  </section>
+
+  <!-- Soạn sa bàn -->
+  <section id="vMapEdit" class="card" hidden>
+    <div class="a-bar"><h1 id="meTitle">Sa bàn</h1><button class="btn ghost" data-close>✕ Đóng</button></div>
+    <form id="fMap" class="grid2">
+      <label>Tên sa bàn (tiếng Việt)<input name="name" maxlength="80" required></label>
+      <label>Name (English)<input name="nameEn" maxlength="80"></label>
+      <label>Chiều rộng (cm)<input name="wcm" type="number" min="50" max="400" step="1" required></label>
+      <label>Chiều dài (cm)<input name="hcm" type="number" min="50" max="300" step="1" required></label>
+      <label>Mã sa bàn<input name="id" maxlength="40" pattern="[a-z0-9][a-z0-9-]*" required></label>
+      <div class="drop">
+        <label class="btn" for="meFile">Chọn ảnh mặt sa bàn</label>
+        <input type="file" id="meFile" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+        <span id="meFileInfo" class="muted">Chưa có ảnh</span>
+      </div>
+      <fieldset class="wide line">
+        <legend>Vạch dò line (camera.line_position)</legend>
+        <label class="check"><input type="radio" name="lineMode" value="dark" checked> Vạch tối (đen)</label>
+        <label class="check"><input type="radio" name="lineMode" value="color"> Vạch màu</label>
+        <input type="color" name="lineColor" value="#f5a623" aria-label="Màu vạch">
+        <label class="inline">Độ nhạy <input type="range" name="lineTol" min="10" max="200" value="80"> <output id="tolOut">80</output></label>
+      </fieldset>
+    </form>
+    <div class="tools" role="toolbar" aria-label="Công cụ sa bàn">
+      <button data-tool="start" aria-pressed="true">⌖ Điểm xuất phát</button>
+      <button data-tool="box" aria-pressed="false">▣ Vật cản</button>
+      <button data-tool="zone" aria-pressed="false">■ Ô màu</button>
+      <select id="zoneColor" aria-label="Màu ô"><option value="green">xanh lá</option><option value="red">đỏ</option><option value="blue">xanh dương</option><option value="yellow">vàng</option></select>
+      <button data-tool="pick" aria-pressed="false">✚ Lấy màu vạch từ ảnh</button>
+      <button class="sm" data-rot="-15">↻ 15°</button><button class="sm" data-rot="15">↺ 15°</button>
+      <button class="sm danger" id="meClearBoxes">Xoá hết vật cản</button>
+    </div>
+    <p class="a-hint" id="toolHint"></p>
+    <div class="canvas-wrap"><canvas id="meCanvas" width="960" height="640"></canvas></div>
+    <div class="actions">
+      <button class="btn primary" id="meSave">Lưu sa bàn</button>
+      <a class="btn ghost" id="mePreview" target="_blank" rel="noopener" hidden>Xem thử ↗</a>
+      <span class="msg" id="meMsg" role="status"></span>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="/admin.js"></script>
+</body>
+</html>
