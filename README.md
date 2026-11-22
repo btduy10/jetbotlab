@@ -31,7 +31,10 @@ Vercel tự thêm biến `DATABASE_URL`.
 ### 3. Đăng nhập Google + Classroom
 1. Mở <https://console.cloud.google.com> → tạo dự án (VD *JetBot Lab*).
 2. **APIs & Services → Library** → bật **Google Classroom API**.
-3. **OAuth consent screen**: User type **External**, tên ứng dụng *JetBot Lab*, email hỗ trợ, domain `jetbotlab.vercel.app`.
+3. **OAuth consent screen**: User type **External**, tên ứng dụng *JetBot Lab*, email hỗ trợ.
+   *App domain*: Application home page `https://jetbotlab.vercel.app` · Privacy policy `https://jetbotlab.vercel.app/privacy` ·
+   Terms of service `https://jetbotlab.vercel.app/terms` · Authorized domain `jetbotlab.vercel.app`.
+   **Không tải logo** (thêm logo buộc Google xét duyệt thương hiệu, mất vài ngày).
    Scopes: `openid`, `email`, `profile` và 4 scope Classroom: `classroom.courses.readonly`, `classroom.rosters.readonly`,
    `classroom.profile.emails`, `classroom.coursework.students`. Chuyển **Publishing status → In production**.
 4. **Credentials → Create credentials → OAuth client ID → Web application**:
