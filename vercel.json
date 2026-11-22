@@ -62,7 +62,7 @@
   "rewrites": [
     {
       "source": "/teacher",
-      "destination": "/admin.html"
+      "destination": "/admin"
     }
   ]
 }
