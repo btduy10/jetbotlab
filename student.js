@@ -70,14 +70,27 @@ function renderAsBar(){
   const el = $("#asBar"), a = AS.cur;
   if (!a){ el.hidden = true; el.innerHTML = ""; return; }
   const [cls, label] = asState({ status: a.status, due_at: a.due, submitted_at: a.submitted_at });
-  el.innerHTML = `<span class="lbl">${esc(t("asLabel"))}</span><b>${esc(a.title)}</b><span class="muted">${esc(a.cls)}${a.due ? " · " + esc(t("asDue")) + " " + esc(fmtWhen(a.due)) : ""}</span>`
+  el.innerHTML = `<span class="bar-lbl">${esc(t("asLabel"))}</span><b>${esc(a.title)}</b><span class="muted">${esc(a.cls)}${a.due ? " · " + esc(t("asDue")) + " " + esc(fmtWhen(a.due)) : ""}</span>`
     + `<span class="st ${cls}">${esc(label)}</span>${a.completed ? `<span class="st done">✓ ${esc(t("asCompleted"))}</span>` : ""}${a.total !== null && a.total !== undefined ? `<span class="st sub">${esc(t("asScore"))} ${a.total}/10</span>` : ""}`
     + `<span class="grow"></span><span class="saved">${esc(AS.saving ? t("asSaving") : AS.failed ? t("asSaveFail") : AS.savedAt ? t("asSavedAt").replace("{t}", AS.savedAt) : "")}</span>`
-    + `<button class="go" id="asSubmit">${esc(t(a.status === "submitted" ? "asResubmit" : "asSubmit"))}</button><button id="asExit">${esc(t("asExit"))}</button>`
-    + (a.comment ? `<p class="cmt"><b>${esc(t("asComment"))}:</b> ${esc(a.comment)}</p>` : "");
+    + `<button class="go" id="asSubmit">${esc(t(a.status === "submitted" ? "asResubmit" : "asSubmit"))}</button><button id="asRobot" title="${attr(t("asRobot"))}">.ipynb</button><button id="asFb">${esc(t("fbBtn"))}</button><button id="asExit">${esc(t("asExit"))}</button>`
+    + (a.comment ? `<p class="cmt"><b>${esc(t("asComment"))}:</b> ${esc(a.comment)}</p>` : "")
+    + (AS.fbOpen ? `<div class="fbform"><b>${esc(t("fbTitle"))}</b><span class="starpick">${[1, 2, 3, 4, 5].map(n => `<button data-star="${n}" class="${n <= (AS.fbStar || 0) ? "on" : ""}" aria-label="${n}">★</button>`).join("")}</span>
+      <textarea id="fbText" rows="2" maxlength="2000" placeholder="${attr(t("fbPh"))}"></textarea><button class="go" id="fbSend">${esc(t("fbSend"))}</button></div>` : "");
   el.hidden = false;
   $("#asSubmit").onclick = async () => { if (confirm(t("asSubmitConfirm"))) await saveAssignment(true); };
   $("#asExit").onclick = async () => { await flushAssignment(); leaveAssignment(); };
+  $("#asRobot").onclick = () => saveFile();
+  $("#asFb").onclick = () => { AS.fbOpen = !AS.fbOpen; renderAsBar(); };
+  if (AS.fbOpen){
+    const keep = AS.fbDraft || ""; $("#fbText").value = keep; $("#fbText").oninput = e => AS.fbDraft = e.target.value;
+    el.querySelectorAll("[data-star]").forEach(b => b.onclick = () => { AS.fbStar = +b.dataset.star; renderAsBar(); });
+    $("#fbSend").onclick = async () => {
+      if (!AS.fbStar) return toast(t("fbNeedStar"));
+      try { await api("/api/class?a=feedback", { method: "POST", body: JSON.stringify({ lesson: a.lesson, assignment: a.id, rating: AS.fbStar, text: $("#fbText").value }) });
+        AS.fbOpen = false; AS.fbStar = 0; AS.fbDraft = ""; toast(t("fbThanks")); renderAsBar(); } catch (e){ toast(e.message); }
+    };
+  }
 }
 async function saveAssignment(final){
   const a = AS.cur; if (!a) return;
@@ -143,7 +156,7 @@ function renderReview(){
   const sel = (k, v) => `<select data-k="${k}">${[0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4].map(n => `<option${n === v ? " selected" : ""}>${n}</option>`).join("")}</select>`;
   const cur = g ? g.scores : { task: sug.task, optim: sug.optim === null ? 2 : sug.optim, code: sug.code };
   const late = s.submitted_at && s.due_at && new Date(s.submitted_at) > new Date(s.due_at);
-  el.innerHTML = `<span class="lbl">${esc(t("rvLabel"))}</span><b>${esc(s.student.name || s.student.email)}</b><span class="muted">${esc(s.student.email)} · ${esc(s.title || s.lesson_id)}</span>`
+  el.innerHTML = `<span class="bar-lbl">${esc(t("rvLabel"))}</span><b>${esc(s.student.name || s.student.email)}</b><span class="muted">${esc(s.student.email)} · ${esc(s.title || s.lesson_id)}</span>`
     + `<span class="st ${s.status === "submitted" ? (late ? "late" : "sub") : ""}">${esc(s.status === "submitted" ? t("asSubmitted") + " " + fmtWhen(s.submitted_at) + (late ? " · " + t("asOverdue") : "") : t("asStarted"))}</span>`
     + (s.completed ? `<span class="st done">✓ ${esc(t("asCompleted"))}</span>` : "")
     + `<span class="muted">${esc(t("rvStats").replace("{n}", s.runs_count).replace("{m}", Math.round(s.active_seconds/60)))}${b ? " · " + esc(t("rvBest").replace("{t}", (+keyT(b)).toFixed(1)).replace("{d}", (+b.dist).toFixed(2)).replace("{k}", b.coll)) : ""}</span>`
@@ -153,6 +166,7 @@ function renderReview(){
     + `<label>${esc(t("rvCode"))} ${sel("code", cur.code)}<small>${esc(t("rvSug"))} ${sug.code}</small></label>`
     + `<b class="total" id="rvTotal"></b></div>`
     + `<textarea id="rvComment" rows="2" placeholder="${attr(t("rvCommentPh"))}">${esc(g ? g.comment : "")}</textarea>`
+    + `<label class="vf"><input type="checkbox" id="rvVerified"${s.robot_verified ? " checked" : ""}> ${esc(t("rvVerified"))}</label>`
     + `<span class="grow"></span><span class="saved" id="rvMsg">${g ? esc(t("rvGraded").replace("{t}", fmtWhen(g.graded_at))) : ""}</span>`
     + `<button class="go" id="rvSave">${esc(t("rvSave"))}</button>${s.gc ? `<button id="rvPush">${esc(t("rvPush"))}</button>` : ""}`
     + `<details class="runs"><summary>${esc(t("rvRuns"))} (${d.runs.length})</summary><ul>${d.runs.map(r => `<li class="${r.completed ? "ok" : ""}">${esc(fmtWhen(r.at))} · ${r.completed ? "✓" : r.ok ? "•" : "✗"} ${esc(t("critStats").replace("{t}", (+keyT(r.metrics)).toFixed(1)).replace("{d}", (+r.metrics.dist).toFixed(2)).replace("{k}", r.metrics.coll))}</li>`).join("")}</ul></details>`;
@@ -166,6 +180,7 @@ function renderReview(){
     catch (e){ toast(e.message); }
   };
   if ($("#rvPush")) $("#rvPush").onclick = () => window.pushGrade && pushGrade(s.id);
+  $("#rvVerified").onchange = async e => { try { await api("/api/class?a=verify", { method: "POST", body: JSON.stringify({ submission: s.id, value: e.target.checked }) }); s.robot_verified = e.target.checked; } catch (x){ e.target.checked = !e.target.checked; toast(x.message); } };
 }
 window.pushGrade = async sid => {
   if (!RV.d || !RV.d.grade) return toast(t("rvPushFirst"));
@@ -188,3 +203,26 @@ document.addEventListener("jbl:auth", async () => {
 });
 
 loadMe();
+
+/* ---------- tiết học trực tiếp: nhóm nào đang ở robot thật ---------- */
+const LIVE = { list: [], at: 0, warned: {} };
+async function pollLive(){
+  if (!ACC.me || ACC.me.role !== "student" || document.visibilityState !== "visible") return;
+  try { LIVE.list = (await api("/api/class?a=my_live")).live; LIVE.at = Date.now(); } catch (e) { LIVE.list = []; }
+  renderLive();
+}
+function renderLive(){
+  const el = $("#liveStrip"), x = LIVE.list[0];
+  if (!x){ el.hidden = true; return; }
+  const n = x.now, slot = n.minutes*60; let i = n.round, r = n.remaining - Math.floor((Date.now() - LIVE.at)/1000); while (r <= 0){ r += slot; i++; }
+  const g = n.groups[i % n.groups.length], nx = n.groups[(i + 1) % n.groups.length], mine = x.my_group && x.my_group === g;
+  const key = x.class_id + ":" + i;
+  if (mine && !LIVE.warned[key]){ LIVE.warned[key] = 1; toast(t("lvYourTurn").replace("{g}", g)); }
+  el.className = "livestrip" + (mine ? " mine" : "");
+  el.innerHTML = `<span class="bar-lbl">${esc(t("lvLive"))}</span><span>${esc(x.class_name)}</span><b>${esc(t("lvAtRobot").replace("{g}", g).replace("{t}", `${Math.floor(r/60)}:${String(r % 60).padStart(2, "0")}`))}</b>`
+    + `<span class="muted">${esc(t("lvNext").replace("{g}", nx))}</span>${x.my_group ? `<span class="mg">${esc(mine ? t("lvYouNow") : t("lvMine").replace("{g}", x.my_group))}</span>` : ""}`;
+  el.hidden = false;
+}
+setInterval(() => { if (LIVE.list.length) renderLive(); }, 1000);
+setInterval(pollLive, 20000);
+document.addEventListener("jbl:auth", pollLive);

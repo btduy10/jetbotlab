@@ -391,6 +391,62 @@ ACTIONS.gc_grade_all = { POST: async (req, res) => {
   send(res, 200, { ok: true, pushed, failed });
 } };
 
+// ---------- tiết học trực tiếp: luân phiên nhóm dùng robot thật ----------
+// state = { on, groups: [tên nhóm theo thứ tự], minutes, startedAt, assignment }. Nhóm hiện tại tính theo đồng hồ, không cần ghi liên tục.
+function liveNow(st){
+  if (!st || !st.on || !Array.isArray(st.groups) || !st.groups.length || !(st.minutes > 0)) return null;
+  const el = Math.max(0, (Date.now() - Date.parse(st.startedAt))/1000), slot = st.minutes*60, i = Math.floor(el/slot);
+  return { group: st.groups[i % st.groups.length], next: st.groups[(i + 1) % st.groups.length], remaining: Math.round(slot - el % slot), round: i, minutes: st.minutes, groups: st.groups, assignment: st.assignment || null };
+}
+ACTIONS.live = {
+  GET: async (req, res) => {
+    const u = await needTeacher(req), id = intId(query(req).get("class")); await ownClass(u, id);
+    const r = await q("SELECT state FROM live WHERE class_id = $1", [id]); const st = r[0] ? r[0].state : null;
+    send(res, 200, { state: st, now: liveNow(st) });
+  },
+  POST: async (req, res) => {
+    const u = await needTeacher(req), b = await readJsonBody(req, 8192), id = intId(b.class); await ownClass(u, id);
+    const groups = (Array.isArray(b.groups) ? b.groups : []).map(g => str(g, 40)).filter(Boolean).slice(0, 20);
+    const st = { on: b.on === true && groups.length > 0, groups, minutes: Math.max(1, Math.min(120, Math.round(Number(b.minutes) || 10))),
+      startedAt: date(b.startedAt) || new Date().toISOString(), assignment: b.assignment ? intId(b.assignment) : null };
+    await q(`INSERT INTO live (class_id, state, updated_at) VALUES ($1, $2, now()) ON CONFLICT (class_id) DO UPDATE SET state = EXCLUDED.state, updated_at = now()`, [id, JSON.stringify(st)]);
+    send(res, 200, { ok: true, state: st, now: liveNow(st) });
+  }
+};
+ACTIONS.my_live = { GET: async (req, res) => {
+  const u = await needUser(req);
+  const rows = await q(`SELECT c.id, c.name, m.group_name, l.state FROM class_members m JOIN classes c ON c.id = m.class_id AND NOT c.archived
+    JOIN live l ON l.class_id = c.id WHERE m.user_id = $1 AND l.updated_at > now() - interval '12 hours'`, [u.id]);
+  const out = rows.map(r => ({ class_id: N(r.id), class_name: r.name, my_group: r.group_name, now: liveNow(r.state) })).filter(x => x.now);
+  send(res, 200, { live: out });
+} };
+ACTIONS.verify = { POST: async (req, res) => {
+  const u = await needTeacher(req), b = await readJsonBody(req, 1024), sid = intId(b.submission); await ownSubmission(u, sid);
+  await q("UPDATE submissions SET robot_verified = $2 WHERE id = $1", [sid, b.value === true]); send(res, 200, { ok: true });
+} };
+
+// ---------- phản hồi / khảo sát của học sinh ----------
+ACTIONS.feedback = {
+  POST: async (req, res) => {
+    const u = await needUser(req), b = await readJsonBody(req, 8192), lesson = str(b.lesson, 60);
+    if (!LESSON_ID.test(lesson)) throw new HttpError(400, "Bài học không hợp lệ");
+    const rating = Math.round(Number(b.rating)); if (!(rating >= 1 && rating <= 5)) throw new HttpError(400, "Hãy chọn từ 1 đến 5 sao");
+    const recent = await q("SELECT count(*) AS n FROM feedback WHERE user_id = $1 AND created_at > now() - interval '1 hour'", [u.id]);
+    if (N(recent[0].n) >= 20) throw new HttpError(429, "Em đã gửi nhiều góp ý, hãy thử lại sau");
+    let classId = null;
+    if (b.assignment){ const a = await myAssignment(u, intId(b.assignment)); classId = N((await q("SELECT class_id FROM assignments WHERE id = $1", [N(a.id)]))[0].class_id); }
+    await q("INSERT INTO feedback (user_id, class_id, lesson_id, rating, text) VALUES ($1, $2, $3, $4, $5)", [u.id, classId, lesson, rating, str(b.text, 2000)]);
+    send(res, 200, { ok: true });
+  },
+  GET: async (req, res) => {
+    const u = await needTeacher(req), id = intId(query(req).get("class")); await ownClass(u, id);
+    const rows = await q(`SELECT f.lesson_id, f.rating, f.text, f.created_at, COALESCE(NULLIF(m.name, ''), us.name, us.email) AS who
+      FROM feedback f JOIN class_members m ON m.class_id = $1 AND m.user_id = f.user_id LEFT JOIN users us ON us.id = f.user_id
+      WHERE f.class_id = $1 OR f.class_id IS NULL ORDER BY f.created_at DESC LIMIT 500`, [id]);
+    send(res, 200, { feedback: rows });
+  }
+};
+
 module.exports = handle(async (req, res) => {
   const a = query(req).get("a"), h = ACTIONS[a] && ACTIONS[a][req.method];
   if (!h) throw new HttpError(404, "Không có");

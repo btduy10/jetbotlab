@@ -126,8 +126,9 @@ window.CLASS_SUBTABS = Object.assign(window.CLASS_SUBTABS || {}, { progress: loa
 const PG = { d: null, week: "" };
 const median = a => { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m])/2; };
 const subKey = (aid, email) => aid + "|" + email;
-async function loadProgress(){
-  const el = $("#progressTable");
+async function loadProgress(target){
+  PG.el = target instanceof Element ? target : $("#progressTable");
+  const el = PG.el;
   try { PG.d = await api("/api/class?a=progress&class=" + TC.cls.id); } catch (e){ el.innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
   const weeks = [...new Set(PG.d.assignments.map(a => a.week_label || "—"))], sel = $("#pgWeek");
   sel.innerHTML = `<option value="">Tất cả các tuần</option>` + weeks.map(w => `<option>${esc(w)}</option>`).join("");
@@ -151,7 +152,7 @@ function studentFlags(m, as, map, med){
   return { help: [...new Set(help)], up: canUp };
 }
 function renderProgress(){
-  const d = PG.d, el = $("#progressTable"); if (!d) return;
+  const d = PG.d, el = PG.el || $("#progressTable"); if (!d) return;
   const as = d.assignments.filter(a => !PG.week || (a.week_label || "—") === PG.week);
   if (!d.members.length || !as.length){ el.innerHTML = `<div class="empty">${!d.members.length ? "Lớp chưa có học sinh." : "Chưa có bài được giao trong tuần này."}</div>`; return; }
   const map = new Map(d.subs.map(s => [subKey(s.assignment_id, s.email), s]));
@@ -227,3 +228,69 @@ $("#assignList").addEventListener("click", async e => {
   if (!confirm("Xoá bài được giao này? Bài làm và điểm của học sinh cho bài này cũng bị xoá.")) return;
   try { await api("/api/class?a=assignments&id=" + id, { method: "DELETE" }); loadAssignments(); } catch (x){ toast(x.message); }
 });
+
+/* ---------- tiết học: luân phiên robot thật ---------- */
+const LV = { st: null, now: null, at: 0, tick: 0, poll: 0 };
+window.CLASS_SUBTABS.live = loadLive;
+const mmss = s => `${String(Math.floor(s/60)).padStart(2, "0")}:${String(Math.max(0, s % 60)).padStart(2, "0")}`;
+async function loadLive(){
+  try { const j = await api("/api/class?a=live&class=" + TC.cls.id); LV.st = j.state; LV.now = j.now; LV.at = Date.now(); } catch (e){ toast(e.message); }
+  if (!$("#lvGroups").value){
+    const m = (await api("/api/class?a=members&class=" + TC.cls.id)).members, gs = [...new Set(m.map(x => x.group).filter(Boolean))];
+    $("#lvGroups").value = (LV.st && LV.st.groups && LV.st.groups.length ? LV.st.groups : gs).join(", ");
+  }
+  if (LV.st && LV.st.minutes) $("#lvMinutes").value = LV.st.minutes;
+  renderLive(); loadProgress($("#liveTable"));
+  clearInterval(LV.tick); clearInterval(LV.poll);
+  LV.tick = setInterval(() => { if ($("#vClass").hidden || TC.sub !== "live"){ clearInterval(LV.tick); clearInterval(LV.poll); return; } renderLive(); }, 1000);
+  LV.poll = setInterval(() => { if (TC.sub === "live" && !$("#vClass").hidden && document.visibilityState === "visible") loadProgress($("#liveTable")); }, 10000);
+}
+function renderLive(){
+  const el = $("#lvBoard"), n = LV.now;
+  if (!n){ el.hidden = true; return; }
+  const passed = Math.floor((Date.now() - LV.at)/1000), slot = n.minutes*60, rem = n.remaining - passed;
+  // hết lượt → tự tính nhóm kế tiếp theo đồng hồ
+  let i = n.round, r = rem; while (r <= 0){ r += slot; i++; }
+  const g = n.groups[i % n.groups.length], nx = n.groups[(i + 1) % n.groups.length];
+  el.innerHTML = `<div class="bar-lbl">Đang ở robot thật</div><div class="big">${esc(g)}</div><div class="clock${r <= 60 ? " warn" : ""}">${mmss(r)}</div><div class="muted">Tiếp theo: <b>${esc(nx)}</b> · ${n.minutes} phút mỗi nhóm · thứ tự: ${n.groups.map(esc).join(" → ")}</div>`;
+  el.hidden = false;
+}
+async function saveLive(body){
+  try { const j = await api("/api/class?a=live", { method: "POST", body: JSON.stringify(Object.assign({ class: TC.cls.id }, body)) }); LV.st = j.state; LV.now = j.now; LV.at = Date.now(); renderLive(); }
+  catch (e){ toast(e.message); }
+}
+const lvGroups = () => $("#lvGroups").value.split(/[,;\n]+/).map(s => s.trim()).filter(Boolean);
+$("#lvStart").onclick = () => { const g = lvGroups(); if (!g.length) return toast("Hãy nhập thứ tự nhóm (VD: Nhóm 1, Nhóm 2)"); saveLive({ on: true, groups: g, minutes: +$("#lvMinutes").value, startedAt: new Date().toISOString() }); toast("Đã bắt đầu luân phiên robot thật"); };
+$("#lvNext").onclick = () => {
+  const n = LV.now; if (!n) return toast("Tiết học chưa bắt đầu");
+  const passed = Math.floor((Date.now() - LV.at)/1000), slot = n.minutes*60; let i = n.round, r = n.remaining - passed; while (r <= 0){ r += slot; i++; }
+  saveLive({ on: true, groups: n.groups, minutes: n.minutes, startedAt: new Date(Date.now() - (i + 1)*slot*1000).toISOString() });
+};
+$("#lvStop").onclick = () => { if (confirm("Kết thúc tiết học? Học sinh sẽ không còn thấy lịch luân phiên.")) saveLive({ on: false, groups: lvGroups(), minutes: +$("#lvMinutes").value }); };
+
+/* ---------- phản hồi của học sinh ---------- */
+const FB = { list: [] };
+window.CLASS_SUBTABS.feedback = loadFeedback;
+async function loadFeedback(){
+  const el = $("#fbList");
+  try { FB.list = (await api("/api/class?a=feedback&class=" + TC.cls.id)).feedback; } catch (e){ el.innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
+  if (!FB.list.length){ el.innerHTML = '<div class="empty">Chưa có góp ý nào từ học sinh lớp này.</div>'; return; }
+  const by = new Map(); for (const f of FB.list){ if (!by.has(f.lesson_id)) by.set(f.lesson_id, []); by.get(f.lesson_id).push(f); }
+  el.innerHTML = [...by].map(([lid, fs]) => { const avg = fs.reduce((x, f) => x + f.rating, 0)/fs.length;
+    return `<div class="card fb"><div class="fbh"><b>${esc(lessonTitle(lid))}</b><span class="stars">${"★".repeat(Math.round(avg))}${"☆".repeat(5 - Math.round(avg))}</span><span class="muted">${avg.toFixed(1)}/5 · ${fs.length} lượt</span></div>
+      <ul>${fs.filter(f => f.text).map(f => `<li><span class="stars sm">${"★".repeat(f.rating)}</span> ${esc(f.text)} <small class="muted">— ${esc(f.who || "")}, ${fmtDate(f.created_at)}</small></li>`).join("") || '<li class="muted">(chỉ chấm sao, không có lời góp ý)</li>'}</ul></div>`; }).join("");
+}
+$("#fbRefresh").onclick = loadFeedback;
+$("#fbCopy").onclick = async () => {
+  if (!FB.list.length) return toast("Chưa có góp ý để sao chép");
+  const by = new Map(); for (const f of FB.list){ if (!by.has(f.lesson_id)) by.set(f.lesson_id, []); by.get(f.lesson_id).push(f); }
+  const lines = [`Phản hồi của học sinh lớp "${TC.cls.name}" về JetBot Lab (${location.origin}):`];
+  for (const [lid, fs] of by){
+    const avg = fs.reduce((x, f) => x + f.rating, 0)/fs.length;
+    lines.push(`\n- Bài "${lessonTitle(lid)}" (mã ${lid}): trung bình ${avg.toFixed(1)}/5 sao, ${fs.length} lượt.`);
+    for (const f of fs.filter(f => f.text).slice(0, 25)) lines.push(`  • (${f.rating}★) ${f.text.replace(/\s+/g, " ")}`);
+  }
+  lines.push("\nYêu cầu: dựa trên các góp ý trên, hãy đề xuất rồi thực hiện cải tiến cho JetBot Lab (bài học, sa bàn, thử thách hoặc tính năng). Ưu tiên vấn đề được nhiều học sinh nhắc tới; giữ quy ước trong CLAUDE.md; thử trên trình duyệt có CSP trước khi commit.");
+  const text = lines.join("\n");
+  try { await navigator.clipboard.writeText(text); toast("Đã sao chép, dán vào Claude Code để cải tiến"); } catch (e){ prompt("Sao chép đoạn sau", text); }
+};

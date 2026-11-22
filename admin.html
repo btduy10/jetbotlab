@@ -64,6 +64,8 @@
       <button data-sub="members" aria-pressed="true">Học sinh</button>
       <button data-sub="assign" aria-pressed="false">Giao bài</button>
       <button data-sub="progress" aria-pressed="false">Tiến độ &amp; chấm bài</button>
+      <button data-sub="live" aria-pressed="false">Tiết học</button>
+      <button data-sub="feedback" aria-pressed="false">Phản hồi</button>
     </nav>
     <div class="subpane" data-sub="members">
       <form id="fMembers" class="card">
@@ -90,6 +92,24 @@
     <div class="subpane" data-sub="progress" hidden>
       <div class="pgbar"><select id="pgWeek" aria-label="Lọc theo tuần"></select><button class="btn ghost" id="pgRefresh">↻ Làm mới</button><button class="btn ghost" id="pgCsv">Tải CSV</button></div>
       <div id="progressTable"></div>
+    </div>
+    <div class="subpane" data-sub="live" hidden>
+      <div class="card">
+        <b>Tiết học trên lớp</b>
+        <p class="a-hint">Cả lớp làm trên lab ảo; các nhóm lần lượt kiểm chứng trên robot thật theo đồng hồ. Học sinh thấy ngay nhóm nào đang tới lượt.</p>
+        <div class="grid2">
+          <label>Thứ tự nhóm (cách nhau bằng dấu phẩy)<input id="lvGroups" maxlength="400" placeholder="Nhóm 1, Nhóm 2, Nhóm 3"></label>
+          <label>Số phút mỗi nhóm ở robot thật<input id="lvMinutes" type="number" min="1" max="120" value="10"></label>
+        </div>
+        <div class="actions"><button class="btn primary" id="lvStart">Bắt đầu luân phiên</button><button class="btn" id="lvNext">Chuyển sang nhóm kế</button><button class="btn ghost dangerbtn" id="lvStop">Kết thúc tiết học</button></div>
+      </div>
+      <div class="liveboard" id="lvBoard" hidden></div>
+      <div id="liveTable"></div>
+    </div>
+    <div class="subpane" data-sub="feedback" hidden>
+      <div class="pgbar"><button class="btn primary" id="fbCopy">Sao chép yêu cầu cho Claude</button><button class="btn ghost" id="fbRefresh">↻ Làm mới</button></div>
+      <p class="a-hint">Học sinh chấm sao và góp ý sau mỗi bài. Bấm “Sao chép yêu cầu cho Claude” để gom góp ý thành một yêu cầu cải tiến, dán vào Claude Code (vibe coding), rồi đẩy bản cập nhật lên GitHub → Vercel.</p>
+      <div id="fbList"></div>
     </div>
   </section>
 

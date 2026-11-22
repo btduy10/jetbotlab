@@ -112,3 +112,15 @@ h3.wk{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--a
 .gcbox{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;margin:6px 0 4px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
 .gcbox .grow{flex:1}
 .gcbox select{min-width:240px}
+/* tiết học, phản hồi */
+.liveboard{margin:12px 0;padding:18px;border-radius:12px;background:var(--panel);border:2px solid var(--accent);text-align:center}
+.liveboard .bar-lbl{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.liveboard .big{font-size:40px;font-weight:800;color:var(--accent-ink);line-height:1.15;margin:4px 0}
+.liveboard .clock{font:700 34px var(--f-code);margin:2px 0 6px}
+.liveboard .clock.warn{color:var(--err)}
+#liveTable{margin-top:8px}
+.card.fb{margin-bottom:10px}
+.fbh{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.stars{color:#e8a10c;letter-spacing:1px}
+.stars.sm{font-size:11px}
+.card.fb ul{margin:8px 0 0;padding-left:18px;display:grid;gap:4px;font-size:13px}
