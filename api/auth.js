@@ -1,7 +1,7 @@
 // Đăng nhập: Google OAuth (mọi người), mật khẩu admin (dự phòng), phiên hiện tại, đăng xuất.
 // /api/auth?a=google&next=/…  → Google → /api/auth?a=callback
 const crypto = require("crypto");
-const { HttpError, env, sealed, unseal, cookies, cookieStr, sessionCookie, clearCookie, isLocal, effectiveRole, currentUser,
+const { HttpError, env, encrypt, siteOrigin, sealed, unseal, cookies, cookieStr, sessionCookie, clearCookie, isLocal, effectiveRole, currentUser,
   checkLogin, sameOrigin, readJsonBody, query, send, redirect, handle } = require("./_lib");
 const { q } = require("./_db");
 
@@ -15,8 +15,7 @@ const SCOPE_CLASSROOM = [
   "https://www.googleapis.com/auth/classroom.coursework.students"
 ].join(" ");
 
-const origin = req => `${isLocal(req) ? "http" : "https"}://${req.headers.host}`;
-const redirectUri = req => origin(req) + "/api/auth?a=callback";
+const redirectUri = req => siteOrigin(req) + "/api/auth?a=callback";
 const safeNext = n => typeof n === "string" && /^\/(?!\/)[\w\-./?=&%#]*$/.test(n) && n.length < 300 ? n : "/";
 const b64u = buf => Buffer.from(buf).toString("base64url");
 
@@ -26,9 +25,6 @@ function clientConf(){
   return { id, secret };
 }
 
-// Mã hoá refresh token của giáo viên trước khi lưu (AES-256-GCM, khoá từ TOKEN_ENC_KEY).
-function encKey(){ const k = env("TOKEN_ENC_KEY"); if (k.length < 16) throw new HttpError(500, "Server chưa cấu hình TOKEN_ENC_KEY (≥ 16 ký tự)"); return crypto.createHash("sha256").update(k).digest(); }
-function encrypt(text){ const iv = crypto.randomBytes(12), c = crypto.createCipheriv("aes-256-gcm", encKey(), iv); const ct = Buffer.concat([c.update(text, "utf8"), c.final()]); return [b64u(iv), b64u(c.getAuthTag()), b64u(ct)].join("."); }
 
 async function upsertUser({ email, name, sub }){
   email = String(email).toLowerCase().trim();

@@ -167,6 +167,10 @@ function renderReview(){
   };
   if ($("#rvPush")) $("#rvPush").onclick = () => window.pushGrade && pushGrade(s.id);
 }
+window.pushGrade = async sid => {
+  if (!RV.d || !RV.d.grade) return toast(t("rvPushFirst"));
+  try { await api("/api/class?a=gc_grade", { method: "POST", body: JSON.stringify({ submission: sid }) }); toast(t("rvPushed")); } catch (e){ toast(e.message); }
+};
 async function openReview(){
   if (!ACC.me || ACC.me.role === "student") return toast(t("rvNoRight"));
   let j; try { j = await api("/api/class?a=review&submission=" + RV.id); } catch (e) { return toast(e.message); }

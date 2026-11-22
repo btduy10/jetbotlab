@@ -83,6 +83,8 @@ module.exports = [
     rating INT CHECK (rating BETWEEN 1 AND 5),
     text TEXT NOT NULL DEFAULT '',
     created_at TIMESTAMPTZ NOT NULL DEFAULT now())`,
+  `ALTER TABLE classes ADD COLUMN IF NOT EXISTS gc_course_name TEXT`,
+  `ALTER TABLE assignments ADD COLUMN IF NOT EXISTS gc_link TEXT`,
   `CREATE TABLE IF NOT EXISTS live (
     class_id BIGINT PRIMARY KEY REFERENCES classes(id) ON DELETE CASCADE,
     state JSONB NOT NULL,

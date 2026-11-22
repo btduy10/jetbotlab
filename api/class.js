@@ -1,6 +1,6 @@
 // Lớp học: CSDL, giáo viên, lớp, học sinh, giao bài, bài làm, tiến độ, chấm điểm, Classroom, phản hồi.
 // Định tuyến bằng ?a=… để gói gọn trong một function (Vercel Hobby giới hạn 12 function).
-const { HttpError, readJsonBody, requireRole, currentUser, sameOrigin, query, send, handle } = require("./_lib");
+const { HttpError, env, decrypt, siteOrigin, readJsonBody, requireRole, currentUser, sameOrigin, query, send, handle } = require("./_lib");
 const { q, migrate } = require("./_db");
 
 const EMAIL = /^[^\s@<>"',;]{1,64}@[^\s@<>"',;]{1,190}\.[a-z]{2,24}$/i;
@@ -14,7 +14,7 @@ const date = v => { if (v === null || v === undefined || v === "") return null; 
 
 // Giáo viên chỉ thao tác trên lớp của mình; admin được mọi lớp.
 async function ownClass(u, classId){
-  const rows = await q("SELECT id, teacher_id, name, gc_course_id FROM classes WHERE id = $1", [classId]);
+  const rows = await q("SELECT id, teacher_id, name, gc_course_id, gc_course_name FROM classes WHERE id = $1", [classId]);
   if (!rows.length) throw new HttpError(404, "Không có lớp này");
   if (u.role !== "admin" && N(rows[0].teacher_id) !== u.id) throw new HttpError(403, "Đây không phải lớp của bạn");
   return rows[0];
@@ -73,7 +73,7 @@ ACTIONS.teachers = {
 ACTIONS.classes = {
   GET: async (req, res) => {
     const u = await needTeacher(req);
-    const rows = await q(`SELECT c.id, c.name, c.note, c.gc_course_id, c.archived, c.created_at, u.email AS teacher_email,
+    const rows = await q(`SELECT c.id, c.name, c.note, c.gc_course_id, c.gc_course_name, c.archived, c.created_at, u.email AS teacher_email,
         (SELECT count(*) FROM class_members m WHERE m.class_id = c.id) AS members,
         (SELECT count(*) FROM assignments a WHERE a.class_id = c.id) AS assignments
       FROM classes c JOIN users u ON u.id = c.teacher_id
@@ -281,6 +281,114 @@ ACTIONS.grade = { POST: async (req, res) => {
     ON CONFLICT (submission_id) DO UPDATE SET scores = EXCLUDED.scores, total = EXCLUDED.total, comment = EXCLUDED.comment, graded_by = EXCLUDED.graded_by, graded_at = now()`,
     [sid, JSON.stringify(scores), total, str(b.comment, 4000), u.id]);
   send(res, 200, { ok: true, total });
+} };
+
+// ---------- Google Classroom: liên kết khoá học, nhập học sinh, đăng bài, trả điểm ----------
+async function gcToken(u){
+  const rows = await q("SELECT refresh_enc FROM teacher_tokens WHERE user_id = $1", [u.id]);
+  if (!rows.length) throw new HttpError(409, "Chưa kết nối Google Classroom. Bấm “Kết nối Google Classroom” trước.");
+  const r = await fetch("https://oauth2.googleapis.com/token", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ client_id: env("GOOGLE_CLIENT_ID"), client_secret: env("GOOGLE_CLIENT_SECRET"), refresh_token: decrypt(rows[0].refresh_enc), grant_type: "refresh_token" }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.access_token){
+    if (j.error === "invalid_grant"){ await q("DELETE FROM teacher_tokens WHERE user_id = $1", [u.id]); throw new HttpError(409, "Kết nối Classroom đã hết hạn hoặc bị thu hồi. Hãy bấm “Kết nối Google Classroom” lại."); }
+    throw new HttpError(502, "Google không cấp quyền Classroom (" + (j.error || r.status) + ")");
+  }
+  return j.access_token;
+}
+async function gc(token, method, path, body){
+  const r = await fetch("https://classroom.googleapis.com/v1/" + path, { method, headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new HttpError(r.status === 404 ? 404 : r.status === 403 ? 403 : 502, "Google Classroom: " + ((j.error && j.error.message) || "lỗi " + r.status));
+  return j;
+}
+const enc = encodeURIComponent;
+async function gcRoster(token, courseId){
+  const out = []; let page = "", skipped = 0;
+  for (let i = 0; i < 20; i++){
+    const j = await gc(token, "GET", `courses/${enc(courseId)}/students?pageSize=100${page ? "&pageToken=" + enc(page) : ""}`);
+    for (const s of j.students || []){ const p = s.profile || {}; if (p.emailAddress && EMAIL.test(p.emailAddress)) out.push({ email: p.emailAddress.toLowerCase(), name: str(p.name && p.name.fullName, 120) }); else skipped++; }
+    if (!j.nextPageToken) break; page = j.nextPageToken;
+  }
+  return { list: out, skipped };
+}
+async function importRoster(u, cls){
+  const { list, skipped } = await gcRoster(await gcToken(u), cls.gc_course_id);
+  for (const m of list) await q(`INSERT INTO class_members (class_id, email, name, user_id) VALUES ($1, $2, $3, (SELECT id FROM users WHERE email = $2))
+    ON CONFLICT (class_id, email) DO UPDATE SET name = CASE WHEN class_members.name = '' THEN EXCLUDED.name ELSE class_members.name END`, [N(cls.id), m.email, m.name]);
+  return { imported: list.length, skipped };
+}
+ACTIONS.gc_courses = { GET: async (req, res) => {
+  const u = await needTeacher(req), token = await gcToken(u), out = []; let page = "";
+  for (let i = 0; i < 5; i++){
+    const j = await gc(token, "GET", `courses?teacherId=me&courseStates=ACTIVE&pageSize=100${page ? "&pageToken=" + enc(page) : ""}`);
+    for (const c of j.courses || []) out.push({ id: c.id, name: c.name, section: c.section || "" });
+    if (!j.nextPageToken) break; page = j.nextPageToken;
+  }
+  send(res, 200, { courses: out });
+} };
+ACTIONS.gc_link = { POST: async (req, res) => {
+  const u = await needTeacher(req), b = await readJsonBody(req, 4096), id = intId(b.class), cls = await ownClass(u, id);
+  const course = str(b.course, 40); if (!/^\d{1,30}$/.test(course)) throw new HttpError(400, "Mã khoá học không hợp lệ");
+  const c = await gc(await gcToken(u), "GET", "courses/" + enc(course));   // chỉ liên kết khoá học giáo viên này thấy được
+  await q("UPDATE classes SET gc_course_id = $2, gc_course_name = $3 WHERE id = $1", [id, course, str(c.name + (c.section ? " · " + c.section : ""), 160)]);
+  send(res, 200, { ok: true, ...(await importRoster(u, { ...cls, gc_course_id: course })) });
+} };
+ACTIONS.gc_import = { POST: async (req, res) => {
+  const u = await needTeacher(req), b = await readJsonBody(req, 1024), cls = await ownClass(u, intId(b.class));
+  if (!cls.gc_course_id) throw new HttpError(400, "Lớp chưa liên kết Google Classroom");
+  send(res, 200, { ok: true, ...(await importRoster(u, cls)) });
+} };
+ACTIONS.gc_unlink = { POST: async (req, res) => {
+  const u = await needTeacher(req), b = await readJsonBody(req, 1024), id = intId(b.class); await ownClass(u, id);
+  await q("UPDATE classes SET gc_course_id = NULL, gc_course_name = NULL WHERE id = $1", [id]); send(res, 200, { ok: true });
+} };
+ACTIONS.gc_post = { POST: async (req, res) => {
+  const u = await needTeacher(req), b = await readJsonBody(req, 1024), id = intId(b.assignment);
+  const a = (await q("SELECT * FROM assignments WHERE id = $1", [id]))[0]; if (!a) throw new HttpError(404, "Không có bài được giao này");
+  const cls = await ownClass(u, N(a.class_id));
+  if (!cls.gc_course_id) throw new HttpError(400, "Lớp chưa liên kết Google Classroom");
+  if (a.gc_coursework_id) return send(res, 200, { ok: true, already: true });
+  const link = siteOrigin(req) + "/?assignment=" + id;
+  const body = { title: str(a.title || a.lesson_id, 160), workType: "ASSIGNMENT", state: "PUBLISHED", maxPoints: 10,
+    description: `Làm bài trên JetBot Lab (đăng nhập bằng Gmail này): ${link}${a.week_label ? "\n" + a.week_label : ""}${a.period_label ? " · " + a.period_label : ""}`,
+    materials: [{ link: { url: link, title: "Mở bài trên JetBot Lab" } }] };
+  if (a.due_at){ const d = new Date(a.due_at); body.dueDate = { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate() }; body.dueTime = { hours: d.getUTCHours(), minutes: d.getUTCMinutes() }; }
+  const cw = await gc(await gcToken(u), "POST", `courses/${enc(cls.gc_course_id)}/courseWork`, body);
+  await q("UPDATE assignments SET gc_coursework_id = $2, gc_link = $3 WHERE id = $1", [id, String(cw.id), cw.alternateLink || null]);
+  send(res, 200, { ok: true, link: cw.alternateLink || null });
+} };
+// Classroom chỉ cho ứng dụng chấm bài tập do chính ứng dụng tạo (gc_post).
+async function pushOne(token, courseId, cwId, email, total){
+  const subs = await gc(token, "GET", `courses/${enc(courseId)}/courseWork/${enc(cwId)}/studentSubmissions?userId=${enc(email)}`);
+  const s = (subs.studentSubmissions || [])[0]; if (!s) throw new HttpError(404, "Học sinh không có trong khoá học Classroom");
+  const base = `courses/${enc(courseId)}/courseWork/${enc(cwId)}/studentSubmissions/${enc(s.id)}`;
+  await gc(token, "PATCH", base + "?updateMask=assignedGrade,draftGrade", { assignedGrade: total, draftGrade: total });
+  if (s.state !== "RETURNED") await gc(token, "POST", base + ":return", {});
+}
+async function gradedRows(where, params){
+  return q(`SELECT s.id, us.email, g.total, a.gc_coursework_id, c.gc_course_id, a.class_id FROM grades g JOIN submissions s ON s.id = g.submission_id
+    JOIN assignments a ON a.id = s.assignment_id JOIN classes c ON c.id = a.class_id JOIN users us ON us.id = s.user_id WHERE ${where}`, params);
+}
+ACTIONS.gc_grade = { POST: async (req, res) => {
+  const u = await needTeacher(req), b = await readJsonBody(req, 1024), sid = intId(b.submission);
+  const r = (await gradedRows("s.id = $1", [sid]))[0]; if (!r) throw new HttpError(400, "Bài này chưa được chấm");
+  await ownClass(u, N(r.class_id));
+  if (!r.gc_coursework_id) throw new HttpError(400, "Bài được giao chưa đăng lên Google Classroom (bấm “Đăng lên Classroom” ở tab Giao bài)");
+  await pushOne(await gcToken(u), r.gc_course_id, r.gc_coursework_id, r.email, Number(r.total));
+  await q("UPDATE grades SET pushed_gc_at = now() WHERE submission_id = $1", [sid]);
+  send(res, 200, { ok: true });
+} };
+ACTIONS.gc_grade_all = { POST: async (req, res) => {
+  const u = await needTeacher(req), b = await readJsonBody(req, 1024), id = intId(b.assignment); await ownAssignment(u, id);
+  const rows = await gradedRows("s.assignment_id = $1", [id]); if (!rows.length) return send(res, 200, { ok: true, pushed: 0, failed: [] });
+  if (!rows[0].gc_coursework_id) throw new HttpError(400, "Bài được giao chưa đăng lên Google Classroom");
+  const token = await gcToken(u), failed = []; let pushed = 0;
+  for (const r of rows){
+    try { await pushOne(token, r.gc_course_id, r.gc_coursework_id, r.email, Number(r.total)); await q("UPDATE grades SET pushed_gc_at = now() WHERE submission_id = $1", [N(r.id)]); pushed++; }
+    catch (e){ failed.push({ email: r.email, error: e.message }); }
+  }
+  send(res, 200, { ok: true, pushed, failed });
 } };
 
 module.exports = handle(async (req, res) => {

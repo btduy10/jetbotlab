@@ -38,7 +38,39 @@ async function openClass(id){
   if (!TC.classes.length) TC.classes = (await api("/api/class?a=classes")).classes;
   TC.cls = TC.classes.find(c => c.id === id); if (!TC.cls) return toast("Không có lớp này");
   $("#clsName").textContent = TC.cls.name; $("#clsArchive").textContent = TC.cls.archived ? "Bỏ lưu trữ" : "Lưu trữ lớp";
-  show("vClass"); subTab(TC.sub);
+  show("vClass"); renderGc(); subTab(TC.sub);
+}
+/* ---------- Google Classroom ---------- */
+function renderGc(){
+  const el = $("#gcBox"), c = TC.cls;
+  $("#asGcWrap").hidden = !c.gc_course_id;
+  if (!ME_USER.classroom){
+    el.innerHTML = `<b>Google Classroom</b><span class="muted">Kết nối để nhập danh sách học sinh, đăng bài và trả điểm về Classroom.</span>
+      <a class="btn" href="/api/auth?a=google&amp;classroom=1&amp;next=${encodeURIComponent("/admin?tab=classes")}">Kết nối Google Classroom</a>`;
+    return;
+  }
+  if (!c.gc_course_id){
+    el.innerHTML = `<b>Google Classroom</b><span class="muted">Đã kết nối. Chọn khoá học tương ứng với lớp này để nhập học sinh.</span><button class="btn" id="gcPick">Liên kết khoá học…</button>`;
+    $("#gcPick").onclick = pickCourse; return;
+  }
+  el.innerHTML = `<b>Google Classroom</b><span class="badge">${esc(c.gc_course_name || c.gc_course_id)}</span><span class="grow"></span>
+    <button class="btn ghost" id="gcImport">↻ Nhập lại danh sách học sinh</button><button class="btn ghost dangerbtn" id="gcUnlink">Bỏ liên kết</button>`;
+  $("#gcImport").onclick = async () => { try { const j = await api("/api/class?a=gc_import", { method: "POST", body: JSON.stringify({ class: c.id }) }); toast(`Đã nhập ${j.imported} học sinh${j.skipped ? `, bỏ qua ${j.skipped} em không có email` : ""}`); if (TC.sub === "members") loadMembers(); } catch (x){ toast(x.message); } };
+  $("#gcUnlink").onclick = async () => { if (!confirm("Bỏ liên kết lớp với khoá học Classroom? Học sinh và bài đã đăng vẫn giữ nguyên.")) return; try { await api("/api/class?a=gc_unlink", { method: "POST", body: JSON.stringify({ class: c.id }) }); c.gc_course_id = null; c.gc_course_name = null; renderGc(); } catch (x){ toast(x.message); } };
+}
+async function pickCourse(){
+  const el = $("#gcBox"); el.innerHTML = `<b>Google Classroom</b><span class="muted">Đang tải danh sách khoá học…</span>`;
+  let courses; try { courses = (await api("/api/class?a=gc_courses")).courses; } catch (x){ toast(x.message); return renderGc(); }
+  if (!courses.length){ el.innerHTML = `<b>Google Classroom</b><span class="muted">Tài khoản này chưa dạy khoá học Classroom nào đang hoạt động.</span>`; return; }
+  el.innerHTML = `<b>Google Classroom</b><select id="gcSel">${courses.map(c => `<option value="${esc(c.id)}">${esc(c.name)}${c.section ? " · " + esc(c.section) : ""}</option>`).join("")}</select>
+    <button class="btn primary" id="gcLink">Liên kết &amp; nhập học sinh</button><button class="btn ghost" id="gcCancel">Huỷ</button>`;
+  $("#gcCancel").onclick = renderGc;
+  $("#gcLink").onclick = async () => {
+    const c = TC.cls, id = $("#gcSel").value;
+    try { const j = await api("/api/class?a=gc_link", { method: "POST", body: JSON.stringify({ class: c.id, course: id }) });
+      c.gc_course_id = id; c.gc_course_name = $("#gcSel").selectedOptions[0].textContent; toast(`Đã liên kết, nhập ${j.imported} học sinh${j.skipped ? `, bỏ qua ${j.skipped} em không có email` : ""}`); renderGc(); subTab(TC.sub); }
+    catch (x){ toast(x.message); }
+  };
 }
 function subTab(s){
   TC.sub = s; $$("#clsTabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.sub === s));
@@ -170,7 +202,7 @@ async function loadAssignments(){
     const weeks = [...new Set(list.map(a => a.week_label || "Không ghi tuần"))];
     el.innerHTML = weeks.map(w => `<h3 class="wk">${esc(w)}</h3>` + list.filter(a => (a.week_label || "Không ghi tuần") === w).map(a => `<div class="row" data-id="${a.id}"><div></div>
       <div><b>${esc(a.title || lessonTitle(a.lesson_id))}</b><div class="a-meta">${a.period_label ? esc(a.period_label) + " · " : ""}${esc(lessonTitle(a.lesson_id))}${a.open_at ? " · mở " + fmtDate(a.open_at) : ""}${a.due_at ? " · hạn " + fmtDate(a.due_at) : ""} · ${a.submitted} đã nộp · ${a.completed} hoàn thành${a.gc_coursework_id ? " · đã đăng Classroom" : ""}</div></div>
-      <div class="acts"><button data-a="link">Chép link</button><button data-a="del" class="danger">Xoá</button></div></div>`).join("")).join("");
+      <div class="acts">${TC.cls.gc_course_id ? (a.gc_coursework_id ? '<button data-a="gcgrade">Trả điểm về Classroom</button>' : '<button data-a="gcpost">Đăng lên Classroom</button>') : ""}<button data-a="link">Chép link</button><button data-a="del" class="danger">Xoá</button></div></div>`).join("")).join("");
   } catch (e){ el.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
 }
 $("#asLesson").addEventListener("change", () => { const f = $("#fAssign"); if (!f.elements.title.dataset.touched) f.elements.title.value = lessonTitle($("#asLesson").value); });
@@ -178,12 +210,19 @@ $("#fAssign").elements.title.addEventListener("input", e => e.target.dataset.tou
 $("#fAssign").addEventListener("submit", async e => {
   e.preventDefault(); const f = e.target, v = k => f.elements[k].value;
   const body = { class: TC.cls.id, lesson: v("lesson"), title: v("title") || lessonTitle(v("lesson")), week: v("week"), period: v("period"), open_at: fromLocalInput(v("open_at")), due_at: fromLocalInput(v("due_at")) };
-  try { await api("/api/class?a=assignments", { method: "POST", body: JSON.stringify(body) }); toast("Đã giao bài"); f.elements.title.value = ""; delete f.elements.title.dataset.touched; loadAssignments(); if (window.afterAssign) afterAssign(); }
+  try { const j = await api("/api/class?a=assignments", { method: "POST", body: JSON.stringify(body) }); toast("Đã giao bài");
+    if (TC.cls.gc_course_id && f.elements.gcpost.checked){ try { await api("/api/class?a=gc_post", { method: "POST", body: JSON.stringify({ assignment: j.id }) }); toast("Đã giao bài và đăng lên Classroom"); } catch (x){ toast("Đã giao bài, nhưng chưa đăng được lên Classroom: " + x.message); } } f.elements.title.value = ""; delete f.elements.title.dataset.touched; loadAssignments(); if (window.afterAssign) afterAssign(); }
   catch (x){ toast(x.message); }
 });
 $("#assignList").addEventListener("click", async e => {
   const b = e.target.closest("button[data-a]"); if (!b) return;
   const id = +b.closest(".row").dataset.id;
+  if (b.dataset.a === "gcpost"){ try { await api("/api/class?a=gc_post", { method: "POST", body: JSON.stringify({ assignment: id }) }); toast("Đã đăng lên Classroom"); loadAssignments(); } catch (x){ toast(x.message); } return; }
+  if (b.dataset.a === "gcgrade"){
+    if (!confirm("Trả điểm các bài đã chấm của bài này về Google Classroom?")) return;
+    try { const j = await api("/api/class?a=gc_grade_all", { method: "POST", body: JSON.stringify({ assignment: id }) }); toast(`Đã trả ${j.pushed} điểm${j.failed.length ? `, lỗi ${j.failed.length}: ${j.failed[0].email} – ${j.failed[0].error}` : ""}`); }
+    catch (x){ toast(x.message); } return;
+  }
   if (b.dataset.a === "link"){ const u = location.origin + "/?assignment=" + id; try { await navigator.clipboard.writeText(u); toast("Đã chép link: " + u); } catch (x){ prompt("Link bài được giao", u); } return; }
   if (!confirm("Xoá bài được giao này? Bài làm và điểm của học sinh cho bài này cũng bị xoá.")) return;
   try { await api("/api/class?a=assignments&id=" + id, { method: "DELETE" }); loadAssignments(); } catch (x){ toast(x.message); }

@@ -59,6 +59,7 @@
   <section id="vClass" hidden>
     <div class="a-bar"><div class="titlebox"><button class="btn ghost" id="clsBack">← Các lớp</button><h1 id="clsName"></h1></div>
       <div class="acts-top"><button class="btn ghost" id="clsRename">Đổi tên</button><button class="btn ghost" id="clsArchive">Lưu trữ lớp</button><button class="btn ghost dangerbtn" id="clsDelete">Xoá lớp</button></div></div>
+    <div class="gcbox" id="gcBox"></div>
     <nav class="subtabs" id="clsTabs">
       <button data-sub="members" aria-pressed="true">Học sinh</button>
       <button data-sub="assign" aria-pressed="false">Giao bài</button>
@@ -81,6 +82,7 @@
         <label>Tiết học<input name="period" maxlength="40" placeholder="VD: Tiết 1–2"></label>
         <label>Mở từ (để trống = mở ngay)<input name="open_at" type="datetime-local"></label>
         <label>Hạn nộp<input name="due_at" type="datetime-local"></label>
+        <label class="check wide" id="asGcWrap" hidden><input type="checkbox" name="gcpost" checked> Đăng lên Google Classroom (học sinh nhận thông báo, có link mở bài, điểm trả về được)</label>
         <div class="wide actions"><button class="btn primary" type="submit">Giao bài</button></div>
       </form>
       <div id="assignList" class="list"></div>

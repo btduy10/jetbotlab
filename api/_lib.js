@@ -145,5 +145,16 @@ const handle = fn => async (req, res) => {
   catch (e) { const st = e.status || 500; if (st >= 500) console.error(e); send(res, st, { error: e.status ? e.message : "Lỗi máy chủ" }); }
 };
 
-module.exports = { HttpError, env, readFile, writeFile, sealed, unseal, cookies, cookieStr, session, sessionCookie, clearCookie, isLocal,
+// Mã hoá refresh token Google của giáo viên khi lưu (AES-256-GCM, khoá từ TOKEN_ENC_KEY).
+const b64u = buf => Buffer.from(buf).toString("base64url");
+function encKey(){ const k = env("TOKEN_ENC_KEY"); if (k.length < 16) throw new HttpError(500, "Server chưa cấu hình TOKEN_ENC_KEY (≥ 16 ký tự)"); return crypto.createHash("sha256").update(k).digest(); }
+function encrypt(text){ const iv = crypto.randomBytes(12), c = crypto.createCipheriv("aes-256-gcm", encKey(), iv); const ct = Buffer.concat([c.update(text, "utf8"), c.final()]); return [b64u(iv), b64u(c.getAuthTag()), b64u(ct)].join("."); }
+function decrypt(s){
+  const [iv, tag, ct] = String(s).split(".").map(x => Buffer.from(x || "", "base64url"));
+  const d = crypto.createDecipheriv("aes-256-gcm", encKey(), iv); d.setAuthTag(tag);
+  return Buffer.concat([d.update(ct), d.final()]).toString("utf8");
+}
+const siteOrigin = req => `${isLocal(req) ? "http" : "https"}://${req.headers.host}`;
+
+module.exports = { HttpError, env, encrypt, decrypt, siteOrigin, readFile, writeFile, sealed, unseal, cookies, cookieStr, session, sessionCookie, clearCookie, isLocal,
   adminEmails, effectiveRole, currentUser, checkLogin, sameOrigin, requireRole, readJsonBody, query, send, redirect, handle };
