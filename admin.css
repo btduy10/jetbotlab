@@ -55,3 +55,12 @@ fieldset.line input[type=color]{width:42px;height:30px;border:1px solid var(--li
 .canvas-wrap{border:1px solid var(--line);border-radius:10px;background:var(--scene);padding:10px;overflow:auto}
 #meCanvas{display:block;max-width:100%;height:auto;touch-action:none;cursor:crosshair;margin:0 auto}
 @media (max-width:720px){ .grid2{grid-template-columns:1fr} .row{grid-template-columns:1fr} .row .acts{justify-content:flex-start} .adm-right{margin-left:0} }
+/* đăng nhập Google, giáo viên */
+.who{font-size:12.5px;color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.who:empty{display:none}
+.login .gbtn{width:100%;margin-top:6px}
+.login details.pw{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+.login details.pw summary{cursor:pointer;font-size:13px;color:var(--muted)}
+.addrow-f{display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap}
+.addrow-f input{flex:1;min-width:220px}
+.dbcard{margin-top:20px}

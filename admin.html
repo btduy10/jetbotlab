@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
-<title>JetBot Lab · Quản trị</title>
+<title>JetBot Lab · Khu giáo viên</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
@@ -15,27 +15,49 @@
 <header class="adm-top">
   <a class="adm-brand" href="/">
     <svg width="24" height="24" viewBox="0 0 26 26" aria-hidden="true"><rect x="3" y="8" width="20" height="10" rx="2" fill="var(--fg)"/><circle cx="7" cy="20" r="3.4" fill="var(--accent)"/><circle cx="19" cy="20" r="3.4" fill="var(--accent)"/><rect x="9" y="3" width="8" height="5" rx="2.5" fill="var(--fg)"/></svg>
-    JetBot Lab <small>Quản trị</small>
+    JetBot Lab <small>Khu giáo viên</small>
   </a>
   <nav class="adm-tabs" id="tabs" hidden>
     <button data-tab="lessons" aria-pressed="true">Bài học</button>
     <button data-tab="maps" aria-pressed="false">Sa bàn</button>
+    <button data-tab="teachers" aria-pressed="false" hidden>Giáo viên</button>
   </nav>
   <div class="adm-right">
     <a class="btn ghost" href="/" target="_blank" rel="noopener">Mở trang học ↗</a>
+    <span class="who" id="who"></span>
     <button class="btn ghost" id="bLogout" hidden>Đăng xuất</button>
   </div>
 </header>
 
 <main class="adm-main">
   <section id="vLogin" class="card login" hidden>
-    <h1>Đăng nhập quản trị</h1>
-    <form id="fLogin">
-      <label>Tên đăng nhập<input name="username" autocomplete="username" required></label>
-      <label>Mật khẩu<input name="password" type="password" autocomplete="current-password" required></label>
-      <button class="btn primary" type="submit">Đăng nhập</button>
-      <p class="msg" id="loginMsg" role="alert"></p>
+    <h1>Khu giáo viên</h1>
+    <p class="a-hint">Đăng nhập bằng tài khoản Google đã được admin cấp quyền giáo viên.</p>
+    <a class="btn primary gbtn" id="gLogin" href="/api/auth?a=google&amp;next=/admin">Đăng nhập bằng Google</a>
+    <p class="msg" id="loginMsg" role="alert"></p>
+    <details class="pw">
+      <summary>Đăng nhập bằng mật khẩu admin (dự phòng)</summary>
+      <form id="fLogin">
+        <label>Tên đăng nhập<input name="username" autocomplete="username" required></label>
+        <label>Mật khẩu<input name="password" type="password" autocomplete="current-password" required></label>
+        <button class="btn" type="submit">Đăng nhập</button>
+      </form>
+    </details>
+  </section>
+
+  <section id="vTeachers" hidden>
+    <div class="a-bar"><h1>Giáo viên</h1></div>
+    <p class="a-hint">Thêm Gmail của giáo viên để cấp quyền soạn bài, tạo lớp và chấm bài. Admin là các email trong biến <code>ADMIN_EMAILS</code>.</p>
+    <form id="fTeacher" class="addrow-f">
+      <input name="email" type="email" placeholder="giaovien@gmail.com" required aria-label="Email giáo viên">
+      <button class="btn primary" type="submit">+ Cấp quyền giáo viên</button>
     </form>
+    <div id="teacherList" class="list"></div>
+    <div class="card dbcard">
+      <b>Cơ sở dữ liệu</b>
+      <p class="a-hint">Bấm sau lần cấu hình đầu tiên và mỗi khi cập nhật phiên bản có thay đổi CSDL. Chạy lại nhiều lần không mất dữ liệu.</p>
+      <button class="btn" id="bMigrate">Khởi tạo / cập nhật CSDL</button> <span class="msg" id="dbMsg"></span>
+    </div>
   </section>
 
   <section id="vLessons" hidden>

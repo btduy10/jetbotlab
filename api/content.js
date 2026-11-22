@@ -1,5 +1,5 @@
 // Nội dung do admin quản lý: bài học + sa bàn, lưu trong một tệp content.json của repo dữ liệu.
-const { HttpError, readFile, writeFile, requireAdmin, readJsonBody, send, handle } = require("./_lib");
+const { HttpError, readFile, writeFile, requireRole, readJsonBody, send, handle } = require("./_lib");
 
 const FILE = "content.json";
 const COLORS = ["red", "green", "blue", "yellow"];
@@ -58,7 +58,7 @@ module.exports = handle(async (req, res) => {
     return send(res, 200, { content, sha: f ? f.sha : null }, fresh ? {} : { "Cache-Control": "public, max-age=0, s-maxage=20, stale-while-revalidate=300" });
   }
   if (req.method === "PUT"){
-    requireAdmin(req);
+    await requireRole(req, ["admin", "teacher"]);
     const b = await readJsonBody(req, 4e6);
     const content = cleanContent(b.content);
     const sha = await writeFile(FILE, Buffer.from(JSON.stringify(content, null, 1)), "Cập nhật nội dung JetBot Lab", b.sha || null);

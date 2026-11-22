@@ -1,6 +1,6 @@
 // Ảnh do admin tải lên (ảnh trang bài học, ảnh mặt sa bàn). Tên tệp = mã băm nội dung nên cache được vĩnh viễn.
 const crypto = require("crypto");
-const { HttpError, readFile, writeFile, requireAdmin, readJsonBody, send, handle } = require("./_lib");
+const { HttpError, readFile, writeFile, requireRole, readJsonBody, send, handle } = require("./_lib");
 
 const TYPES = { png: "image/png", jpg: "image/jpeg", jpeg: "image/jpeg", webp: "image/webp", gif: "image/gif" };
 const PATH = /^assets\/[a-f0-9]{16,64}\.(png|jpe?g|webp|gif)$/;
@@ -28,7 +28,7 @@ module.exports = handle(async (req, res) => {
     return res.end(f.data);
   }
   if (req.method === "POST"){
-    requireAdmin(req);
+    await requireRole(req, ["admin", "teacher"]);
     const b = await readJsonBody(req, 4.8e6);
     const data = Buffer.from(String(b.data || ""), "base64");
     if (!data.length) throw new HttpError(400, "Thiếu dữ liệu ảnh");

@@ -1,5 +1,5 @@
 // Dùng chung cho các API (tệp bắt đầu bằng "_" không thành endpoint trên Vercel).
-// Lưu trữ: repo GitHub dữ liệu (GITHUB_TOKEN + GITHUB_DATA_REPO), hoặc thư mục cục bộ JBL_DATA_DIR khi chạy thử.
+// Nội dung (bài học, sa bàn, ảnh): repo GitHub dữ liệu (GITHUB_TOKEN + GITHUB_DATA_REPO), hoặc thư mục JBL_DATA_DIR khi chạy thử.
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
@@ -15,12 +15,11 @@ async function gh(method, p, body, accept){
   const token = env("GITHUB_TOKEN");
   if (!token) throw new HttpError(500, "Server chưa cấu hình GITHUB_TOKEN");
   const url = `https://api.github.com/repos/${REPO()}/contents/${p.split("/").map(encodeURIComponent).join("/")}` + (method === "GET" ? `?ref=${encodeURIComponent(BRANCH())}` : "");
-  const r = await fetch(url, {
+  return fetch(url, {
     method,
     headers: { Authorization: `Bearer ${token}`, Accept: accept || "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "jetbotlab" },
     body: body ? JSON.stringify(body) : undefined
   });
-  return r;
 }
 
 // Đọc tệp: { data: Buffer, sha } hoặc null nếu chưa có.
@@ -55,28 +54,49 @@ async function writeFile(p, data, message, sha){
   return (await r.json()).content.sha;
 }
 
-// ---------- phiên đăng nhập admin: cookie "hết-hạn.chữ-ký" ký HMAC bằng AUTH_SECRET ----------
-const COOKIE = "jbl_admin";
+// ---------- phiên đăng nhập: cookie "dữ-liệu.chữ-ký", ký HMAC bằng AUTH_SECRET ----------
+// Dữ liệu: { u: id người dùng | "pw" (admin mật khẩu), x: hạn dùng }. Vai trò luôn tính lại khi dùng (currentUser).
+const COOKIE = "jbl_s";
 const secret = () => { const s = env("AUTH_SECRET"); if (s.length < 16) throw new HttpError(500, "Server chưa cấu hình AUTH_SECRET (≥ 16 ký tự)"); return s; };
 const sign = v => crypto.createHmac("sha256", secret()).update(v).digest("base64url");
 const same = (a, b) => { const x = crypto.createHash("sha256").update(String(a)).digest(), y = crypto.createHash("sha256").update(String(b)).digest(); return crypto.timingSafeEqual(x, y); };
+const isLocal = req => /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(String(req.headers.host || ""));
 
 function cookies(req){
   const o = {};
   for (const part of String(req.headers.cookie || "").split(";")){ const i = part.indexOf("="); if (i > 0) o[part.slice(0, i).trim()] = decodeURIComponent(part.slice(i + 1).trim()); }
   return o;
 }
-function isAdmin(req){
-  const v = cookies(req)[COOKIE]; if (!v) return false;
-  const [exp, sig] = v.split("."); if (!exp || !sig || !/^\d+$/.test(exp) || +exp < Date.now()) return false;
-  try { return same(sig, sign("admin." + exp)); } catch (e) { return false; }
+// Giá trị ký: đọc lại được và không giả mạo được (dùng cho phiên và trạng thái OAuth).
+function sealed(obj){ const v = Buffer.from(JSON.stringify(obj)).toString("base64url"); return v + "." + sign(v); }
+function unseal(s){
+  if (!s || typeof s !== "string") return null;
+  const i = s.lastIndexOf("."); if (i < 1) return null;
+  const v = s.slice(0, i), sig = s.slice(i + 1);
+  try { if (!same(sig, sign(v))) return null; const o = JSON.parse(Buffer.from(v, "base64url").toString("utf8")); return o && typeof o.x === "number" && o.x > Date.now() ? o : null; }
+  catch (e) { return null; }
 }
-function sessionCookie(req, days){
-  const exp = Date.now() + days*864e5, secure = isLocal(req) ? "" : "; Secure";
-  return `${COOKIE}=${exp}.${sign("admin." + exp)}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${Math.floor(days*86400)}${secure}`;
+function cookieStr(req, name, value, maxAgeSec, sameSite = "Strict"){
+  return `${name}=${value}; Path=/; HttpOnly; SameSite=${sameSite}; Max-Age=${Math.max(0, Math.floor(maxAgeSec))}${isLocal(req) ? "" : "; Secure"}`;
 }
-const clearCookie = req => `${COOKIE}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0${isLocal(req) ? "" : "; Secure"}`;
-const isLocal = req => /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(String(req.headers.host || ""));
+const session = req => unseal(cookies(req)[COOKIE]);
+const sessionCookie = (req, uid, days) => cookieStr(req, COOKIE, sealed({ u: uid, x: Date.now() + days*864e5 }), days*86400);
+const clearCookie = (req, name = COOKIE) => cookieStr(req, name, "", 0);
+
+const adminEmails = () => env("ADMIN_EMAILS").toLowerCase().split(/[\s,;]+/).filter(Boolean);
+const effectiveRole = (email, dbRole) => adminEmails().includes(String(email).toLowerCase()) ? "admin" : dbRole === "teacher" ? "teacher" : "student";
+
+// Người dùng hiện tại { id, email, name, role } hoặc null. Vai trò đọc lại từ CSDL để thu hồi quyền có hiệu lực ngay.
+async function currentUser(req){
+  const s = session(req); if (!s) return null;
+  if (s.u === "pw") return { id: null, email: "", name: "Admin", role: "admin", password: true };
+  if (!Number.isInteger(s.u)) return null;
+  const { q } = require("./_db");
+  const rows = await q("SELECT id, email, name, role FROM users WHERE id = $1", [s.u]);
+  if (!rows.length) return null;
+  const u = rows[0];
+  return { id: Number(u.id), email: u.email, name: u.name, role: effectiveRole(u.email, u.role) };
+}
 function checkLogin(user, pass){
   const U = env("ADMIN_USERNAME"), P = env("ADMIN_PASSWORD");
   if (!U || P.length < 8) throw new HttpError(500, "Server chưa cấu hình ADMIN_USERNAME / ADMIN_PASSWORD (mật khẩu ≥ 8 ký tự)");
@@ -88,9 +108,13 @@ function sameOrigin(req){
   const o = req.headers.origin; if (!o) return false;
   try { return new URL(o).host === req.headers.host; } catch (e) { return false; }
 }
-function requireAdmin(req){
-  if (!isAdmin(req)) throw new HttpError(401, "Cần đăng nhập admin");
+// roles: danh sách vai trò được phép. Trả về người dùng.
+async function requireRole(req, roles){
+  const u = await currentUser(req);
+  if (!u) throw new HttpError(401, "Cần đăng nhập");
+  if (!roles.includes(u.role)) throw new HttpError(403, "Tài khoản không có quyền này");
   if (req.method !== "GET" && !sameOrigin(req)) throw new HttpError(403, "Sai nguồn yêu cầu");
+  return u;
 }
 
 async function readJsonBody(req, limit){
@@ -102,6 +126,7 @@ async function readJsonBody(req, limit){
   if (raw.length > limit) throw new HttpError(413, "Dữ liệu quá lớn");
   try { return JSON.parse(raw || "{}"); } catch (e) { throw new HttpError(400, "JSON không hợp lệ"); }
 }
+const query = req => new URL(req.url, "http://x").searchParams;
 
 function send(res, status, obj, headers){
   res.statusCode = status;
@@ -110,9 +135,15 @@ function send(res, status, obj, headers){
   for (const k in headers || {}) res.setHeader(k, headers[k]);
   res.end(JSON.stringify(obj));
 }
+function redirect(res, location, headers){
+  res.statusCode = 302; res.setHeader("Location", location); res.setHeader("Cache-Control", "no-store");
+  for (const k in headers || {}) res.setHeader(k, headers[k]);
+  res.end();
+}
 const handle = fn => async (req, res) => {
   try { await fn(req, res); }
   catch (e) { const st = e.status || 500; if (st >= 500) console.error(e); send(res, st, { error: e.status ? e.message : "Lỗi máy chủ" }); }
 };
 
-module.exports = { HttpError, readFile, writeFile, isAdmin, sessionCookie, clearCookie, checkLogin, sameOrigin, requireAdmin, readJsonBody, send, handle };
+module.exports = { HttpError, env, readFile, writeFile, sealed, unseal, cookies, cookieStr, session, sessionCookie, clearCookie, isLocal,
+  adminEmails, effectiveRole, currentUser, checkLogin, sameOrigin, requireRole, readJsonBody, query, send, redirect, handle };

@@ -50,13 +50,19 @@
       ]
     },
     {
-      "source": "/(app.js|app.css|index.html|admin|admin.html|admin.js|admin.css)?",
+      "source": "/(app.js|app.css|student.js|index.html|admin|admin.html|admin.js|admin.css|teacher.js)?",
       "headers": [
         {
           "key": "Cache-Control",
           "value": "public, max-age=0, must-revalidate"
         }
       ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/teacher",
+      "destination": "/admin.html"
     }
   ]
 }

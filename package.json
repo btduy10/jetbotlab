@@ -1,0 +1,9 @@
+{
+  "name": "jetbotlab",
+  "private": true,
+  "description": "JetBot Lab – notebook Python mô phỏng JetBot + khu giáo viên",
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "@neondatabase/serverless": "1.1.0"
+  }
+}

@@ -19,13 +19,17 @@ const slug = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").repla
 const uniqueId = (base, list, self) => { let id = base, n = 2; while (list.some(x => x.id === id && x !== self)) id = (base.slice(0, 36) + "-" + n++); return id; };
 
 /* ---------- khung trang ---------- */
-const VIEWS = ["vLogin", "vLessons", "vMaps", "vLessonEdit", "vMapEdit"];
+const VIEWS = ["vLogin", "vLessons", "vMaps", "vLessonEdit", "vMapEdit", "vTeachers"];
+let ME_USER = null;
 function show(v){ VIEWS.forEach(id => $("#" + id).hidden = id !== v); window.scrollTo(0, 0); }
-function showLogin(){ $("#tabs").hidden = true; $("#bLogout").hidden = true; show("vLogin"); }
+function showLogin(text){ $("#tabs").hidden = true; $("#bLogout").hidden = !ME_USER; $("#who").textContent = ME_USER ? ME_USER.email || ME_USER.name : ""; show("vLogin"); if (text) msg($("#loginMsg"), text, "err"); }
 function showTab(tab){
   TAB = tab; $("#tabs").hidden = false; $("#bLogout").hidden = false;
   $$("#tabs button").forEach(b => b.setAttribute("aria-pressed", b.dataset.tab === tab));
-  if (tab === "lessons"){ renderLessons(); show("vLessons"); } else { renderMaps(); show("vMaps"); }
+  if (tab === "lessons"){ renderLessons(); show("vLessons"); }
+  else if (tab === "maps"){ renderMaps(); show("vMaps"); }
+  else if (tab === "teachers"){ show("vTeachers"); loadTeachers(); }
+  else if (window.TEACHER_TABS && TEACHER_TABS[tab]) TEACHER_TABS[tab]();
 }
 $("#tabs").addEventListener("click", e => { const b = e.target.closest("button"); if (b) showTab(b.dataset.tab); });
 $$("[data-close]").forEach(b => b.onclick = () => showTab(TAB));
@@ -50,12 +54,34 @@ $("#fLogin").addEventListener("submit", async e => {
   const f = new FormData(e.target), btn = e.target.querySelector("button");
   btn.disabled = true; msg($("#loginMsg"), "Đang đăng nhập…");
   try {
-    await api("/api/login", { method: "POST", body: JSON.stringify({ username: f.get("username"), password: f.get("password") }) });
-    e.target.reset(); msg($("#loginMsg"), ""); await loadData(); showTab("lessons");
+    await api("/api/auth?a=login", { method: "POST", body: JSON.stringify({ username: f.get("username"), password: f.get("password") }) });
+    e.target.reset(); msg($("#loginMsg"), ""); await boot();
   } catch (x){ msg($("#loginMsg"), x.message, "err"); }
   btn.disabled = false;
 });
-$("#bLogout").onclick = async () => { try { await api("/api/logout", { method: "POST" }); } catch (e) {} showLogin(); };
+$("#bLogout").onclick = async () => { try { await api("/api/auth?a=logout", { method: "POST" }); } catch (e) {} ME_USER = null; showLogin(); };
+
+/* ---------- giáo viên (chỉ admin) ---------- */
+async function loadTeachers(){
+  const el = $("#teacherList");
+  try {
+    const j = await api("/api/class?a=teachers");
+    el.innerHTML = j.teachers.length ? j.teachers.map(t => `<div class="row"><div></div><div><b>${esc(t.email)}</b><div class="a-meta">${esc(t.name || "chưa đăng nhập lần nào")}${t.last_login ? " · đăng nhập " + new Date(t.last_login).toLocaleString("vi-VN") : ""}</div></div>
+      <div class="acts"><button class="danger" data-email="${esc(t.email)}">Bỏ quyền</button></div></div>`).join("") : '<div class="empty">Chưa có giáo viên nào.</div>';
+  } catch (e){ el.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+$("#fTeacher").addEventListener("submit", async e => {
+  e.preventDefault(); const email = e.target.elements.email.value.trim();
+  try { await api("/api/class?a=teachers", { method: "POST", body: JSON.stringify({ email }) }); e.target.reset(); toast("Đã cấp quyền giáo viên"); loadTeachers(); } catch (x){ toast(x.message); }
+});
+$("#teacherList").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-email]"); if (!b || !confirm("Bỏ quyền giáo viên của " + b.dataset.email + "?")) return;
+  try { await api("/api/class?a=teachers&email=" + encodeURIComponent(b.dataset.email), { method: "DELETE" }); loadTeachers(); } catch (x){ toast(x.message); }
+});
+$("#bMigrate").onclick = async () => {
+  const m = $("#dbMsg"); msg(m, "Đang cập nhật…");
+  try { const j = await api("/api/class?a=migrate", { method: "POST" }); msg(m, `Xong (${j.statements} lệnh)`, "ok"); } catch (x){ msg(m, x.message, "err"); }
+};
 
 /* ---------- ảnh: thu nhỏ nếu quá lớn rồi tải lên /api/asset ---------- */
 const b64 = buf => { const u = new Uint8Array(buf); let s = ""; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
@@ -345,7 +371,14 @@ $("#meSave").onclick = async () => {
 };
 
 /* ---------- khởi động ---------- */
-(async () => {
-  try { const j = await api("/api/me"); if (!j.admin) return showLogin(); await loadData(); showTab("lessons"); }
-  catch (e){ showLogin(); msg($("#loginMsg"), e.message, "err"); }
-})();
+async function boot(){
+  const j = await api("/api/auth?a=me");
+  ME_USER = j.user; $("#gLogin").hidden = !j.google;
+  const err = new URLSearchParams(location.search).get("login_error");
+  if (!ME_USER) return showLogin(err || (j.google ? "" : "Server chưa cấu hình đăng nhập Google; dùng mật khẩu admin."));
+  if (ME_USER.role !== "admin" && ME_USER.role !== "teacher") return showLogin("Tài khoản " + ME_USER.email + " chưa được admin cấp quyền giáo viên.");
+  $("#who").textContent = ME_USER.email || ME_USER.name;
+  $('#tabs [data-tab="teachers"]').hidden = ME_USER.role !== "admin";
+  await loadData(); showTab(new URLSearchParams(location.search).get("tab") || "lessons");
+}
+boot().catch(e => showLogin(e.message));
