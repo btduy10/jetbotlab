@@ -88,3 +88,24 @@ textarea{font:inherit;font-weight:400;color:var(--fg);background:var(--panel);bo
 .linkbtn.danger{color:var(--err)}
 h3.wk{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent-ink);margin:14px 0 4px}
 @media (max-width:720px){ .tbl{display:block;overflow-x:auto} }
+/* tiến độ */
+.pgbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.tblwrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+.tbl.prog{border:0;border-radius:0;min-width:640px}
+.tbl.prog th small,.tbl.prog td small{display:block;font-weight:400;color:var(--muted);font-size:11px}
+.tbl.prog th{white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis}
+.tbl.prog td.grp{color:var(--muted);font-size:12px;white-space:nowrap}
+.tbl.prog td.pc{text-align:center;min-width:86px}
+.tbl.prog td.pc a{display:block;color:inherit;text-decoration:none;border-radius:6px;padding:3px 2px}
+.tbl.prog td.pc a:hover{background:var(--panel-2);outline:1px solid var(--accent)}
+.tbl.prog td.pc .ic{font-size:15px;font-weight:700;margin-right:4px}
+.tbl.prog td.pc b{font-size:13px}
+.tbl.prog td.none{color:var(--faint)}
+.tbl.prog td.wip .ic{color:var(--warn)}
+.tbl.prog td.sub .ic{color:var(--accent-ink)}
+.tbl.prog td.done .ic{color:var(--ok)}
+.tbl.prog td.late .ic{color:var(--err)}
+.tbl.prog tr.sum td{background:var(--panel-2);font-size:12px;color:var(--muted)}
+.flag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;margin:1px 2px;white-space:nowrap}
+.flag.help{background:color-mix(in srgb, var(--err) 14%, transparent);color:var(--err)}
+.flag.up{background:color-mix(in srgb, var(--ok) 16%, transparent);color:var(--ok)}

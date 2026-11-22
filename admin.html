@@ -62,6 +62,7 @@
     <nav class="subtabs" id="clsTabs">
       <button data-sub="members" aria-pressed="true">Học sinh</button>
       <button data-sub="assign" aria-pressed="false">Giao bài</button>
+      <button data-sub="progress" aria-pressed="false">Tiến độ &amp; chấm bài</button>
     </nav>
     <div class="subpane" data-sub="members">
       <form id="fMembers" class="card">
@@ -83,6 +84,10 @@
         <div class="wide actions"><button class="btn primary" type="submit">Giao bài</button></div>
       </form>
       <div id="assignList" class="list"></div>
+    </div>
+    <div class="subpane" data-sub="progress" hidden>
+      <div class="pgbar"><select id="pgWeek" aria-label="Lọc theo tuần"></select><button class="btn ghost" id="pgRefresh">↻ Làm mới</button><button class="btn ghost" id="pgCsv">Tải CSV</button></div>
+      <div id="progressTable"></div>
     </div>
   </section>
 

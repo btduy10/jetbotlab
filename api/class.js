@@ -208,6 +208,81 @@ ACTIONS.submit = { POST: async (req, res) => {
   send(res, 200, { ok: true, submission: await upsertSubmission(u, intId(b.assignment), b.notebook, true) });
 } };
 
+// ---------- tiến độ: lượt chạy, thời gian làm bài ----------
+function cleanMetrics(m){
+  m = m && typeof m === "object" ? m : {};
+  const n = (v, hi) => Number.isFinite(+v) ? Math.max(0, Math.min(hi, +v)) : 0;
+  return { time: n(m.time, 86400), dist: n(m.dist, 1e5), coll: Math.round(n(m.coll, 1e5)), reached: m.reached === true,
+    reachT: m.reachT === null || m.reachT === undefined ? null : n(m.reachT, 86400), left: m.left === true, err: m.err === true, stopped: m.stopped === true };
+}
+const keyTime = m => m.reachT !== null ? m.reachT : m.time;
+async function ensureSubmission(u, id){
+  await myAssignment(u, id);
+  const r = await q(`INSERT INTO submissions (assignment_id, user_id) VALUES ($1, $2)
+    ON CONFLICT (assignment_id, user_id) DO UPDATE SET last_at = now() RETURNING id, completed, best, runs_count`, [id, u.id]);
+  return r[0];
+}
+ACTIONS.run = { POST: async (req, res) => {
+  const u = await needUser(req), b = await readJsonBody(req, 8192), id = intId(b.assignment);
+  const s = await ensureSubmission(u, id);
+  if (N(s.runs_count) >= 5000) return send(res, 200, { ok: true, ignored: true });
+  const m = cleanMetrics(b.metrics), done = b.completed === true && !m.err, best = s.best;
+  // kết quả tốt nhất: ưu tiên lượt đạt tiêu chí, rồi thời gian ngắn hơn, rồi quãng đường ngắn hơn
+  const better = !best || (done && !best.completed) || (done === !!best.completed && (keyTime(m) < keyTime(best) || (keyTime(m) === keyTime(best) && m.dist < best.dist)));
+  await q("INSERT INTO runs (submission_id, ok, completed, metrics) VALUES ($1, $2, $3, $4)", [N(s.id), b.ok !== false && !m.err, done, JSON.stringify(m)]);
+  await q(`UPDATE submissions SET runs_count = runs_count + 1, completed = completed OR $2, last_at = now(),
+    best = CASE WHEN $3 THEN $4::jsonb ELSE best END WHERE id = $1`, [N(s.id), done, better, JSON.stringify(Object.assign({ completed: done, at: new Date().toISOString() }, m))]);
+  send(res, 200, { ok: true });
+} };
+ACTIONS.beat = { POST: async (req, res) => {
+  const u = await needUser(req), b = await readJsonBody(req, 1024), id = intId(b.assignment);
+  const sec = Math.round(Math.max(0, Math.min(70, Number(b.seconds) || 0)));   // gửi mỗi phút khi em đang làm bài
+  const s = await ensureSubmission(u, id);
+  await q("UPDATE submissions SET active_seconds = active_seconds + $2, last_at = now() WHERE id = $1", [N(s.id), sec]);
+  send(res, 200, { ok: true });
+} };
+
+ACTIONS.progress = { GET: async (req, res) => {
+  const u = await needTeacher(req), id = intId(query(req).get("class")); await ownClass(u, id);
+  const assignments = (await q(`SELECT id, lesson_id, title, week_label, period_label, open_at, due_at, gc_coursework_id FROM assignments
+    WHERE class_id = $1 ORDER BY week_label, period_label, created_at`, [id])).map(r => ({ ...r, id: N(r.id) }));
+  const members = (await q(`SELECT m.email, m.name, m.group_name, m.user_id, u.name AS account_name FROM class_members m
+    LEFT JOIN users u ON u.id = m.user_id WHERE m.class_id = $1 ORDER BY m.group_name, m.name, m.email`, [id]))
+    .map(r => ({ email: r.email, name: r.name || r.account_name || "", group: r.group_name, joined: r.user_id !== null }));
+  const subs = await q(`SELECT s.id, s.assignment_id, m.email, s.status, s.completed, s.runs_count, s.active_seconds, s.best, s.robot_verified,
+      s.first_at, s.last_at, s.submitted_at, g.total, g.scores, g.pushed_gc_at
+    FROM submissions s JOIN assignments a ON a.id = s.assignment_id JOIN class_members m ON m.class_id = a.class_id AND m.user_id = s.user_id
+    LEFT JOIN grades g ON g.submission_id = s.id WHERE a.class_id = $1`, [id]);
+  send(res, 200, { assignments, members, subs: subs.map(s => ({ ...s, id: N(s.id), assignment_id: N(s.assignment_id), runs_count: N(s.runs_count), active_seconds: N(s.active_seconds), total: N(s.total) })) });
+} };
+
+// ---------- xem bài làm và chấm ----------
+async function ownSubmission(u, sid){
+  const rows = await q(`SELECT s.*, a.lesson_id, a.title, a.class_id, a.due_at, a.gc_coursework_id, m.name AS member_name, us.email, us.name AS account_name
+    FROM submissions s JOIN assignments a ON a.id = s.assignment_id JOIN users us ON us.id = s.user_id
+    LEFT JOIN class_members m ON m.class_id = a.class_id AND m.user_id = s.user_id WHERE s.id = $1`, [sid]);
+  if (!rows.length) throw new HttpError(404, "Không có bài làm này");
+  await ownClass(u, N(rows[0].class_id)); return rows[0];
+}
+ACTIONS.review = { GET: async (req, res) => {
+  const u = await needTeacher(req), sid = intId(query(req).get("submission")), s = await ownSubmission(u, sid);
+  const runs = await q("SELECT at, ok, completed, metrics FROM runs WHERE submission_id = $1 ORDER BY at DESC LIMIT 30", [sid]);
+  const g = await q("SELECT scores, total, comment, graded_at, pushed_gc_at FROM grades WHERE submission_id = $1", [sid]);
+  send(res, 200, { submission: { id: sid, assignment_id: N(s.assignment_id), lesson_id: s.lesson_id, title: s.title, due_at: s.due_at, class_id: N(s.class_id),
+    student: { email: s.email, name: s.member_name || s.account_name || "" }, notebook: s.notebook, status: s.status, completed: s.completed,
+    runs_count: N(s.runs_count), active_seconds: N(s.active_seconds), best: s.best, submitted_at: s.submitted_at, first_at: s.first_at, last_at: s.last_at,
+    robot_verified: s.robot_verified, gc: !!s.gc_coursework_id }, runs, grade: g[0] ? { ...g[0], total: N(g[0].total) } : null });
+} };
+ACTIONS.grade = { POST: async (req, res) => {
+  const u = await needTeacher(req), b = await readJsonBody(req, 16384), sid = intId(b.submission); await ownSubmission(u, sid);
+  const sc = b.scores || {}, p = v => { const n = Math.round(Number(v)*2)/2; if (!(n >= 0 && n <= 4)) throw new HttpError(400, "Điểm mỗi tiêu chí từ 0 đến 4"); return n; };
+  const scores = { task: p(sc.task), optim: p(sc.optim), code: p(sc.code) }, total = Math.round((scores.task + scores.optim + scores.code)/12*100)/10;
+  await q(`INSERT INTO grades (submission_id, scores, total, comment, graded_by, graded_at) VALUES ($1, $2, $3, $4, $5, now())
+    ON CONFLICT (submission_id) DO UPDATE SET scores = EXCLUDED.scores, total = EXCLUDED.total, comment = EXCLUDED.comment, graded_by = EXCLUDED.graded_by, graded_at = now()`,
+    [sid, JSON.stringify(scores), total, str(b.comment, 4000), u.id]);
+  send(res, 200, { ok: true, total });
+} };
+
 module.exports = handle(async (req, res) => {
   const a = query(req).get("a"), h = ACTIONS[a] && ACTIONS[a][req.method];
   if (!h) throw new HttpError(404, "Không có");

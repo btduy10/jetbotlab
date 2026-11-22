@@ -89,6 +89,71 @@ $("#memberList").addEventListener("click", async e => {
   try { await api(`/api/class?a=members&class=${TC.cls.id}&email=${encodeURIComponent(email)}`, { method: "DELETE" }); loadMembers(); } catch (x){ toast(x.message); }
 });
 
+/* ---------- tiến độ: bảng học sinh × bài ---------- */
+window.CLASS_SUBTABS = Object.assign(window.CLASS_SUBTABS || {}, { progress: loadProgress });
+const PG = { d: null, week: "" };
+const median = a => { if (!a.length) return 0; const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m])/2; };
+const subKey = (aid, email) => aid + "|" + email;
+async function loadProgress(){
+  const el = $("#progressTable");
+  try { PG.d = await api("/api/class?a=progress&class=" + TC.cls.id); } catch (e){ el.innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
+  const weeks = [...new Set(PG.d.assignments.map(a => a.week_label || "—"))], sel = $("#pgWeek");
+  sel.innerHTML = `<option value="">Tất cả các tuần</option>` + weeks.map(w => `<option>${esc(w)}</option>`).join("");
+  if (weeks.includes(PG.week)) sel.value = PG.week; else PG.week = "";
+  renderProgress();
+}
+// Cờ gợi ý: cần hỗ trợ / có thể nâng cấp độ (theo các bài đang xem)
+function studentFlags(m, as, map, med){
+  const now = Date.now(); let help = [], up = 0, graded = [];
+  for (const a of as){
+    const s = map.get(subKey(a.id, m.email));
+    if (a.due_at && new Date(a.due_at) < now && (!s || s.status !== "submitted")) help.push("quá hạn chưa nộp");
+    if (s && !s.completed && s.runs_count >= 8) help.push("chạy nhiều lần chưa đạt");
+    if (s && !s.completed && med.get(a.id) && s.active_seconds > 2*med.get(a.id) && s.active_seconds > 600) help.push("làm lâu hơn 2× cả lớp");
+    if (s && s.total !== null) graded.push(s.total);
+    if (s && s.completed && s.runs_count <= Math.max(2, median(PG.d.subs.filter(x => x.assignment_id === a.id && x.completed).map(x => x.runs_count)))) up++;
+  }
+  const avg = graded.length ? graded.reduce((x, y) => x + y, 0)/graded.length : null;
+  if (avg !== null && avg < 5) help.push("điểm TB " + avg.toFixed(1));
+  const canUp = !help.length && as.length && up === as.length && (avg === null || avg >= 8);
+  return { help: [...new Set(help)], up: canUp };
+}
+function renderProgress(){
+  const d = PG.d, el = $("#progressTable"); if (!d) return;
+  const as = d.assignments.filter(a => !PG.week || (a.week_label || "—") === PG.week);
+  if (!d.members.length || !as.length){ el.innerHTML = `<div class="empty">${!d.members.length ? "Lớp chưa có học sinh." : "Chưa có bài được giao trong tuần này."}</div>`; return; }
+  const map = new Map(d.subs.map(s => [subKey(s.assignment_id, s.email), s]));
+  const med = new Map(as.map(a => [a.id, median(d.subs.filter(s => s.assignment_id === a.id).map(s => s.active_seconds))]));
+  const cell = (a, m) => {
+    const s = map.get(subKey(a.id, m.email));
+    if (!s) return `<td class="pc none" title="Chưa mở bài">—</td>`;
+    const late = s.submitted_at && a.due_at && new Date(s.submitted_at) > new Date(a.due_at);
+    const icon = s.completed ? "★" : s.status === "submitted" ? "✓" : "◐", cls = s.completed ? "done" : s.status === "submitted" ? "sub" : "wip";
+    const tip = `${s.status === "submitted" ? "Đã nộp" + (late ? " (muộn)" : "") : "Đang làm"} · ${s.runs_count} lần chạy · ${Math.round(s.active_seconds/60)} phút${s.best ? ` · tốt nhất ${(s.best.reachT ?? s.best.time).toFixed(1)} s` : ""}${s.robot_verified ? " · đã kiểm chứng robot thật" : ""}`;
+    return `<td class="pc ${cls}${late ? " late" : ""}" title="${esc(tip)}"><a href="/?review=${s.id}" target="_blank" rel="noopener"><span class="ic">${icon}</span>${s.total !== null ? `<b>${s.total}</b>` : ""}<small>${s.runs_count}× · ${Math.round(s.active_seconds/60)}′${s.robot_verified ? " · robot thật ✓" : ""}</small></a></td>`;
+  };
+  const head = `<tr><th>Nhóm</th><th>Học sinh</th>${as.map(a => `<th title="${esc(lessonTitle(a.lesson_id))}">${esc(a.title || lessonTitle(a.lesson_id))}<small>${esc([a.period_label, a.due_at ? "hạn " + fmtDate(a.due_at) : ""].filter(Boolean).join(" · "))}</small></th>`).join("")}<th>Gợi ý</th></tr>`;
+  const rows = d.members.map(m => { const f = studentFlags(m, as, map, med);
+    return `<tr><td class="grp">${esc(m.group || "")}</td><td><b>${esc(m.name || m.email)}</b><small>${esc(m.email)}${m.joined ? "" : " · chưa đăng nhập"}</small></td>${as.map(a => cell(a, m)).join("")}
+      <td class="flags">${f.help.length ? `<span class="flag help" title="${esc(f.help.join(", "))}">Cần hỗ trợ</span>` : ""}${f.up ? '<span class="flag up">Có thể nâng cấp độ</span>' : ""}</td></tr>`; }).join("");
+  const foot = `<tr class="sum"><td></td><td>Tổng</td>${as.map(a => { const ss = d.subs.filter(s => s.assignment_id === a.id); return `<td>${ss.filter(s => s.status === "submitted").length}/${d.members.length} nộp · ${ss.filter(s => s.completed).length} ★</td>`; }).join("")}<td></td></tr>`;
+  el.innerHTML = `<div class="tblwrap"><table class="tbl prog"><thead>${head}</thead><tbody>${rows}${foot}</tbody></table></div>
+    <p class="a-hint">— chưa mở · ◐ đang làm · ✓ đã nộp · ★ đạt tiêu chí · số đậm là điểm /10 · “3× · 12′” = 3 lần chạy, 12 phút làm bài. Bấm vào ô để xem code, chạy lại và chấm.</p>`;
+}
+$("#pgWeek").addEventListener("change", e => { PG.week = e.target.value; renderProgress(); });
+$("#pgRefresh").onclick = () => loadProgress();
+$("#pgCsv").onclick = () => {
+  const d = PG.d; if (!d) return;
+  const as = d.assignments.filter(a => !PG.week || (a.week_label || "—") === PG.week), map = new Map(d.subs.map(s => [subKey(s.assignment_id, s.email), s]));
+  const q = v => `"${String(v === null || v === undefined ? "" : v).replace(/"/g, '""')}"`;
+  const head = ["Nhóm", "Họ tên", "Email", ...as.flatMap(a => { const n = a.title || lessonTitle(a.lesson_id); return [n + " · trạng thái", n + " · lần chạy", n + " · phút", n + " · đạt tiêu chí", n + " · điểm"]; })];
+  const lines = d.members.map(m => [m.group, m.name, m.email, ...as.flatMap(a => { const s = map.get(subKey(a.id, m.email));
+    return s ? [s.status === "submitted" ? "Đã nộp" : "Đang làm", s.runs_count, Math.round(s.active_seconds/60), s.completed ? "Có" : "Không", s.total ?? ""] : ["Chưa mở", 0, 0, "Không", ""]; })]);
+  const csv = "﻿" + [head, ...lines].map(r => r.map(q).join(",")).join("\r\n");
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+  a.download = `tien-do-${TC.cls.name.replace(/[^\p{L}\p{N}]+/gu, "-")}${PG.week ? "-" + PG.week.replace(/\s+/g, "-") : ""}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+
 /* ---------- giao bài ---------- */
 function fillLessonSelect(){
   const sel = $("#asLesson"), cur = sel.value;

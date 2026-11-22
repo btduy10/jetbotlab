@@ -381,3 +381,15 @@ input[type=file]{display:none}
 .drawer .asg em .st.late{color:var(--err)}
 .drawer .asg em .st.done{color:var(--ok);font-weight:700}
 .drawer-empty{margin:8px 14px;color:var(--muted);font-size:13px}
+/* giáo viên chấm bài trong lab ảo */
+.asbar.review{background:color-mix(in srgb, #E97132 10%, var(--panel));border-color:color-mix(in srgb, #E97132 40%, transparent)}
+.asbar.review .lbl{color:#c2561c}
+.asbar .rubric{flex-basis:100%;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-top:2px}
+.asbar .rubric label{display:flex;align-items:center;gap:6px;font-weight:600}
+.asbar .rubric select{height:28px;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--fg);padding:0 4px}
+.asbar .rubric small{color:var(--muted);font-weight:400}
+.asbar .rubric .total{margin-left:auto;font-size:14px;color:#c2561c}
+.asbar textarea{flex-basis:100%;font:inherit;border:1px solid var(--line);border-radius:6px;background:var(--panel);color:var(--fg);padding:6px 8px;resize:vertical}
+.asbar details.runs{flex-basis:100%;font-size:12px}
+.asbar details.runs ul{margin:4px 0 0;padding-left:16px;max-height:140px;overflow:auto}
+.asbar details.runs li.ok{color:var(--ok)}
