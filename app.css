@@ -361,3 +361,23 @@ input[type=file]{display:none}
 .critbox p{margin:5px 0 0;color:var(--muted);font-size:12px}
 .drawer h4.lvl{margin:10px 14px 2px;font-size:11px;font-weight:700;color:var(--accent-ink);text-transform:uppercase;letter-spacing:.06em}
 .lesson em .chal{font-style:normal;background:#E97132;color:#fff;border-radius:4px;padding:0 5px;font-size:10px;letter-spacing:0}
+/* bài được giao */
+.rail button{position:relative}
+.rail .dot{position:absolute;top:6px;right:6px;width:8px;height:8px;border-radius:50%;background:#E97132}
+.asbar{order:99;flex-basis:100%;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:5px;padding:6px 10px;border-radius:var(--r);background:var(--accent-soft);border:1px solid color-mix(in srgb, var(--accent) 35%, transparent);font-size:12.5px}
+.asbar .lbl{font-weight:700;color:var(--accent-ink);text-transform:uppercase;font-size:10.5px;letter-spacing:.06em}
+.asbar b{font-weight:700}
+.asbar .st{font-size:11.5px;padding:1px 8px;border-radius:99px;background:var(--panel);border:1px solid var(--line);color:var(--muted)}
+.asbar .st.sub{color:var(--ok);border-color:var(--ok)}
+.asbar .st.late{color:var(--err);border-color:var(--err)}
+.asbar .st.done{background:var(--ok);border-color:var(--ok);color:#fff}
+.asbar .grow{flex:1}
+.asbar .saved{color:var(--muted);font-size:11.5px}
+.asbar button{height:28px;padding:0 12px;border-radius:var(--r);border:1px solid var(--line);background:var(--panel);font-weight:600;cursor:pointer}
+.asbar button.go{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.asbar .cmt{flex-basis:100%;margin:2px 0 0;padding:6px 8px;border-radius:6px;background:var(--panel);border:1px solid var(--line);white-space:pre-wrap}
+.drawer .asg em .st{font-style:normal;margin-left:4px}
+.drawer .asg em .st.sub{color:var(--ok)}
+.drawer .asg em .st.late{color:var(--err)}
+.drawer .asg em .st.done{color:var(--ok);font-weight:700}
+.drawer-empty{margin:8px 14px;color:var(--muted);font-size:13px}

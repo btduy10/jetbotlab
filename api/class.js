@@ -1,10 +1,51 @@
 // Lớp học: CSDL, giáo viên, lớp, học sinh, giao bài, bài làm, tiến độ, chấm điểm, Classroom, phản hồi.
 // Định tuyến bằng ?a=… để gói gọn trong một function (Vercel Hobby giới hạn 12 function).
-const { HttpError, readJsonBody, requireRole, query, send, handle } = require("./_lib");
+const { HttpError, readJsonBody, requireRole, currentUser, sameOrigin, query, send, handle } = require("./_lib");
 const { q, migrate } = require("./_db");
 
-const EMAIL = /^[^\s@<>"]{1,64}@[^\s@<>"]{1,190}\.[a-z]{2,24}$/i;
+const EMAIL = /^[^\s@<>"',;]{1,64}@[^\s@<>"',;]{1,190}\.[a-z]{2,24}$/i;
+const LESSON_ID = /^(l\d{1,2}|c-[a-z0-9][a-z0-9-]{0,39})$/;
+const STAFF = ["admin", "teacher"];
 const ACTIONS = {};
+const N = v => v === null || v === undefined ? null : Number(v);
+const str = (v, max) => String(v === null || v === undefined ? "" : v).trim().slice(0, max);
+const intId = v => { const n = Number(v); if (!Number.isSafeInteger(n) || n <= 0) throw new HttpError(400, "Mã không hợp lệ"); return n; };
+const date = v => { if (v === null || v === undefined || v === "") return null; const d = new Date(v); if (isNaN(d)) throw new HttpError(400, "Ngày giờ không hợp lệ"); return d.toISOString(); };
+
+// Giáo viên chỉ thao tác trên lớp của mình; admin được mọi lớp.
+async function ownClass(u, classId){
+  const rows = await q("SELECT id, teacher_id, name, gc_course_id FROM classes WHERE id = $1", [classId]);
+  if (!rows.length) throw new HttpError(404, "Không có lớp này");
+  if (u.role !== "admin" && N(rows[0].teacher_id) !== u.id) throw new HttpError(403, "Đây không phải lớp của bạn");
+  return rows[0];
+}
+async function ownAssignment(u, id){
+  const rows = await q("SELECT id, class_id FROM assignments WHERE id = $1", [id]);
+  if (!rows.length) throw new HttpError(404, "Không có bài được giao này");
+  await ownClass(u, N(rows[0].class_id)); return rows[0];
+}
+// Học sinh chỉ mở được bài giao cho lớp mình (và đã tới ngày mở).
+async function myAssignment(u, id){
+  const rows = await q(`SELECT a.id, a.lesson_id, a.title, a.week_label, a.period_label, a.due_at, c.name AS class_name
+    FROM assignments a JOIN class_members m ON m.class_id = a.class_id JOIN classes c ON c.id = a.class_id
+    WHERE a.id = $1 AND m.user_id = $2 AND NOT c.archived AND (a.open_at IS NULL OR a.open_at <= now())`, [id, u.id]);
+  if (!rows.length) throw new HttpError(404, "Không tìm thấy bài được giao (hoặc chưa tới ngày mở)");
+  return rows[0];
+}
+async function needUser(req){ const u = await currentUser(req); if (!u || !u.id) throw new HttpError(401, "Cần đăng nhập Google"); if (req.method !== "GET" && !sameOrigin(req)) throw new HttpError(403, "Sai nguồn yêu cầu"); return u; }
+async function needTeacher(req){ const u = await requireRole(req, STAFF); if (!u.id) throw new HttpError(400, "Hãy đăng nhập bằng Google (không dùng mật khẩu admin) để quản lý lớp"); return u; }
+
+// Notebook học sinh: [loại, mã, null, metadata khoá?], tối đa 300 ô và ~400 KB.
+function cleanNotebook(nb){
+  if (!Array.isArray(nb) || nb.length > 300) throw new HttpError(400, "Notebook không hợp lệ");
+  const out = nb.map(c => {
+    if (!Array.isArray(c) || (c[0] !== "code" && c[0] !== "md")) throw new HttpError(400, "Ô không hợp lệ");
+    const src = String(c[1] === null || c[1] === undefined ? "" : c[1]).slice(0, 100000), m = c[3] && typeof c[3] === "object" ? c[3] : null;
+    return m && (m.editable === false || m.deletable === false) ? [c[0], src, null, { editable: m.editable === false ? false : undefined, deletable: m.deletable === false ? false : undefined }] : [c[0], src];
+  });
+  if (JSON.stringify(out).length > 400000) throw new HttpError(413, "Notebook quá lớn");
+  return out;
+}
 
 // ---------- quản trị ----------
 ACTIONS.migrate = { POST: async (req, res) => { await requireRole(req, ["admin"]); send(res, 200, { ok: true, statements: await migrate() }); } };
@@ -12,23 +53,160 @@ ACTIONS.migrate = { POST: async (req, res) => { await requireRole(req, ["admin"]
 ACTIONS.teachers = {
   GET: async (req, res) => {
     await requireRole(req, ["admin"]);
-    const rows = await q("SELECT id, email, name, last_login FROM users WHERE role = 'teacher' ORDER BY email");
-    send(res, 200, { teachers: rows });
+    send(res, 200, { teachers: (await q("SELECT id, email, name, last_login FROM users WHERE role = 'teacher' ORDER BY email")).map(r => ({ ...r, id: N(r.id) })) });
   },
   POST: async (req, res) => {
     await requireRole(req, ["admin"]);
-    const b = await readJsonBody(req, 4096), email = String(b.email || "").trim().toLowerCase();
+    const b = await readJsonBody(req, 4096), email = str(b.email, 254).toLowerCase();
     if (!EMAIL.test(email)) throw new HttpError(400, "Email không hợp lệ");
     await q(`INSERT INTO users (email, role) VALUES ($1, 'teacher') ON CONFLICT (email) DO UPDATE SET role = 'teacher'`, [email]);
     send(res, 200, { ok: true });
   },
   DELETE: async (req, res) => {
     await requireRole(req, ["admin"]);
-    const email = String(query(req).get("email") || "").toLowerCase();
-    await q("UPDATE users SET role = 'student' WHERE email = $1", [email]);
+    await q("UPDATE users SET role = 'student' WHERE email = $1", [str(query(req).get("email"), 254).toLowerCase()]);
     send(res, 200, { ok: true });
   }
 };
+
+// ---------- lớp ----------
+ACTIONS.classes = {
+  GET: async (req, res) => {
+    const u = await needTeacher(req);
+    const rows = await q(`SELECT c.id, c.name, c.note, c.gc_course_id, c.archived, c.created_at, u.email AS teacher_email,
+        (SELECT count(*) FROM class_members m WHERE m.class_id = c.id) AS members,
+        (SELECT count(*) FROM assignments a WHERE a.class_id = c.id) AS assignments
+      FROM classes c JOIN users u ON u.id = c.teacher_id
+      WHERE ($1::bigint IS NULL OR c.teacher_id = $1) ORDER BY c.archived, c.created_at DESC`, [u.role === "admin" ? null : u.id]);
+    send(res, 200, { classes: rows.map(r => ({ ...r, id: N(r.id), members: N(r.members), assignments: N(r.assignments), mine: r.teacher_email === u.email })) });
+  },
+  POST: async (req, res) => {
+    const u = await needTeacher(req), b = await readJsonBody(req, 8192), name = str(b.name, 120);
+    if (!name) throw new HttpError(400, "Hãy nhập tên lớp");
+    const r = await q("INSERT INTO classes (teacher_id, name, note) VALUES ($1, $2, $3) RETURNING id", [u.id, name, str(b.note, 500)]);
+    send(res, 200, { ok: true, id: N(r[0].id) });
+  },
+  DELETE: async (req, res) => {
+    const u = await needTeacher(req), id = intId(query(req).get("id"));
+    await ownClass(u, id); await q("DELETE FROM classes WHERE id = $1", [id]); send(res, 200, { ok: true });
+  }
+};
+ACTIONS.class_edit = { POST: async (req, res) => {
+  const u = await needTeacher(req), b = await readJsonBody(req, 8192), id = intId(b.id); await ownClass(u, id);
+  const name = str(b.name, 120); if (!name) throw new HttpError(400, "Hãy nhập tên lớp");
+  await q("UPDATE classes SET name = $2, note = $3, archived = $4 WHERE id = $1", [id, name, str(b.note, 500), b.archived === true]);
+  send(res, 200, { ok: true });
+} };
+
+// ---------- học sinh trong lớp ----------
+// Mỗi dòng một học sinh: "email", "Tên <email>", "email, Tên", "Tên<TAB>email"… (chép từ Excel được)
+function parseMembers(text){
+  const out = new Map();
+  for (const line of String(text || "").split(/\r?\n/).slice(0, 400)){
+    const m = line.match(/[^\s<>"',;:()\[\]]+@[^\s<>"',;:()\[\]]+\.[a-z]{2,24}/i); if (!m) continue;
+    const email = m[0].toLowerCase(); if (!EMAIL.test(email)) continue;
+    const name = line.replace(m[0], "").replace(/[<>"\[\]()\t,;]+/g, " ").replace(/\s+/g, " ").trim().slice(0, 120);
+    out.set(email, name);
+  }
+  return [...out].map(([email, name]) => ({ email, name }));
+}
+ACTIONS.members = {
+  GET: async (req, res) => {
+    const u = await needTeacher(req), id = intId(query(req).get("class")); await ownClass(u, id);
+    const rows = await q(`SELECT m.email, m.name, m.group_name, m.user_id, u.name AS account_name, u.last_login
+      FROM class_members m LEFT JOIN users u ON u.id = m.user_id WHERE m.class_id = $1 ORDER BY m.group_name, m.name, m.email`, [id]);
+    send(res, 200, { members: rows.map(r => ({ email: r.email, name: r.name || r.account_name || "", group: r.group_name, joined: r.user_id !== null, last_login: r.last_login })) });
+  },
+  POST: async (req, res) => {
+    const u = await needTeacher(req), b = await readJsonBody(req, 200000), id = intId(b.class); await ownClass(u, id);
+    const list = parseMembers(b.text);
+    if (!list.length) throw new HttpError(400, "Không tìm thấy email nào");
+    for (const m of list){
+      await q(`INSERT INTO class_members (class_id, email, name, user_id) VALUES ($1, $2, $3, (SELECT id FROM users WHERE email = $2))
+        ON CONFLICT (class_id, email) DO UPDATE SET name = CASE WHEN EXCLUDED.name <> '' THEN EXCLUDED.name ELSE class_members.name END`, [id, m.email, m.name]);
+    }
+    send(res, 200, { ok: true, added: list.length });
+  },
+  DELETE: async (req, res) => {
+    const u = await needTeacher(req), p = query(req), id = intId(p.get("class")); await ownClass(u, id);
+    await q("DELETE FROM class_members WHERE class_id = $1 AND email = $2", [id, str(p.get("email"), 254).toLowerCase()]);
+    send(res, 200, { ok: true });
+  }
+};
+ACTIONS.member_edit = { POST: async (req, res) => {
+  const u = await needTeacher(req), b = await readJsonBody(req, 4096), id = intId(b.class); await ownClass(u, id);
+  await q("UPDATE class_members SET name = $3, group_name = $4 WHERE class_id = $1 AND email = $2", [id, str(b.email, 254).toLowerCase(), str(b.name, 120), str(b.group, 40)]);
+  send(res, 200, { ok: true });
+} };
+
+// ---------- giao bài ----------
+function assignmentFields(b){
+  const lesson = str(b.lesson, 60); if (!LESSON_ID.test(lesson)) throw new HttpError(400, "Bài học không hợp lệ");
+  const open = date(b.open_at), due = date(b.due_at);
+  if (open && due && due < open) throw new HttpError(400, "Hạn nộp phải sau ngày mở");
+  return [lesson, str(b.title, 160), str(b.week, 40), str(b.period, 40), open, due];
+}
+ACTIONS.assignments = {
+  GET: async (req, res) => {
+    const u = await needTeacher(req), id = intId(query(req).get("class")); await ownClass(u, id);
+    const rows = await q(`SELECT a.id, a.lesson_id, a.title, a.week_label, a.period_label, a.open_at, a.due_at, a.gc_coursework_id, a.created_at,
+        (SELECT count(*) FROM submissions s WHERE s.assignment_id = a.id AND s.status = 'submitted') AS submitted,
+        (SELECT count(*) FROM submissions s WHERE s.assignment_id = a.id AND s.completed) AS completed
+      FROM assignments a WHERE a.class_id = $1 ORDER BY a.week_label, a.period_label, a.created_at`, [id]);
+    send(res, 200, { assignments: rows.map(r => ({ ...r, id: N(r.id), submitted: N(r.submitted), completed: N(r.completed) })) });
+  },
+  POST: async (req, res) => {
+    const u = await needTeacher(req), b = await readJsonBody(req, 8192), id = intId(b.class); await ownClass(u, id);
+    const r = await q(`INSERT INTO assignments (class_id, lesson_id, title, week_label, period_label, open_at, due_at) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`, [id, ...assignmentFields(b)]);
+    send(res, 200, { ok: true, id: N(r[0].id) });
+  },
+  DELETE: async (req, res) => {
+    const u = await needTeacher(req), id = intId(query(req).get("id")); await ownAssignment(u, id);
+    await q("DELETE FROM assignments WHERE id = $1", [id]); send(res, 200, { ok: true });
+  }
+};
+ACTIONS.assignment_edit = { POST: async (req, res) => {
+  const u = await needTeacher(req), b = await readJsonBody(req, 8192), id = intId(b.id); await ownAssignment(u, id);
+  await q("UPDATE assignments SET lesson_id = $2, title = $3, week_label = $4, period_label = $5, open_at = $6, due_at = $7 WHERE id = $1", [id, ...assignmentFields(b)]);
+  send(res, 200, { ok: true });
+} };
+
+// ---------- phía học sinh ----------
+ACTIONS.my = { GET: async (req, res) => {
+  const u = await needUser(req);
+  const rows = await q(`SELECT a.id, a.lesson_id, a.title, a.week_label, a.period_label, a.open_at, a.due_at, c.name AS class_name,
+      s.status, s.completed, s.runs_count, s.submitted_at, s.last_at, g.total, g.comment
+    FROM class_members m JOIN classes c ON c.id = m.class_id AND NOT c.archived JOIN assignments a ON a.class_id = c.id
+    LEFT JOIN submissions s ON s.assignment_id = a.id AND s.user_id = $1 LEFT JOIN grades g ON g.submission_id = s.id
+    WHERE m.user_id = $1 AND (a.open_at IS NULL OR a.open_at <= now())
+    ORDER BY a.week_label DESC, a.period_label DESC, a.created_at DESC`, [u.id]);
+  send(res, 200, { assignments: rows.map(r => ({ ...r, id: N(r.id), runs_count: N(r.runs_count), total: N(r.total) })) });
+} };
+ACTIONS.sub = { GET: async (req, res) => {
+  const u = await needUser(req), id = intId(query(req).get("assignment")), a = await myAssignment(u, id);
+  const s = await q(`SELECT s.notebook, s.status, s.completed, s.runs_count, s.submitted_at, g.total, g.scores, g.comment
+    FROM submissions s LEFT JOIN grades g ON g.submission_id = s.id WHERE s.assignment_id = $1 AND s.user_id = $2`, [id, u.id]);
+  send(res, 200, { assignment: { ...a, id: N(a.id) }, submission: s[0] ? { ...s[0], runs_count: N(s[0].runs_count), total: N(s[0].total) } : null });
+} };
+async function upsertSubmission(u, id, notebook, submit){
+  await myAssignment(u, id);
+  const nb = cleanNotebook(notebook);
+  const r = await q(`INSERT INTO submissions (assignment_id, user_id, notebook, status, submitted_at, last_at)
+      VALUES ($1, $2, $3, CASE WHEN $4 THEN 'submitted' ELSE 'started' END, CASE WHEN $4 THEN now() END, now())
+    ON CONFLICT (assignment_id, user_id) DO UPDATE SET notebook = EXCLUDED.notebook, last_at = now(),
+      status = CASE WHEN $4 THEN 'submitted' ELSE submissions.status END,
+      submitted_at = CASE WHEN $4 THEN now() ELSE submissions.submitted_at END
+    RETURNING id, status, submitted_at`, [id, u.id, JSON.stringify(nb), !!submit]);
+  return { ...r[0], id: N(r[0].id) };
+}
+ACTIONS.save = { POST: async (req, res) => {
+  const u = await needUser(req), b = await readJsonBody(req, 600000);
+  send(res, 200, { ok: true, submission: await upsertSubmission(u, intId(b.assignment), b.notebook, false) });
+} };
+ACTIONS.submit = { POST: async (req, res) => {
+  const u = await needUser(req), b = await readJsonBody(req, 600000);
+  send(res, 200, { ok: true, submission: await upsertSubmission(u, intId(b.assignment), b.notebook, true) });
+} };
 
 module.exports = handle(async (req, res) => {
   const a = query(req).get("a"), h = ACTIONS[a] && ACTIONS[a][req.method];
@@ -36,3 +214,4 @@ module.exports = handle(async (req, res) => {
   await h(req, res);
 });
 module.exports.ACTIONS = ACTIONS;
+module.exports.helpers = { q, N, str, intId, ownClass, ownAssignment, myAssignment, needUser, needTeacher, cleanNotebook };
