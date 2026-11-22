@@ -83,6 +83,19 @@
       <label class="wide">Mô tả<input name="desc" maxlength="500"></label>
       <label class="wide">Description (English)<input name="descEn" maxlength="500"></label>
       <label>Sa bàn dùng cho bài<select name="map" id="leMap"></select></label>
+      <label>Cấp độ<select name="level">
+        <option value="1">1 · Điều khiển cơ bản</option><option value="2">2 · Cảm biến (encoder, IMU)</option>
+        <option value="3">3 · Lidar &amp; vật cản</option><option value="4">4 · Camera &amp; dò line</option><option value="5">5 · Ứng dụng AI</option></select></label>
+      <label>Loại<select name="kind"><option value="lesson">Bài học</option><option value="challenge">Thử thách</option></select></label>
+      <fieldset class="wide crit">
+        <legend>Tiêu chí hoàn thành (chấm tự động sau mỗi lượt chạy, để trống = không xét)</legend>
+        <label>Ô đích phải tới<select name="cGoal"><option value="">— không —</option><option value="green">xanh lá</option><option value="red">đỏ</option><option value="blue">xanh dương</option><option value="yellow">vàng</option></select></label>
+        <label>Thời gian tối đa (giây)<input name="cMaxTime" type="number" min="1" max="3600" step="0.5"></label>
+        <label>Số va chạm tối đa<input name="cMaxColl" type="number" min="0" max="1000" step="1"></label>
+        <label class="check"><input type="checkbox" name="cInside"> Không được ra khỏi vạch biên</label>
+        <label>Thời gian chuẩn (giây) <small>để gợi ý điểm tối ưu</small><input name="cRefTime" type="number" min="1" max="3600" step="0.5"></label>
+        <label>Quãng đường chuẩn (m)<input name="cRefDist" type="number" min="0.05" max="1000" step="0.01"></label>
+      </fieldset>
       <label>Mã bài (dùng trong đường link)<input name="id" maxlength="40" pattern="[a-z0-9][a-z0-9-]*" required></label>
       <div class="wide drop">
         <label class="btn" for="leFile">Chọn tệp notebook .ipynb</label>

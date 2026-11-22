@@ -106,7 +106,7 @@ function renderLessons(){
   if (!DATA.lessons.length){ el.innerHTML = '<div class="empty">Chưa có bài học nào. Bấm <b>+ Thêm bài học</b> để tải notebook .ipynb lên.</div>'; return; }
   el.innerHTML = DATA.lessons.map((l, i) => `<div class="row${l.hidden ? " off" : ""}" data-i="${i}">
     <div class="order"><button data-a="up" title="Lên" aria-label="Lên">↑</button><button data-a="down" title="Xuống" aria-label="Xuống">↓</button></div>
-    <div><b>${esc(l.title)}${l.hidden ? '<span class="badge">đang ẩn</span>' : ""}</b><div class="a-meta">${esc(l.tag || "—")} · ${esc(mapLabel(l.map))} · ${l.cells.length} ô · mã <code>${esc(l.id)}</code></div></div>
+    <div><b>${esc(l.title)}${l.hidden ? '<span class="badge">đang ẩn</span>' : ""}</b><div class="a-meta">${l.kind === "challenge" ? "Thử thách" : "Bài học"} · cấp ${l.level || 1}${l.criteria ? " · có tiêu chí" : ""} · ${esc(l.tag || "—")} · ${esc(mapLabel(l.map))} · ${l.cells.length} ô · mã <code>${esc(l.id)}</code></div></div>
     <div class="acts"><button data-a="edit">Sửa</button><a href="/?lesson=c-${encodeURIComponent(l.id)}" target="_blank" rel="noopener">Xem ↗</a><button data-a="hide">${l.hidden ? "Hiện" : "Ẩn"}</button><button data-a="del" class="danger">Xoá</button></div></div>`).join("");
 }
 $("#lessonList").addEventListener("click", async e => {
@@ -135,6 +135,9 @@ function editLesson(i){
   const f = $("#fLesson");
   for (const k of ["title", "titleEn", "tag", "tagEn", "desc", "descEn", "id"]) f.elements[k].value = l[k] || "";
   f.elements.id.readOnly = i !== null; f.elements.hidden.checked = !!l.hidden;
+  const c = l.criteria || {}, setv = (k, x) => f.elements[k].value = x === null || x === undefined ? "" : x;
+  setv("level", l.level || 1); setv("kind", l.kind || "lesson"); setv("cGoal", c.goal || ""); setv("cMaxTime", c.maxTime); setv("cMaxColl", c.maxCollisions);
+  f.elements.cInside.checked = !!c.stayInside; setv("cRefTime", c.refTime); setv("cRefDist", c.refDistance);
   fillMapSelect($("#leMap"), l.map);
   $("#leTitle").textContent = i === null ? "Thêm bài học" : "Sửa bài học";
   $("#leFileInfo").textContent = LE.cells.length ? `${LE.file || "notebook"} · ${LE.cells.length} ô` : "Chưa có nội dung";
@@ -190,7 +193,10 @@ $("#fLesson").addEventListener("submit", async e => {
   const id = v("id");
   if (!/^[a-z0-9][a-z0-9-]{0,39}$/.test(id)) return msg(m, "Mã bài chỉ gồm chữ thường không dấu, số và dấu gạch ngang", "err");
   if (DATA.lessons.some((l, i) => l.id === id && i !== LE.index)) return msg(m, "Mã bài đã có, hãy đổi mã khác", "err");
-  const obj = { id, title: v("title"), titleEn: v("titleEn"), tag: v("tag"), tagEn: v("tagEn"), desc: v("desc"), descEn: v("descEn"), map: $("#leMap").value, file: LE.file || id + ".ipynb", hidden: f.elements.hidden.checked, cells: LE.cells };
+  const num = k => v(k) === "" ? null : Number(v(k));
+  const criteria = { goal: v("cGoal"), maxTime: num("cMaxTime"), maxCollisions: num("cMaxColl"), stayInside: f.elements.cInside.checked, refTime: num("cRefTime"), refDistance: num("cRefDist") };
+  const obj = { id, title: v("title"), titleEn: v("titleEn"), tag: v("tag"), tagEn: v("tagEn"), desc: v("desc"), descEn: v("descEn"), map: $("#leMap").value, file: LE.file || id + ".ipynb", hidden: f.elements.hidden.checked, cells: LE.cells,
+    level: Number(v("level")) || 1, kind: v("kind"), criteria };
   const backup = JSON.stringify(DATA.lessons);
   if (LE.index === null) DATA.lessons.unshift(obj); else DATA.lessons[LE.index] = obj;
   f.querySelector("[type=submit]").disabled = true; msg(m, "Đang lưu…");

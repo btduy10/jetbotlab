@@ -64,3 +64,7 @@ fieldset.line input[type=color]{width:42px;height:30px;border:1px solid var(--li
 .addrow-f{display:flex;gap:8px;margin:0 0 12px;flex-wrap:wrap}
 .addrow-f input{flex:1;min-width:220px}
 .dbcard{margin-top:20px}
+fieldset.crit{display:grid;grid-template-columns:repeat(3,1fr);gap:10px 14px;border:1px solid var(--line);border-radius:var(--r);padding:10px 12px}
+fieldset.crit legend{font-size:13px;font-weight:600;color:var(--muted);padding:0 4px}
+fieldset.crit small{font-weight:400}
+@media (max-width:720px){ fieldset.crit{grid-template-columns:1fr} }

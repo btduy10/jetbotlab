@@ -25,8 +25,18 @@ function cleanLesson(l){
   return {
     id: id(l.id), title: str(l.title, 200) || "Bài học", titleEn: str(l.titleEn, 200), tag: str(l.tag, 40), tagEn: str(l.tagEn, 40),
     desc: str(l.desc, 500), descEn: str(l.descEn, 500), map: str(l.map, 60), file: str(l.file, 120).replace(/[\u0000-\u001f<>]/g, ""),
-    hidden: l.hidden === true, cells: list(l.cells, 300).map(cleanCell)
+    hidden: l.hidden === true, cells: list(l.cells, 300).map(cleanCell),
+    level: Math.round(num(l.level === undefined ? 1 : l.level, 1, 5)), kind: l.kind === "challenge" ? "challenge" : "lesson",
+    criteria: cleanCriteria(l.criteria)
   };
+}
+// Tiêu chí hoàn thành, chấm tự động trên sa bàn sau mỗi lượt chạy. Trường để trống = không xét.
+function cleanCriteria(c){
+  if (!c || typeof c !== "object") return null;
+  const opt = (v, lo, hi) => v === null || v === undefined || v === "" ? null : num(v, lo, hi);
+  const out = { goal: COLORS.includes(c.goal) ? c.goal : "", maxTime: opt(c.maxTime, 1, 3600), maxCollisions: opt(c.maxCollisions, 0, 1000),
+    stayInside: c.stayInside === true, refTime: opt(c.refTime, 1, 3600), refDistance: opt(c.refDistance, 0.05, 1000) };
+  return out.goal || out.maxTime !== null || out.maxCollisions !== null || out.stayInside ? out : null;
 }
 function cleanMap(m){
   if (!m || typeof m !== "object") throw new HttpError(400, "Sa bàn không hợp lệ");
