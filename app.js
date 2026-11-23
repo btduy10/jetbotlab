@@ -1386,7 +1386,7 @@ function matTexture(){
 function buildField(){
   if (fieldGroup){ scene.remove(fieldGroup); fieldGroup.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material){ if (o.material.map) o.material.map.dispose(); o.material.dispose(); } }); }
   fieldGroup = new THREE.Group();
-  const base = box(FIELD.w + 0.08, 0.018, FIELD.h + 0.08, std(0xcfd6cc)); base.position.y = -0.0095; fieldGroup.add(base);
+  const base = box(FIELD.w + 0.08, 0.018, FIELD.h + 0.08, std(0xd5d8dd)); base.position.y = -0.0095; fieldGroup.add(base);
   const mat = new THREE.Mesh(new THREE.PlaneGeometry(FIELD.w, FIELD.h), new THREE.MeshStandardMaterial({ map: matTexture(), roughness: 0.85 }));
   mat.rotation.x = -Math.PI/2; mat.position.y = 0.0005; mat.receiveShadow = true; fieldGroup.add(mat);
   const wallMat = std(0xe8dcc4, { roughness: 0.8 }), obMat = std(0xe0833a, { roughness: 0.55 }), mazeMat = std(0x6d7f99, { roughness: 0.6 });
@@ -1446,7 +1446,7 @@ function initScene(){
 }
 function applyTheme(){
   if (!renderer) return;
-  const bg = new THREE.Color(cssVar("--scene") || "#dde3dc");
+  const bg = new THREE.Color(cssVar("--scene") || "#e8ebef");
   scene.background = bg; scene.fog = new THREE.Fog(bg, 4, 12);
   ground.material.color = bg.clone().multiplyScalar(0.93);
 }
