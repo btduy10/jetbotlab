@@ -1074,7 +1074,7 @@ $("#rNb").onclick = () => openDrawer("nb");
 $("#rApi").onclick = () => openDrawer("api");
 drawer.addEventListener("click", e => {
   const l = e.target.closest(".lesson:not(.asg)");
-  if (l){ openLesson(l.dataset.id); if (innerWidth < 900) closeDrawer(); return; }
+  if (l){ if (openLesson(l.dataset.id)) closeDrawer(); return; }
   const ins = e.target.closest(".ins");
   if (ins){
     let c = ACTIVE; if (!c || c.type !== "code" || !canEdit(c)) c = insertAfter(ACTIVE, makeCell("code", ""));
