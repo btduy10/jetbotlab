@@ -78,6 +78,13 @@ tab **Giáo viên** → **Khởi tạo / cập nhật CSDL**. Bấm lại nút n
 7. **Phản hồi**: xem sao + góp ý của học sinh → *Sao chép yêu cầu cho Claude* → dán vào Claude Code để cải tiến
    → đẩy lên GitHub → Vercel tự cập nhật.
 
+### Dùng không cần API Classroom (thủ công)
+Khi chưa kết nối được Google Classroom (Google chưa duyệt, trường không cho cấp quyền…), mọi việc vẫn làm được:
+1. **Học sinh**: tab *Học sinh* → dán danh sách, mỗi dòng *Họ tên + email* (chép thẳng từ Google Sheets được).
+2. **Giao bài**: *Giao bài* → bấm **Chép link** → dán link vào một bài tập trên Classroom.
+3. **Điểm**: chấm trong JetBot Lab → bấm **Chép điểm** ở bài đó → dán vào Google Sheets (cột Họ tên · Email · Điểm · Nhận xét)
+   rồi nhập sang sổ điểm Classroom. Bảng tiến độ đầy đủ: *Tiến độ* → *Tải CSV*.
+
 ## Bảo mật
 - Python của học sinh chạy trong sandbox: đã gỡ `jseval`, `open`, `file`, `execfile`; chỉ cho phép thư viện an toàn.
 - CSP chỉ cho script cùng tên miền và **không cho thuộc tính `style` trong HTML** (style phải gán bằng JavaScript).

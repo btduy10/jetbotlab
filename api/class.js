@@ -250,7 +250,7 @@ ACTIONS.progress = { GET: async (req, res) => {
     LEFT JOIN users u ON u.id = m.user_id WHERE m.class_id = $1 ORDER BY m.group_name, m.name, m.email`, [id]))
     .map(r => ({ email: r.email, name: r.name || r.account_name || "", group: r.group_name, joined: r.user_id !== null }));
   const subs = await q(`SELECT s.id, s.assignment_id, m.email, s.status, s.completed, s.runs_count, s.active_seconds, s.best, s.robot_verified,
-      s.first_at, s.last_at, s.submitted_at, g.total, g.scores, g.pushed_gc_at
+      s.first_at, s.last_at, s.submitted_at, g.total, g.scores, g.comment, g.pushed_gc_at
     FROM submissions s JOIN assignments a ON a.id = s.assignment_id JOIN class_members m ON m.class_id = a.class_id AND m.user_id = s.user_id
     LEFT JOIN grades g ON g.submission_id = s.id WHERE a.class_id = $1`, [id]);
   send(res, 200, { assignments, members, subs: subs.map(s => ({ ...s, id: N(s.id), assignment_id: N(s.assignment_id), runs_count: N(s.runs_count), active_seconds: N(s.active_seconds), total: N(s.total) })) });

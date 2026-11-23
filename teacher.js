@@ -46,11 +46,11 @@ function renderGc(){
   $("#asGcWrap").hidden = !c.gc_course_id;
   if (!ME_USER.classroom){
     el.innerHTML = `<b>Google Classroom</b><span class="muted">Kết nối để nhập danh sách học sinh, đăng bài và trả điểm về Classroom.</span>
-      <a class="btn" href="/api/auth?a=google&amp;classroom=1&amp;next=${encodeURIComponent("/admin?tab=classes")}">Kết nối Google Classroom</a>`;
+      <a class="btn" href="/api/auth?a=google&amp;classroom=1&amp;next=${encodeURIComponent("/admin?tab=classes")}">Kết nối Google Classroom</a><div class="gc-manual">Không kết nối được Classroom? Dùng thủ công: dán danh sách học sinh ở tab <b>Học sinh</b> · bấm <b>Chép link</b> rồi dán vào bài tập Classroom · chấm xong bấm <b>Chép điểm</b> để dán sang Google Sheets / sổ điểm.</div>`;
     return;
   }
   if (!c.gc_course_id){
-    el.innerHTML = `<b>Google Classroom</b><span class="muted">Đã kết nối. Chọn khoá học tương ứng với lớp này để nhập học sinh.</span><button class="btn" id="gcPick">Liên kết khoá học…</button>`;
+    el.innerHTML = `<b>Google Classroom</b><span class="muted">Đã kết nối. Chọn khoá học tương ứng với lớp này để nhập học sinh.</span><button class="btn" id="gcPick">Liên kết khoá học…</button><div class="gc-manual">Không kết nối được Classroom? Dùng thủ công: dán danh sách học sinh ở tab <b>Học sinh</b> · bấm <b>Chép link</b> rồi dán vào bài tập Classroom · chấm xong bấm <b>Chép điểm</b> để dán sang Google Sheets / sổ điểm.</div>`;
     $("#gcPick").onclick = pickCourse; return;
   }
   el.innerHTML = `<b>Google Classroom</b><span class="badge">${esc(c.gc_course_name || c.gc_course_id)}</span><span class="grow"></span>
@@ -203,7 +203,7 @@ async function loadAssignments(){
     const weeks = [...new Set(list.map(a => a.week_label || "Không ghi tuần"))];
     el.innerHTML = weeks.map(w => `<h3 class="wk">${esc(w)}</h3>` + list.filter(a => (a.week_label || "Không ghi tuần") === w).map(a => `<div class="row" data-id="${a.id}"><div></div>
       <div><b>${esc(a.title || lessonTitle(a.lesson_id))}</b><div class="a-meta">${a.period_label ? esc(a.period_label) + " · " : ""}${esc(lessonTitle(a.lesson_id))}${a.open_at ? " · mở " + fmtDate(a.open_at) : ""}${a.due_at ? " · hạn " + fmtDate(a.due_at) : ""} · ${a.submitted} đã nộp · ${a.completed} hoàn thành${a.gc_coursework_id ? " · đã đăng Classroom" : ""}</div></div>
-      <div class="acts">${TC.cls.gc_course_id ? (a.gc_coursework_id ? '<button data-a="gcgrade">Trả điểm về Classroom</button>' : '<button data-a="gcpost">Đăng lên Classroom</button>') : ""}<button data-a="link">Chép link</button><button data-a="del" class="danger">Xoá</button></div></div>`).join("")).join("");
+      <div class="acts">${TC.cls.gc_course_id ? (a.gc_coursework_id ? '<button data-a="gcgrade">Trả điểm về Classroom</button>' : '<button data-a="gcpost">Đăng lên Classroom</button>') : ""}<button data-a="link">Chép link</button><button data-a="grades" title="Chép bảng Họ tên · Email · Điểm · Nhận xét để dán vào Google Sheets">Chép điểm</button><button data-a="del" class="danger">Xoá</button></div></div>`).join("")).join("");
   } catch (e){ el.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
 }
 $("#asLesson").addEventListener("change", () => { const f = $("#fAssign"); if (!f.elements.title.dataset.touched) f.elements.title.value = lessonTitle($("#asLesson").value); });
@@ -224,10 +224,25 @@ $("#assignList").addEventListener("click", async e => {
     try { const j = await api("/api/class?a=gc_grade_all", { method: "POST", body: JSON.stringify({ assignment: id }) }); toast(`Đã trả ${j.pushed} điểm${j.failed.length ? `, lỗi ${j.failed.length}: ${j.failed[0].email} – ${j.failed[0].error}` : ""}`); }
     catch (x){ toast(x.message); } return;
   }
+  if (b.dataset.a === "grades"){ copyGrades(id); return; }
   if (b.dataset.a === "link"){ const u = location.origin + "/?assignment=" + id; try { await navigator.clipboard.writeText(u); toast("Đã chép link: " + u); } catch (x){ prompt("Link bài được giao", u); } return; }
   if (!confirm("Xoá bài được giao này? Bài làm và điểm của học sinh cho bài này cũng bị xoá.")) return;
   try { await api("/api/class?a=assignments&id=" + id, { method: "DELETE" }); loadAssignments(); } catch (x){ toast(x.message); }
 });
+
+// Chép điểm một bài (dạng bảng, phân cách bằng Tab) để dán vào Google Sheets hoặc nhập tay vào sổ điểm Classroom
+async function copyGrades(aid){
+  let d; try { d = await api("/api/class?a=progress&class=" + TC.cls.id); } catch (x){ toast(x.message); return; }
+  const subs = new Map(d.subs.filter(s => s.assignment_id === aid).map(s => [s.email, s]));
+  const cell = v => String(v === null || v === undefined ? "" : v).replace(/[\t\r\n]+/g, " ").trim();
+  const ms = [...d.members].sort((a, b) => (a.name || a.email).localeCompare(b.name || b.email, "vi"));
+  const rows = ms.map(m => { const s = subs.get(m.email);
+    return [m.name, m.email, s && s.total !== null ? s.total : "", s && s.comment ? s.comment : (!s || s.status !== "submitted" ? "Chưa nộp" : s.total === null ? "Chưa chấm" : "")].map(cell).join("\t"); });
+  const text = ["Họ tên\tEmail\tĐiểm\tNhận xét", ...rows].join("\n");
+  const done = () => toast(`Đã chép điểm ${ms.filter(m => { const s = subs.get(m.email); return s && s.total !== null; }).length}/${ms.length} học sinh · dán vào Google Sheets`);
+  try { await navigator.clipboard.writeText(text); done(); }
+  catch (e){ const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); done(); } catch (x){ toast("Không chép được, hãy dùng Tải CSV ở tab Tiến độ"); } ta.remove(); }
+}
 
 /* ---------- tiết học: luân phiên robot thật ---------- */
 const LV = { st: null, now: null, at: 0, tick: 0, poll: 0 };
