@@ -1,13 +1,13 @@
 # JetBot Lab
 
-Notebook Python kiểu Jupyter để học lập trình JetBot ROS AI Kit trên sa bàn 3D, kèm **khu giáo viên**:
+Notebook Python kiểu Jupyter để học lập trình JetBot ROS AI Kit trên sa bàn 3D, kèm **trang Giáo viên**:
 soạn bài/thử thách có tiêu chí, quản lý lớp (liên kết Google Classroom), giao bài theo tuần/tiết, theo dõi tiến độ,
 xem code và chấm theo tiêu chí, tổ chức tiết học luân phiên robot thật.
 Python chạy trong trình duyệt (Skulpt 1.2.0), đồ hoạ Three.js r128. Trang không cần build.
 
 ## Cấu trúc
 - `index.html`, `app.css`, `app.js` – trang học (lab ảo); `student.js` – tài khoản, bài được giao, tự lưu, nộp bài, chấm bài trong lab
-- `admin.html`, `admin.css`, `admin.js` – khu giáo viên `/admin` (cũng mở được bằng `/teacher`): bài học, sa bàn, giáo viên;
+- `admin.html`, `admin.css`, `admin.js` – trang Giáo viên `/admin` (cũng mở được bằng `/teacher`): bài học, sa bàn, giáo viên;
   `teacher.js` – lớp học, học sinh, giao bài, tiến độ, tiết học, Google Classroom
 - `api/` – Vercel Functions (Node): `auth.js` (Google OAuth, phiên), `content.js` (bài học + sa bàn), `asset.js` (ảnh),
   `class.js` (mọi thứ về lớp học); `_lib.js`, `_db.js`, `_schema.js` dùng chung (không thành endpoint)

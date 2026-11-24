@@ -1,5 +1,5 @@
 "use strict";
-// Khu giáo viên: lớp học, học sinh, giao bài. Dùng chung $, esc, api, toast, msg, show, VIEWS, DATA của admin.js.
+// Trang Giáo viên: lớp học, học sinh, giao bài. Dùng chung $, esc, api, toast, msg, show, VIEWS, DATA của admin.js.
 const BUILTIN_LESSONS = [["l0", "0. Bài giảng: Tránh vật cản với JetBot"], ["l1", "1. Làm quen: tiến, quay, dừng"], ["l2", "2. Vòng lặp: đi hình vuông"],
   ["l3", "3. Điều khiển từng động cơ"], ["l4", "4. Encoder: đi đúng 50 cm"], ["l5", "5. IMU: quay chính xác 90°"], ["l6", "6. Lidar: đọc bản quét 360°"],
   ["l7", "7. Lidar: tránh vật cản"], ["l8", "8. Camera: dò line"], ["l9", "9. Mê cung: bám tường phải"], ["l10", "10. OLED: hiển thị cảm biến"],

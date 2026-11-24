@@ -1,7 +1,7 @@
 # JetBot Lab — ghi chú cho Claude
 
 Trang web (không build) dạy lập trình JetBot ROS AI Kit: notebook Python kiểu Jupyter bên trái, sa bàn 3D mô phỏng
-robot bên phải, cộng khu giáo viên (lớp, giao bài, tiến độ, chấm điểm, Google Classroom).
+robot bên phải, cộng trang Giáo viên (lớp, giao bài, tiến độ, chấm điểm, Google Classroom).
 Người dùng: giáo viên STEM-Robotics THPT FPT Cần Thơ và học sinh. Triển khai: Vercel tự deploy khi push `main`.
 Giao tiếp với chủ dự án bằng tiếng Việt. Góp ý của học sinh thu riêng bên ngoài (không có trong app).
 
@@ -16,7 +16,7 @@ Giao tiếp với chủ dự án bằng tiếng Việt. Góp ý của học sinh
 - `student.js` – nạp sau `app.js`, dùng chung biến toàn cục: tài khoản (`ACC`), bài được giao (`AS`, tự lưu 20 s / sau lượt chạy / khi ẩn tab),
   gửi lượt chạy + nhịp thời gian, chế độ chấm `/?review=<submission>` (`RV`), dải tiết học (`LIVE`), góp ý.
   Sự kiện: `jbl:auth` (đăng nhập xong), `jbl:save` (notebook đổi, từ `save()`), `jbl:run` (kết thúc lượt chạy).
-- `admin.html`/`admin.css`/`admin.js` – khu giáo viên `/admin` (+ rewrite `/teacher`), chỉ tiếng Việt: bài học, sa bàn, giáo viên.
+- `admin.html`/`admin.css`/`admin.js` – trang Giáo viên `/admin` (+ rewrite `/teacher`), chỉ tiếng Việt: bài học, sa bàn, giáo viên.
   `teacher.js` – lớp học (tab Học sinh, Giao bài, Tiến độ & chấm bài, Tiết học) + Google Classroom; hook vào admin qua `TEACHER_TABS`, `CLASS_SUBTABS`, `VIEWS`.
 - `api/` – Vercel Functions Node CommonJS. **Gói Hobby tối đa 12 function**: gom endpoint mới vào function có sẵn, định tuyến bằng `?a=`.
   - `_lib.js` lưu trữ nội dung GitHub (`GITHUB_TOKEN`, `GITHUB_DATA_REPO`) hoặc `JBL_DATA_DIR`; phiên `jbl_s` ký HMAC (`AUTH_SECRET`);
@@ -36,7 +36,7 @@ Hai bánh chủ động ở giữa, cách nhau 17 cm, bánh Ø 6.5 cm, động c
 Hằng số ở `RB` trong `app.js`; mô hình 3D ở `buildRobot()`.
 
 ## Quy ước
-- Song ngữ trang học: mọi chữ mới thêm key vào cả `I18N.vi` và `I18N.en`, dùng `t("key")`. Bài mẫu mới thêm cả `LESSONS_EN`. Khu giáo viên chỉ tiếng Việt.
+- Song ngữ trang học: mọi chữ mới thêm key vào cả `I18N.vi` và `I18N.en`, dùng `t("key")`. Bài mẫu mới thêm cả `LESSONS_EN`. Trang Giáo viên chỉ tiếng Việt.
 - Không chèn HTML chưa qua `esc()` vào `innerHTML`. **Không dùng thuộc tính `style="..."` trong HTML** (CSP chặn) – dùng class,
   hoặc `data-css` rồi `applyCss()`, hoặc gán `element.style` bằng JS.
 - Tên class dễ trùng giữa `app.css` và phần mới: `.lbl` (nhãn linh kiện, position absolute), `.hint`, `.bar`, `.meta` – đặt tên khác (`.bar-lbl`, `.a-hint`…).
