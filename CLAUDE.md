@@ -3,7 +3,7 @@
 Trang web (không build) dạy lập trình JetBot ROS AI Kit: notebook Python kiểu Jupyter bên trái, sa bàn 3D mô phỏng
 robot bên phải, cộng khu giáo viên (lớp, giao bài, tiến độ, chấm điểm, Google Classroom).
 Người dùng: giáo viên STEM-Robotics THPT FPT Cần Thơ và học sinh. Triển khai: Vercel tự deploy khi push `main`.
-Giao tiếp với chủ dự án bằng tiếng Việt. Chủ dự án hay gửi yêu cầu cải tiến dán từ nút "Sao chép yêu cầu cho Claude" (tab Phản hồi).
+Giao tiếp với chủ dự án bằng tiếng Việt. Góp ý của học sinh thu riêng bên ngoài (không có trong app).
 
 ## Cấu trúc
 - `index.html` – markup trang học. Chữ hiển thị gắn `data-i18n`, `data-i18n-title`, `data-i18n-aria`, `data-i18n-html`.
@@ -17,7 +17,7 @@ Giao tiếp với chủ dự án bằng tiếng Việt. Chủ dự án hay gửi
   gửi lượt chạy + nhịp thời gian, chế độ chấm `/?review=<submission>` (`RV`), dải tiết học (`LIVE`), góp ý.
   Sự kiện: `jbl:auth` (đăng nhập xong), `jbl:save` (notebook đổi, từ `save()`), `jbl:run` (kết thúc lượt chạy).
 - `admin.html`/`admin.css`/`admin.js` – khu giáo viên `/admin` (+ rewrite `/teacher`), chỉ tiếng Việt: bài học, sa bàn, giáo viên.
-  `teacher.js` – lớp học (tab Học sinh, Giao bài, Tiến độ & chấm bài, Tiết học, Phản hồi) + Google Classroom; hook vào admin qua `TEACHER_TABS`, `CLASS_SUBTABS`, `VIEWS`.
+  `teacher.js` – lớp học (tab Học sinh, Giao bài, Tiến độ & chấm bài, Tiết học) + Google Classroom; hook vào admin qua `TEACHER_TABS`, `CLASS_SUBTABS`, `VIEWS`.
 - `api/` – Vercel Functions Node CommonJS. **Gói Hobby tối đa 12 function**: gom endpoint mới vào function có sẵn, định tuyến bằng `?a=`.
   - `_lib.js` lưu trữ nội dung GitHub (`GITHUB_TOKEN`, `GITHUB_DATA_REPO`) hoặc `JBL_DATA_DIR`; phiên `jbl_s` ký HMAC (`AUTH_SECRET`);
     `currentUser` đọc lại vai trò từ CSDL; `requireRole`; mã hoá token (`TOKEN_ENC_KEY`).
@@ -26,7 +26,7 @@ Giao tiếp với chủ dự án bằng tiếng Việt. Chủ dự án hay gửi
   - `auth.js` Google OAuth (PKCE, state cookie `jbl_oa`), mật khẩu admin dự phòng, `me`, `logout`, `dev` (chỉ localhost + `JBL_DEV_LOGIN=1`).
   - `content.js` content.json (bài học: `level`, `kind`, `criteria`; sa bàn) – admin + giáo viên ghi. `asset.js` ảnh.
   - `class.js` mọi thứ lớp học: teachers, classes, members, assignments, my/sub/save/submit, run/beat, progress, review/grade, verify,
-    live/my_live, feedback, gc_* (Classroom). Giáo viên chỉ thao tác lớp của mình (`ownClass`), học sinh chỉ bài lớp mình (`myAssignment`).
+    live/my_live, gc_* (Classroom). Giáo viên chỉ thao tác lớp của mình (`ownClass`), học sinh chỉ bài lớp mình (`myAssignment`).
 - Vai trò: `admin` = email trong `ADMIN_EMAILS` (không lưu CSDL), `teacher` do admin cấp, `student` mặc định.
 - `vendor/` – Three.js 0.128.0, OrbitControls, Skulpt 1.2.0. `vercel.json` – CSP, cache, rewrite `/teacher`.
 

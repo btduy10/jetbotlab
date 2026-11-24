@@ -73,24 +73,12 @@ function renderAsBar(){
   el.innerHTML = `<span class="bar-lbl">${esc(t("asLabel"))}</span><b>${esc(a.title)}</b><span class="muted">${esc(a.cls)}${a.due ? " · " + esc(t("asDue")) + " " + esc(fmtWhen(a.due)) : ""}</span>`
     + `<span class="st ${cls}">${esc(label)}</span>${a.completed ? `<span class="st done">✓ ${esc(t("asCompleted"))}</span>` : ""}${a.total !== null && a.total !== undefined ? `<span class="st sub">${esc(t("asScore"))} ${a.total}/10</span>` : ""}`
     + `<span class="grow"></span><span class="saved">${esc(AS.saving ? t("asSaving") : AS.failed ? t("asSaveFail") : AS.savedAt ? t("asSavedAt").replace("{t}", AS.savedAt) : "")}</span>`
-    + `<button class="go" id="asSubmit">${esc(t(a.status === "submitted" ? "asResubmit" : "asSubmit"))}</button><button id="asRobot" title="${attr(t("asRobot"))}">.ipynb</button><button id="asFb">${esc(t("fbBtn"))}</button><button id="asExit">${esc(t("asExit"))}</button>`
-    + (a.comment ? `<p class="cmt"><b>${esc(t("asComment"))}:</b> ${esc(a.comment)}</p>` : "")
-    + (AS.fbOpen ? `<div class="fbform"><b>${esc(t("fbTitle"))}</b><span class="starpick">${[1, 2, 3, 4, 5].map(n => `<button data-star="${n}" class="${n <= (AS.fbStar || 0) ? "on" : ""}" aria-label="${n}">★</button>`).join("")}</span>
-      <textarea id="fbText" rows="2" maxlength="2000" placeholder="${attr(t("fbPh"))}"></textarea><button class="go" id="fbSend">${esc(t("fbSend"))}</button></div>` : "");
+    + `<button class="go" id="asSubmit">${esc(t(a.status === "submitted" ? "asResubmit" : "asSubmit"))}</button><button id="asRobot" title="${attr(t("asRobot"))}">.ipynb</button><button id="asExit">${esc(t("asExit"))}</button>`
+    + (a.comment ? `<p class="cmt"><b>${esc(t("asComment"))}:</b> ${esc(a.comment)}</p>` : "");
   el.hidden = false;
   $("#asSubmit").onclick = async () => { if (confirm(t("asSubmitConfirm"))) await saveAssignment(true); };
   $("#asExit").onclick = async () => { await flushAssignment(); leaveAssignment(); };
   $("#asRobot").onclick = () => saveFile();
-  $("#asFb").onclick = () => { AS.fbOpen = !AS.fbOpen; renderAsBar(); };
-  if (AS.fbOpen){
-    const keep = AS.fbDraft || ""; $("#fbText").value = keep; $("#fbText").oninput = e => AS.fbDraft = e.target.value;
-    el.querySelectorAll("[data-star]").forEach(b => b.onclick = () => { AS.fbStar = +b.dataset.star; renderAsBar(); });
-    $("#fbSend").onclick = async () => {
-      if (!AS.fbStar) return toast(t("fbNeedStar"));
-      try { await api("/api/class?a=feedback", { method: "POST", body: JSON.stringify({ lesson: a.lesson, assignment: a.id, rating: AS.fbStar, text: $("#fbText").value }) });
-        AS.fbOpen = false; AS.fbStar = 0; AS.fbDraft = ""; toast(t("fbThanks")); renderAsBar(); } catch (e){ toast(e.message); }
-    };
-  }
 }
 async function saveAssignment(final){
   const a = AS.cur; if (!a) return;

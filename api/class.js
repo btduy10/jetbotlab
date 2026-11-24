@@ -451,27 +451,6 @@ ACTIONS.verify = { POST: async (req, res) => {
   await q("UPDATE submissions SET robot_verified = $2 WHERE id = $1", [sid, b.value === true]); send(res, 200, { ok: true });
 } };
 
-// ---------- phản hồi / khảo sát của học sinh ----------
-ACTIONS.feedback = {
-  POST: async (req, res) => {
-    const u = await needUser(req), b = await readJsonBody(req, 8192), lesson = str(b.lesson, 60);
-    if (!LESSON_ID.test(lesson)) throw new HttpError(400, "Bài học không hợp lệ");
-    const rating = Math.round(Number(b.rating)); if (!(rating >= 1 && rating <= 5)) throw new HttpError(400, "Hãy chọn từ 1 đến 5 sao");
-    const recent = await q("SELECT count(*) AS n FROM feedback WHERE user_id = $1 AND created_at > now() - interval '1 hour'", [u.id]);
-    if (N(recent[0].n) >= 20) throw new HttpError(429, "Em đã gửi nhiều góp ý, hãy thử lại sau");
-    let classId = null;
-    if (b.assignment){ const a = await myAssignment(u, intId(b.assignment)); classId = N((await q("SELECT class_id FROM assignments WHERE id = $1", [N(a.id)]))[0].class_id); }
-    await q("INSERT INTO feedback (user_id, class_id, lesson_id, rating, text) VALUES ($1, $2, $3, $4, $5)", [u.id, classId, lesson, rating, str(b.text, 2000)]);
-    send(res, 200, { ok: true });
-  },
-  GET: async (req, res) => {
-    const u = await needTeacher(req), id = intId(query(req).get("class")); await ownClass(u, id);
-    const rows = await q(`SELECT f.lesson_id, f.rating, f.text, f.created_at, COALESCE(NULLIF(m.name, ''), us.name, us.email) AS who
-      FROM feedback f JOIN class_members m ON m.class_id = $1 AND m.user_id = f.user_id LEFT JOIN users us ON us.id = f.user_id
-      WHERE f.class_id = $1 OR f.class_id IS NULL ORDER BY f.created_at DESC LIMIT 500`, [id]);
-    send(res, 200, { feedback: rows });
-  }
-};
 
 module.exports = handle(async (req, res) => {
   const a = query(req).get("a"), h = ACTIONS[a] && ACTIONS[a][req.method];

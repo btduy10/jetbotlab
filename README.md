@@ -2,13 +2,13 @@
 
 Notebook Python kiểu Jupyter để học lập trình JetBot ROS AI Kit trên sa bàn 3D, kèm **khu giáo viên**:
 soạn bài/thử thách có tiêu chí, quản lý lớp (liên kết Google Classroom), giao bài theo tuần/tiết, theo dõi tiến độ,
-xem code và chấm theo tiêu chí, tổ chức tiết học luân phiên robot thật, thu phản hồi học sinh.
+xem code và chấm theo tiêu chí, tổ chức tiết học luân phiên robot thật.
 Python chạy trong trình duyệt (Skulpt 1.2.0), đồ hoạ Three.js r128. Trang không cần build.
 
 ## Cấu trúc
 - `index.html`, `app.css`, `app.js` – trang học (lab ảo); `student.js` – tài khoản, bài được giao, tự lưu, nộp bài, chấm bài trong lab
 - `admin.html`, `admin.css`, `admin.js` – khu giáo viên `/admin` (cũng mở được bằng `/teacher`): bài học, sa bàn, giáo viên;
-  `teacher.js` – lớp học, học sinh, giao bài, tiến độ, tiết học, phản hồi, Google Classroom
+  `teacher.js` – lớp học, học sinh, giao bài, tiến độ, tiết học, Google Classroom
 - `api/` – Vercel Functions (Node): `auth.js` (Google OAuth, phiên), `content.js` (bài học + sa bàn), `asset.js` (ảnh),
   `class.js` (mọi thứ về lớp học); `_lib.js`, `_db.js`, `_schema.js` dùng chung (không thành endpoint)
 - `lessons/` – ảnh của bài có sẵn; `vendor/` – thư viện tự lưu (không dùng CDN)
@@ -17,7 +17,7 @@ Python chạy trong trình duyệt (Skulpt 1.2.0), đồ hoạ Three.js r128. Tr
 | Loại | Nơi lưu |
 |---|---|
 | Bài học, thử thách, sa bàn, ảnh | repo GitHub riêng (mặc định `btduy10/jetbotlab-data`): `content.json` + `assets/` |
-| Tài khoản, lớp, học sinh, giao bài, bài làm, lượt chạy, điểm, phản hồi, tiết học | **Neon Postgres** (Vercel → Storage) |
+| Tài khoản, lớp, học sinh, giao bài, bài làm, lượt chạy, điểm, tiết học | **Neon Postgres** (Vercel → Storage) |
 | Notebook học tự do (chưa đăng nhập) | trình duyệt của từng máy |
 
 ## Cấu hình một lần (chủ dự án)
@@ -75,8 +75,6 @@ tab **Giáo viên** → **Khởi tạo / cập nhật CSDL**. Bấm lại nút n
    cờ *Cần hỗ trợ* / *Có thể nâng cấp độ*, tải CSV. Bấm vào ô để mở code của em đó **trong lab ảo**, chạy lại,
    chấm 3 tiêu chí (có gợi ý điểm), nhận xét, *Trả điểm về Classroom*.
 6. **Tiết học**: đặt thứ tự nhóm + số phút → *Bắt đầu luân phiên*; học sinh thấy nhóm nào đang ở robot thật.
-7. **Phản hồi**: xem sao + góp ý của học sinh → *Sao chép yêu cầu cho Claude* → dán vào Claude Code để cải tiến
-   → đẩy lên GitHub → Vercel tự cập nhật.
 
 ### Dùng không cần API Classroom (thủ công)
 Khi chưa kết nối được Google Classroom (Google chưa duyệt, trường không cho cấp quyền…), mọi việc vẫn làm được:

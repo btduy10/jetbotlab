@@ -310,29 +310,3 @@ $("#lvNext").onclick = () => {
 };
 $("#lvStop").onclick = () => { if (confirm("Kết thúc tiết học? Học sinh sẽ không còn thấy lịch luân phiên.")) saveLive({ on: false, groups: lvGroups(), minutes: +$("#lvMinutes").value }); };
 
-/* ---------- phản hồi của học sinh ---------- */
-const FB = { list: [] };
-window.CLASS_SUBTABS.feedback = loadFeedback;
-async function loadFeedback(){
-  const el = $("#fbList");
-  try { FB.list = (await api("/api/class?a=feedback&class=" + TC.cls.id)).feedback; } catch (e){ el.innerHTML = `<div class="empty">${esc(e.message)}</div>`; return; }
-  if (!FB.list.length){ el.innerHTML = '<div class="empty">Chưa có góp ý nào từ học sinh lớp này.</div>'; return; }
-  const by = new Map(); for (const f of FB.list){ if (!by.has(f.lesson_id)) by.set(f.lesson_id, []); by.get(f.lesson_id).push(f); }
-  el.innerHTML = [...by].map(([lid, fs]) => { const avg = fs.reduce((x, f) => x + f.rating, 0)/fs.length;
-    return `<div class="card fb"><div class="fbh"><b>${esc(lessonTitle(lid))}</b><span class="stars">${"★".repeat(Math.round(avg))}${"☆".repeat(5 - Math.round(avg))}</span><span class="muted">${avg.toFixed(1)}/5 · ${fs.length} lượt</span></div>
-      <ul>${fs.filter(f => f.text).map(f => `<li><span class="stars sm">${"★".repeat(f.rating)}</span> ${esc(f.text)} <small class="muted">— ${esc(f.who || "")}, ${fmtDate(f.created_at)}</small></li>`).join("") || '<li class="muted">(chỉ chấm sao, không có lời góp ý)</li>'}</ul></div>`; }).join("");
-}
-$("#fbRefresh").onclick = loadFeedback;
-$("#fbCopy").onclick = async () => {
-  if (!FB.list.length) return toast("Chưa có góp ý để sao chép");
-  const by = new Map(); for (const f of FB.list){ if (!by.has(f.lesson_id)) by.set(f.lesson_id, []); by.get(f.lesson_id).push(f); }
-  const lines = [`Phản hồi của học sinh lớp "${TC.cls.name}" về JetBot Lab (${location.origin}):`];
-  for (const [lid, fs] of by){
-    const avg = fs.reduce((x, f) => x + f.rating, 0)/fs.length;
-    lines.push(`\n- Bài "${lessonTitle(lid)}" (mã ${lid}): trung bình ${avg.toFixed(1)}/5 sao, ${fs.length} lượt.`);
-    for (const f of fs.filter(f => f.text).slice(0, 25)) lines.push(`  • (${f.rating}★) ${f.text.replace(/\s+/g, " ")}`);
-  }
-  lines.push("\nYêu cầu: dựa trên các góp ý trên, hãy đề xuất rồi thực hiện cải tiến cho JetBot Lab (bài học, sa bàn, thử thách hoặc tính năng). Ưu tiên vấn đề được nhiều học sinh nhắc tới; giữ quy ước trong CLAUDE.md; thử trên trình duyệt có CSP trước khi commit.");
-  const text = lines.join("\n");
-  try { await navigator.clipboard.writeText(text); toast("Đã sao chép, dán vào Claude Code để cải tiến"); } catch (e){ prompt("Sao chép đoạn sau", text); }
-};

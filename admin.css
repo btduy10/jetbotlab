@@ -129,10 +129,5 @@ label.invalid input,label.invalid select{border-color:var(--err);background:colo
 .liveboard .clock{font:700 34px var(--f-code);margin:2px 0 6px}
 .liveboard .clock.warn{color:var(--err)}
 #liveTable{margin-top:8px}
-.card.fb{margin-bottom:10px}
-.fbh{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.stars{color:#e8a10c;letter-spacing:1px}
-.stars.sm{font-size:11px}
-.card.fb ul{margin:8px 0 0;padding-left:18px;display:grid;gap:4px;font-size:13px}
 .legal-note{margin:16px 0 0;font-size:12.5px;color:var(--muted)}
 .legal-note a{color:var(--muted)}
