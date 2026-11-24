@@ -19,9 +19,23 @@ async function conn(){
   }
   return _q;
 }
-const q = async (text, params) => (await conn())(text, params);
+const raw = async (text, params) => (await conn())(text, params);
 
 // Tạo / cập nhật bảng. Mỗi lệnh chạy riêng vì Neon HTTP chỉ nhận một lệnh mỗi lần.
-async function migrate(){ for (const s of SCHEMA) await q(s); return SCHEMA.length; }
+async function migrate(){ for (const s of SCHEMA) await raw(s); return SCHEMA.length; }
+
+// CSDL mới (chưa có bảng) hoặc thiếu cột của bản cập nhật: tự chạy migrate một lần rồi thử lại.
+// Tránh vòng lặp "phải đăng nhập mới khởi tạo được CSDL, mà đăng nhập lại cần CSDL".
+const MISSING = new Set(["42P01", "42703"]); // undefined_table, undefined_column
+let autoMig = null;
+async function q(text, params){
+  try { return await raw(text, params); }
+  catch (e){
+    if (!e || !MISSING.has(e.code) || autoMig === "done") throw e;
+    autoMig = autoMig || migrate();
+    try { await autoMig; } finally { autoMig = "done"; }
+    return raw(text, params);
+  }
+}
 
 module.exports = { q, migrate };
