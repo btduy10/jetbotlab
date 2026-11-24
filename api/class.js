@@ -297,10 +297,13 @@ async function gcToken(u){
   }
   return j.access_token;
 }
-async function gc(token, method, path, body){
+async function gc(token, method, path, body, step){
   const r = await fetch("https://classroom.googleapis.com/v1/" + path, { method, headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new HttpError(r.status === 404 ? 404 : r.status === 403 ? 403 : 502, "Google Classroom: " + ((j.error && j.error.message) || "lỗi " + r.status));
+  if (!r.ok){
+    const e = new HttpError(r.status === 404 ? 404 : r.status === 403 ? 403 : 502, "Google Classroom" + (step ? " (" + step + ")" : "") + ": " + ((j.error && j.error.message) || "lỗi " + r.status));
+    e.gstatus = j.error && j.error.status; throw e;
+  }
   return j;
 }
 const enc = encodeURIComponent;
@@ -385,12 +388,16 @@ ACTIONS.gc_post = { POST: async (req, res) => {
   send(res, 200, { ok: true, link: cw.alternateLink || null, warn });
 } };
 // Classroom chỉ cho ứng dụng chấm bài tập do chính ứng dụng tạo (gc_post).
+// Ghi điểm rồi "trả bài". Nếu Classroom không cho trả (thường do em chưa bấm Nộp trên Classroom), điểm vẫn được ghi:
+// trả về returned = false để báo giáo viên bấm "Trả bài" trong Classroom, thay vì báo lỗi cả thao tác.
 async function pushOne(token, courseId, cwId, email, total){
-  const subs = await gc(token, "GET", `courses/${enc(courseId)}/courseWork/${enc(cwId)}/studentSubmissions?userId=${enc(email)}`);
+  const subs = await gc(token, "GET", `courses/${enc(courseId)}/courseWork/${enc(cwId)}/studentSubmissions?userId=${enc(email)}`, null, "tìm bài của học sinh");
   const s = (subs.studentSubmissions || [])[0]; if (!s) throw new HttpError(404, "Học sinh không có trong khoá học Classroom");
   const base = `courses/${enc(courseId)}/courseWork/${enc(cwId)}/studentSubmissions/${enc(s.id)}`;
-  await gc(token, "PATCH", base + "?updateMask=assignedGrade,draftGrade", { assignedGrade: total, draftGrade: total });
-  if (s.state !== "RETURNED") await gc(token, "POST", base + ":return", {});
+  await gc(token, "PATCH", base + "?updateMask=assignedGrade,draftGrade", { assignedGrade: total, draftGrade: total }, "ghi điểm");
+  if (s.state === "RETURNED") return { returned: true, state: s.state };
+  try { await gc(token, "POST", base + ":return", {}, "trả bài"); return { returned: true, state: s.state }; }
+  catch (e){ if (e.gstatus === "FAILED_PRECONDITION") return { returned: false, state: s.state }; throw e; }
 }
 async function gradedRows(where, params){
   return q(`SELECT s.id, us.email, g.total, a.gc_coursework_id, c.gc_course_id, a.class_id FROM grades g JOIN submissions s ON s.id = g.submission_id
@@ -401,20 +408,20 @@ ACTIONS.gc_grade = { POST: async (req, res) => {
   const r = (await gradedRows("s.id = $1", [sid]))[0]; if (!r) throw new HttpError(400, "Bài này chưa được chấm");
   await ownClass(u, N(r.class_id));
   if (!r.gc_coursework_id) throw new HttpError(400, "Bài được giao chưa đăng lên Google Classroom (bấm “Đăng lên Classroom” ở tab Giao bài)");
-  await pushOne(await gcToken(u), r.gc_course_id, r.gc_coursework_id, r.email, Number(r.total));
+  const p = await pushOne(await gcToken(u), r.gc_course_id, r.gc_coursework_id, r.email, Number(r.total));
   await q("UPDATE grades SET pushed_gc_at = now() WHERE submission_id = $1", [sid]);
-  send(res, 200, { ok: true });
+  send(res, 200, { ok: true, returned: p.returned });
 } };
 ACTIONS.gc_grade_all = { POST: async (req, res) => {
   const u = await needTeacher(req), b = await readJsonBody(req, 1024), id = intId(b.assignment); await ownAssignment(u, id);
   const rows = await gradedRows("s.assignment_id = $1", [id]); if (!rows.length) return send(res, 200, { ok: true, pushed: 0, failed: [] });
   if (!rows[0].gc_coursework_id) throw new HttpError(400, "Bài được giao chưa đăng lên Google Classroom");
-  const token = await gcToken(u), failed = []; let pushed = 0;
+  const token = await gcToken(u), failed = []; let pushed = 0, notReturned = 0;
   for (const r of rows){
-    try { await pushOne(token, r.gc_course_id, r.gc_coursework_id, r.email, Number(r.total)); await q("UPDATE grades SET pushed_gc_at = now() WHERE submission_id = $1", [N(r.id)]); pushed++; }
+    try { const p = await pushOne(token, r.gc_course_id, r.gc_coursework_id, r.email, Number(r.total)); await q("UPDATE grades SET pushed_gc_at = now() WHERE submission_id = $1", [N(r.id)]); pushed++; if (!p.returned) notReturned++; }
     catch (e){ failed.push({ email: r.email, error: e.message }); }
   }
-  send(res, 200, { ok: true, pushed, failed });
+  send(res, 200, { ok: true, pushed, notReturned, failed });
 } };
 
 // ---------- tiết học trực tiếp: luân phiên nhóm dùng robot thật ----------

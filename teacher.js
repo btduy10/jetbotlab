@@ -248,7 +248,7 @@ $("#assignList").addEventListener("click", async e => {
   if (b.dataset.a === "gcpost"){ try { await api("/api/class?a=gc_post", { method: "POST", body: JSON.stringify({ assignment: id }) }); toast("Đã đăng lên Classroom"); loadAssignments(); } catch (x){ toast(x.message); } return; }
   if (b.dataset.a === "gcgrade"){
     if (!confirm("Trả điểm các bài đã chấm của bài này về Google Classroom?")) return;
-    try { const j = await api("/api/class?a=gc_grade_all", { method: "POST", body: JSON.stringify({ assignment: id }) }); toast(`Đã trả ${j.pushed} điểm${j.failed.length ? `, lỗi ${j.failed.length}: ${j.failed[0].email} – ${j.failed[0].error}` : ""}`); }
+    try { const j = await api("/api/class?a=gc_grade_all", { method: "POST", body: JSON.stringify({ assignment: id }) }); toast(`Đã ghi ${j.pushed} điểm vào Classroom${j.notReturned ? ` (${j.notReturned} em chưa nộp trên Classroom: vào Classroom bấm “Trả bài” để em thấy điểm)` : ""}${j.failed.length ? `, lỗi ${j.failed.length}: ${j.failed[0].email} – ${j.failed[0].error}` : ""}`); }
     catch (x){ toast(x.message); } return;
   }
   if (b.dataset.a === "grades"){ copyGrades(id); return; }
