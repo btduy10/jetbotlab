@@ -60,7 +60,7 @@ async function openAssignment(id){
   const a = j.assignment, s = j.submission, cells = s && s.notebook ? sanitizeCells(s.notebook) : null;
   if (!openLesson(a.lesson_id, cells && cells.length ? cells : null)) return toast(t("asNoLesson"));
   const L = findLesson(a.lesson_id);
-  AS.cur = { id: a.id, lesson: a.lesson_id, title: a.title || (L ? lessonIn(L, LANG).title : a.lesson_id), cls: a.class_name, due: a.due_at,
+  AS.cur = { id: a.id, gc: !!a.gc, lesson: a.lesson_id, title: a.title || (L ? lessonIn(L, LANG).title : a.lesson_id), cls: a.class_name, due: a.due_at,
     status: s ? s.status : null, submitted_at: s ? s.submitted_at : null, completed: s ? s.completed : false, total: s ? s.total : null, comment: s ? s.comment : "" };
   AS.lastSaved = JSON.stringify(nbNow()); AS.savedAt = null; AS.failed = false;
   renderAsBar(); if (innerWidth < 900) closeDrawer();
@@ -76,7 +76,7 @@ function renderAsBar(){
     + `<button class="go" id="asSubmit">${esc(t(a.status === "submitted" ? "asResubmit" : "asSubmit"))}</button><button id="asRobot" title="${attr(t("asRobot"))}">.ipynb</button><button id="asExit">${esc(t("asExit"))}</button>`
     + (a.comment ? `<p class="cmt"><b>${esc(t("asComment"))}:</b> ${esc(a.comment)}</p>` : "");
   el.hidden = false;
-  $("#asSubmit").onclick = async () => { if (confirm(t("asSubmitConfirm"))) await saveAssignment(true); };
+  $("#asSubmit").onclick = async () => { if (confirm(t(a.gc && !(ACC.me && ACC.me.turnin) ? "asSubmitConfirmGc" : "asSubmitConfirm"))) await saveAssignment(true); };
   $("#asExit").onclick = async () => { await flushAssignment(); leaveAssignment(); };
   $("#asRobot").onclick = () => saveFile();
 }
@@ -90,9 +90,20 @@ async function saveAssignment(final){
     const j = await api("/api/class?a=" + (final ? "submit" : "save"), { method: "POST", body: JSON.stringify({ assignment: a.id, notebook: nb }) });
     AS.lastSaved = js; AS.failed = false; AS.savedAt = new Date().toLocaleTimeString(LANG === "en" ? "en-GB" : "vi-VN", { hour: "2-digit", minute: "2-digit" });
     if (AS.cur === a){ a.status = j.submission.status; a.submitted_at = j.submission.submitted_at; }
-    if (final){ toast(t("asSubmittedToast")); loadAssignments(); }
+    if (final){ loadAssignments(); afterSubmitGc(a, j.gc); }
   } catch (e){ AS.failed = true; if (final) toast(e.message); else AS.saveT = setTimeout(() => saveAssignment(false), 30000); }
   AS.saving = false; renderAsBar();
+}
+// Kết quả nộp trên Classroom. Lần đầu: chuyển sang Google để em cho phép, quay về thì tự nộp tiếp.
+function afterSubmitGc(a, gc){
+  if (gc === "need_connect"){
+    toast(t("asGcConnecting"));
+    location.href = "/api/auth?a=google&classroom=student&next=" + encodeURIComponent("/?assignment=" + a.id + "&gcturnin=1");
+    return;
+  }
+  if (gc === "turned_in") toast(t("asSubmittedGc"));
+  else if (gc) toast(t("asSubmittedNoGc") + " " + gc.replace(/^error: /, ""));
+  else toast(t("asSubmittedToast"));
 }
 const flushAssignment = () => AS.cur && JSON.stringify(nbNow()) !== AS.lastSaved ? saveAssignment(false) : Promise.resolve();
 document.addEventListener("jbl:save", () => {
@@ -187,7 +198,17 @@ document.addEventListener("jbl:auth", async () => {
   if (RV.id && !RV.d){ openReview(); return; }
   await loadAssignments();
   if (!ACC.me) leaveAssignment();
-  if (AS.deep){ const id = +AS.deep; AS.deep = null; if (ACC.me) openAssignment(id); else toast(t("asNeedLogin")); }
+  if (AS.deep){
+    const id = +AS.deep, sp = new URLSearchParams(location.search), retry = sp.get("gcturnin") === "1"; AS.deep = null;
+    if (!ACC.me){ toast(t("asNeedLogin")); return; }
+    await openAssignment(id);
+    if (retry){
+      sp.delete("gcturnin"); history.replaceState(null, "", location.pathname + (sp.toString() ? "?" + sp : ""));
+      if (sp.get("login_error")) return;
+      try { const j = await api("/api/class?a=gc_turnin", { method: "POST", body: JSON.stringify({ assignment: id }) });
+        if (j.gc === "need_connect") toast(t("asGcDenied")); else afterSubmitGc(AS.cur || { id }, j.gc); loadMe(); } catch (e){ toast(e.message); }
+    }
+  }
 });
 
 loadMe();

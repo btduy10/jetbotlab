@@ -26,7 +26,7 @@ async function ownAssignment(u, id){
 }
 // Học sinh chỉ mở được bài giao cho lớp mình (và đã tới ngày mở).
 async function myAssignment(u, id){
-  const rows = await q(`SELECT a.id, a.lesson_id, a.title, a.week_label, a.period_label, a.due_at, c.name AS class_name
+  const rows = await q(`SELECT a.id, a.lesson_id, a.title, a.week_label, a.period_label, a.due_at, c.name AS class_name, a.gc_coursework_id, c.gc_course_id
     FROM assignments a JOIN class_members m ON m.class_id = a.class_id JOIN classes c ON c.id = a.class_id
     WHERE a.id = $1 AND m.user_id = $2 AND NOT c.archived AND (a.open_at IS NULL OR a.open_at <= now())`, [id, u.id]);
   if (!rows.length) throw new HttpError(404, "Không tìm thấy bài được giao (hoặc chưa tới ngày mở)");
@@ -187,7 +187,8 @@ ACTIONS.sub = { GET: async (req, res) => {
   const u = await needUser(req), id = intId(query(req).get("assignment")), a = await myAssignment(u, id);
   const s = await q(`SELECT s.notebook, s.status, s.completed, s.runs_count, s.submitted_at, g.total, g.scores, g.comment
     FROM submissions s LEFT JOIN grades g ON g.submission_id = s.id WHERE s.assignment_id = $1 AND s.user_id = $2`, [id, u.id]);
-  send(res, 200, { assignment: { ...a, id: N(a.id) }, submission: s[0] ? { ...s[0], runs_count: N(s[0].runs_count), total: N(s[0].total) } : null });
+  send(res, 200, { assignment: { id: N(a.id), lesson_id: a.lesson_id, title: a.title, week_label: a.week_label, period_label: a.period_label, due_at: a.due_at,
+    class_name: a.class_name, gc: !!(a.gc_coursework_id && a.gc_course_id) }, submission: s[0] ? { ...s[0], runs_count: N(s[0].runs_count), total: N(s[0].total) } : null });
 } };
 async function upsertSubmission(u, id, notebook, submit){
   await myAssignment(u, id);
@@ -205,8 +206,33 @@ ACTIONS.save = { POST: async (req, res) => {
   send(res, 200, { ok: true, submission: await upsertSubmission(u, intId(b.assignment), b.notebook, false) });
 } };
 ACTIONS.submit = { POST: async (req, res) => {
-  const u = await needUser(req), b = await readJsonBody(req, 600000);
-  send(res, 200, { ok: true, submission: await upsertSubmission(u, intId(b.assignment), b.notebook, true) });
+  const u = await needUser(req), b = await readJsonBody(req, 600000), id = intId(b.assignment);
+  const submission = await upsertSubmission(u, id, b.notebook, true);
+  send(res, 200, { ok: true, submission, gc: await turnIn(u, await myAssignment(u, id)) });
+} };
+// Nộp luôn trên Google Classroom bằng quyền của chính học sinh (Google chỉ cho chủ bài nộp).
+// Kết quả: null (bài không đăng Classroom) · "turned_in" · "need_connect" (em chưa cho phép) · "error: …"
+async function turnIn(u, a){
+  if (!a.gc_coursework_id || !a.gc_course_id) return null;
+  const tok = await q("SELECT scopes FROM teacher_tokens WHERE user_id = $1", [u.id]);
+  if (!tok.length || !String(tok[0].scopes || "").includes("classroom.coursework.me")) return "need_connect";
+  try {
+    const token = await gcToken(u), base = `courses/${enc(a.gc_course_id)}/courseWork/${enc(a.gc_coursework_id)}/studentSubmissions`;
+    const s = ((await gc(token, "GET", base + "?userId=me", null, "tìm bài của em")).studentSubmissions || [])[0];
+    if (!s) return "error: Em không có trong khoá học Classroom này";
+    if (s.state !== "TURNED_IN") await gc(token, "POST", `${base}/${enc(s.id)}:turnIn`, {}, "nộp bài");
+    return "turned_in";
+  } catch (e){
+    if (e.status === 409 || (e.status === 403 && /scope|insufficient/i.test(e.message))) return "need_connect";
+    return "error: " + e.message;
+  }
+}
+// Sau khi em cho phép trên Google: nộp lại trên Classroom bài đã nộp ở JetBot Lab.
+ACTIONS.gc_turnin = { POST: async (req, res) => {
+  const u = await needUser(req), b = await readJsonBody(req, 1024), id = intId(b.assignment), a = await myAssignment(u, id);
+  const s = await q("SELECT status FROM submissions WHERE assignment_id = $1 AND user_id = $2", [id, u.id]);
+  if (!s.length || s[0].status !== "submitted") throw new HttpError(400, "Em chưa nộp bài này trên JetBot Lab");
+  send(res, 200, { ok: true, gc: await turnIn(u, a) });
 } };
 
 // ---------- tiến độ: lượt chạy, thời gian làm bài ----------

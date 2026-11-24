@@ -15,6 +15,8 @@ const SCOPE_CLASSROOM = [
   "https://www.googleapis.com/auth/classroom.coursework.students",
   "https://www.googleapis.com/auth/classroom.topics"
 ].join(" ");
+// Học sinh: chỉ xin quyền nộp bài của chính mình, khi em nộp bài được giao có đăng trên Classroom (một lần).
+const SCOPE_TURNIN = "https://www.googleapis.com/auth/classroom.coursework.me";
 
 const redirectUri = req => siteOrigin(req) + "/api/auth?a=callback";
 const safeNext = n => typeof n === "string" && /^\/(?!\/)[\w\-./?=&%#]*$/.test(n) && n.length < 300 ? n : "/";
@@ -47,26 +49,27 @@ module.exports = handle(async (req, res) => {
   if (a === "me" && req.method === "GET"){
     let user = null;
     try { user = await currentUser(req); } catch (e) { if (e.status !== 500) throw e; }
-    let classroom = false;
-    if (user && user.id && (user.role === "teacher" || user.role === "admin")){
-      try { classroom = (await q("SELECT 1 FROM teacher_tokens WHERE user_id = $1", [user.id])).length > 0; } catch (e) {}
+    let classroom = false, turnin = false;
+    if (user && user.id){
+      try { const t = await q("SELECT scopes FROM teacher_tokens WHERE user_id = $1", [user.id]);
+        if (t.length){ turnin = String(t[0].scopes || "").includes("classroom.coursework.me"); classroom = (user.role === "teacher" || user.role === "admin") && String(t[0].scopes || "").includes("classroom.courses"); } } catch (e) {}
     }
-    return send(res, 200, { user: user && { id: user.id, email: user.email, name: user.name, role: user.role, password: !!user.password, classroom },
+    return send(res, 200, { user: user && { id: user.id, email: user.email, name: user.name, role: user.role, password: !!user.password, classroom, turnin },
       google: !!(env("GOOGLE_CLIENT_ID") && env("GOOGLE_CLIENT_SECRET")) });
   }
 
   if (a === "google" && req.method === "GET"){
     const { id } = clientConf(), state = b64u(crypto.randomBytes(18)), verifier = b64u(crypto.randomBytes(32));
-    const classroom = p.get("classroom") === "1";
+    const mode = p.get("classroom") === "1" ? "t" : p.get("classroom") === "student" ? "s" : "", classroom = !!mode;
     const params = new URLSearchParams({
       client_id: id, redirect_uri: redirectUri(req), response_type: "code", state,
-      scope: classroom ? SCOPE_BASIC + " " + SCOPE_CLASSROOM : SCOPE_BASIC,
+      scope: mode === "t" ? SCOPE_BASIC + " " + SCOPE_CLASSROOM : mode === "s" ? SCOPE_BASIC + " " + SCOPE_TURNIN : SCOPE_BASIC,
       code_challenge: b64u(crypto.createHash("sha256").update(verifier).digest()), code_challenge_method: "S256",
       prompt: classroom ? "consent" : "select_account"
     });
     if (classroom){ params.set("access_type", "offline"); params.set("include_granted_scopes", "true"); }
     // Lax: cookie này phải đi kèm lần Google chuyển hướng quay về
-    const st = sealed({ s: state, v: verifier, n: safeNext(p.get("next")), c: classroom, x: Date.now() + 10*60e3 });
+    const st = sealed({ s: state, v: verifier, n: safeNext(p.get("next")), c: mode, x: Date.now() + 10*60e3 });
     return redirect(res, "https://accounts.google.com/o/oauth2/v2/auth?" + params, { "Set-Cookie": cookieStr(req, OA, st, 600, "Lax") });
   }
 
@@ -87,7 +90,7 @@ module.exports = handle(async (req, res) => {
     const u = await upsertUser({ email: c.email, name: String(c.name || "").slice(0, 120), sub: String(c.sub) });
     if (st.c){
       const role = effectiveRole(u.email, u.role);
-      if (role !== "teacher" && role !== "admin") return fail("Chỉ giáo viên mới kết nối Google Classroom");
+      if (st.c !== "s" && role !== "teacher" && role !== "admin") return fail("Chỉ giáo viên mới kết nối Google Classroom");
       if (tok.refresh_token) await q(`INSERT INTO teacher_tokens (user_id, refresh_enc, scopes, updated_at) VALUES ($1, $2, $3, now())
         ON CONFLICT (user_id) DO UPDATE SET refresh_enc = EXCLUDED.refresh_enc, scopes = EXCLUDED.scopes, updated_at = now()`, [u.id, encrypt(tok.refresh_token), String(tok.scope || "")]);
     }

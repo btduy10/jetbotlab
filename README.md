@@ -35,8 +35,8 @@ Vercel tự thêm biến `DATABASE_URL`.
    *App domain*: Application home page `https://jetbotlab.vercel.app` · Privacy policy `https://jetbotlab.vercel.app/privacy` ·
    Terms of service `https://jetbotlab.vercel.app/terms` · Authorized domain `jetbotlab.vercel.app`.
    **Không tải logo** (thêm logo buộc Google xét duyệt thương hiệu, mất vài ngày).
-   Scopes: `openid`, `email`, `profile` và 5 scope Classroom: `classroom.courses.readonly`, `classroom.rosters.readonly`,
-   `classroom.profile.emails`, `classroom.coursework.students`, `classroom.topics` (chủ đề bài tập). Chuyển **Publishing status → In production**.
+   Scopes: `openid`, `email`, `profile` và 6 scope Classroom: `classroom.courses.readonly`, `classroom.rosters.readonly`,
+   `classroom.profile.emails`, `classroom.coursework.students`, `classroom.topics` (chủ đề bài tập), `classroom.coursework.me` (học sinh nộp bài). Chuyển **Publishing status → In production**.
 4. **Credentials → Create credentials → OAuth client ID → Web application**:
    *Authorized redirect URIs*: `https://jetbotlab.vercel.app/api/auth?a=callback`
 5. Chép **Client ID** và **Client secret**.
@@ -45,6 +45,10 @@ Vercel tự thêm biến `DATABASE_URL`.
 > *"Google chưa xác minh ứng dụng này"* → bấm *Nâng cao → Tiếp tục*. Ứng dụng chưa xác minh dùng được tối đa 100 tài khoản
 > cho các scope này (đủ cho giáo viên). Học sinh chỉ đăng nhập cơ bản nên **không** gặp cảnh báo. Muốn bỏ cảnh báo:
 > gửi Google xác minh ở mục OAuth consent screen.
+>
+> **Nộp luôn trên Classroom:** khi học sinh bấm *Nộp bài* ở bài có đăng Classroom, lần đầu em được chuyển sang Google
+> để cho phép quyền `classroom.coursework.me` (cũng gặp cảnh báo chưa xác minh, tính vào giới hạn 100 tài khoản), sau đó
+> mọi lần nộp đều tự nộp trên Classroom. Giáo viên trả điểm thì Classroom tự trả bài cho em.
 
 ### 4. Biến môi trường trên Vercel (Settings → Environment Variables)
 | Biến | Giá trị |
