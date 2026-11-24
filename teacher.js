@@ -195,7 +195,7 @@ function fillLessonSelect(){
   if (cur) sel.value = cur;
 }
 async function loadAssignments(){
-  fillLessonSelect();
+  fillLessonSelect(); checkAssign();
   const el = $("#assignList");
   try {
     const list = (await api("/api/class?a=assignments&class=" + TC.cls.id)).assignments;
@@ -208,8 +208,24 @@ async function loadAssignments(){
 }
 $("#asLesson").addEventListener("change", () => { const f = $("#fAssign"); if (!f.elements.title.dataset.touched) f.elements.title.value = lessonTitle($("#asLesson").value); });
 $("#fAssign").elements.title.addEventListener("input", e => e.target.dataset.touched = "1");
+// Kiểm tra form giao bài: báo đỏ dưới ô còn thiếu / sai và khoá nút Giao bài cho tới khi hợp lệ
+function checkAssign(){
+  const f = $("#fAssign"), v = k => f.elements[k].value.trim(), err = {};
+  if (!v("lesson")) err.lesson = "Hãy chọn bài học";
+  if (!v("week")) err.week = "Hãy nhập tuần, VD: Tuần 3";
+  if (!v("period")) err.period = "Hãy nhập tiết học, VD: Tiết 1–2";
+  const op = v("open_at") ? new Date(v("open_at")) : null, due = v("due_at") ? new Date(v("due_at")) : null;
+  if (!due) err.due_at = "Hãy chọn hạn nộp";
+  else if (due <= new Date()) err.due_at = "Hạn nộp phải sau thời điểm hiện tại";
+  else if (op && due <= op) err.due_at = "Hạn nộp phải sau ngày mở";
+  for (const el of f.querySelectorAll(".f-err")){ const k = el.dataset.err; el.textContent = err[k] || ""; el.parentElement.classList.toggle("invalid", !!err[k]); }
+  const n = Object.keys(err).length;
+  $("#asSubmit").disabled = n > 0; $("#asMissing").textContent = n ? `Còn ${n} mục chưa hợp lệ` : "";
+  return n === 0;
+}
+for (const ev of ["input", "change"]) $("#fAssign").addEventListener(ev, checkAssign);
 $("#fAssign").addEventListener("submit", async e => {
-  e.preventDefault(); const f = e.target, v = k => f.elements[k].value;
+  e.preventDefault(); if (!checkAssign()) return; const f = e.target, v = k => f.elements[k].value;
   const body = { class: TC.cls.id, lesson: v("lesson"), title: v("title") || lessonTitle(v("lesson")), week: v("week"), period: v("period"), open_at: fromLocalInput(v("open_at")), due_at: fromLocalInput(v("due_at")) };
   try { const j = await api("/api/class?a=assignments", { method: "POST", body: JSON.stringify(body) }); toast("Đã giao bài");
     if (TC.cls.gc_course_id && f.elements.gcpost.checked){ try { await api("/api/class?a=gc_post", { method: "POST", body: JSON.stringify({ assignment: j.id }) }); toast("Đã giao bài và đăng lên Classroom"); } catch (x){ toast("Đã giao bài, nhưng chưa đăng được lên Classroom: " + x.message); } } f.elements.title.value = ""; delete f.elements.title.dataset.touched; loadAssignments(); if (window.afterAssign) afterAssign(); }

@@ -114,6 +114,12 @@ h3.wk{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--a
 .gcbox{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;margin:6px 0 4px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
 .gcbox .grow{flex:1}
 .gcbox select{min-width:240px}
+/* form bắt buộc */
+.req{color:var(--err);font-weight:700}
+.f-err{color:var(--err);font-weight:500;font-size:12px}
+.f-err:empty{display:none}
+label.invalid input,label.invalid select{border-color:var(--err);background:color-mix(in srgb, var(--err) 4%, var(--panel))}
+#asSubmit:disabled{cursor:not-allowed}
 .gcbox .gc-manual{flex-basis:100%;font-size:12.5px;color:var(--muted);border-top:1px dashed var(--line);padding-top:8px;margin-top:2px}
 .gcbox .gc-manual b{color:var(--fg);font-weight:600}
 /* tiết học, phản hồi */

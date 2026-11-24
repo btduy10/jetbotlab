@@ -78,15 +78,15 @@
       <div id="memberList"></div>
     </div>
     <div class="subpane" data-sub="assign" hidden>
-      <form id="fAssign" class="card grid2">
-        <label class="wide">Bài học / thử thách<select name="lesson" id="asLesson" required></select></label>
+      <form id="fAssign" class="card grid2" novalidate>
+        <label class="wide" data-f="lesson"><span>Bài học / thử thách <b class="req">*</b></span><select name="lesson" id="asLesson" required></select><small class="f-err" data-err="lesson"></small></label>
         <label class="wide">Tên hiển thị cho học sinh<input name="title" maxlength="160" placeholder="Mặc định: tên bài"></label>
-        <label>Tuần<input name="week" maxlength="40" placeholder="VD: Tuần 3"></label>
-        <label>Tiết học<input name="period" maxlength="40" placeholder="VD: Tiết 1–2"></label>
-        <label>Mở từ (để trống = mở ngay)<input name="open_at" type="datetime-local"></label>
-        <label>Hạn nộp<input name="due_at" type="datetime-local"></label>
+        <label data-f="week"><span>Tuần <b class="req">*</b></span><input name="week" maxlength="40" placeholder="VD: Tuần 3" required><small class="f-err" data-err="week"></small></label>
+        <label data-f="period"><span>Tiết học <b class="req">*</b></span><input name="period" maxlength="40" placeholder="VD: Tiết 1–2" required><small class="f-err" data-err="period"></small></label>
+        <label data-f="open_at">Mở từ (để trống = mở ngay)<input name="open_at" type="datetime-local"><small class="f-err" data-err="open_at"></small></label>
+        <label data-f="due_at"><span>Hạn nộp <b class="req">*</b></span><input name="due_at" type="datetime-local" required><small class="f-err" data-err="due_at"></small></label>
         <label class="check wide" id="asGcWrap" hidden><input type="checkbox" name="gcpost" checked> Đăng lên Google Classroom (học sinh nhận thông báo, có link mở bài, điểm trả về được)</label>
-        <div class="wide actions"><button class="btn primary" type="submit">Giao bài</button></div>
+        <div class="wide actions"><button class="btn primary" type="submit" id="asSubmit">Giao bài</button><span class="msg err" id="asMissing"></span></div>
       </form>
       <div id="assignList" class="list"></div>
     </div>
