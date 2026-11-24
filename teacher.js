@@ -43,7 +43,7 @@ async function openClass(id){
 /* ---------- Google Classroom ---------- */
 function renderGc(){
   const el = $("#gcBox"), c = TC.cls;
-  $("#asGcWrap").hidden = !c.gc_course_id;
+  $("#asGcWrap").hidden = !c.gc_course_id; $("#asTopicWrap").hidden = !c.gc_course_id || !$("#fAssign").elements.gcpost.checked;
   if (!ME_USER.classroom){
     el.innerHTML = `<b>Google Classroom</b><span class="muted">Kết nối để nhập danh sách học sinh, đăng bài và trả điểm về Classroom.</span>
       <a class="btn" href="/api/auth?a=google&amp;classroom=1&amp;next=${encodeURIComponent("/admin?tab=classes")}">Kết nối Google Classroom</a><div class="gc-manual">Không kết nối được Classroom? Dùng thủ công: dán danh sách học sinh ở tab <b>Học sinh</b> · bấm <b>Chép link</b> rồi dán vào bài tập Classroom · chấm xong bấm <b>Chép điểm</b> để dán sang Google Sheets / sổ điểm.</div>`;
@@ -195,19 +195,30 @@ function fillLessonSelect(){
   if (cur) sel.value = cur;
 }
 async function loadAssignments(){
-  fillLessonSelect(); checkAssign();
+  fillLessonSelect(); checkAssign(); loadTopics();
   const el = $("#assignList");
   try {
     const list = (await api("/api/class?a=assignments&class=" + TC.cls.id)).assignments;
     if (!list.length){ el.innerHTML = '<div class="empty">Chưa giao bài nào.</div>'; return; }
     const weeks = [...new Set(list.map(a => a.week_label || "Không ghi tuần"))];
     el.innerHTML = weeks.map(w => `<h3 class="wk">${esc(w)}</h3>` + list.filter(a => (a.week_label || "Không ghi tuần") === w).map(a => `<div class="row" data-id="${a.id}"><div></div>
-      <div><b>${esc(a.title || lessonTitle(a.lesson_id))}</b><div class="a-meta">${a.period_label ? esc(a.period_label) + " · " : ""}${esc(lessonTitle(a.lesson_id))}${a.open_at ? " · mở " + fmtDate(a.open_at) : ""}${a.due_at ? " · hạn " + fmtDate(a.due_at) : ""} · ${a.submitted} đã nộp · ${a.completed} hoàn thành${a.gc_coursework_id ? " · đã đăng Classroom" : ""}</div></div>
+      <div><b>${esc(a.title || lessonTitle(a.lesson_id))}</b><div class="a-meta">${a.period_label ? esc(a.period_label) + " · " : ""}${esc(lessonTitle(a.lesson_id))}${a.open_at ? " · mở " + fmtDate(a.open_at) : ""}${a.due_at ? " · hạn " + fmtDate(a.due_at) : ""} · ${a.submitted} đã nộp · ${a.completed} hoàn thành${a.gc_coursework_id ? " · đã đăng Classroom" : ""}${a.gc_topic ? " · chủ đề " + esc(a.gc_topic) : ""}</div></div>
       <div class="acts">${TC.cls.gc_course_id ? (a.gc_coursework_id ? '<button data-a="gcgrade">Trả điểm về Classroom</button>' : '<button data-a="gcpost">Đăng lên Classroom</button>') : ""}<button data-a="link">Chép link</button><button data-a="grades" title="Chép bảng Họ tên · Email · Điểm · Nhận xét để dán vào Google Sheets">Chép điểm</button><button data-a="del" class="danger">Xoá</button></div></div>`).join("")).join("");
   } catch (e){ el.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
 }
 $("#asLesson").addEventListener("change", () => { const f = $("#fAssign"); if (!f.elements.title.dataset.touched) f.elements.title.value = lessonTitle($("#asLesson").value); });
 $("#fAssign").elements.title.addEventListener("input", e => e.target.dataset.touched = "1");
+// Chủ đề Classroom: gợi ý các chủ đề đã có trong khoá học; mặc định lấy theo ô Tuần cho tới khi GV tự sửa
+async function loadTopics(){
+  const dl = $("#gcTopicList"); dl.innerHTML = ""; if (!TC.cls.gc_course_id) return;
+  try { const j = await api("/api/class?a=gc_topics&class=" + TC.cls.id);
+    dl.innerHTML = j.topics.map(n => `<option value="${esc(n)}">`).join("");
+    if (j.needScope) toast("Để chọn Chủ đề Classroom, hãy bấm “Kết nối Google Classroom” lại để cấp thêm quyền");
+  } catch (e){}
+}
+$("#fAssign").elements.topic.addEventListener("input", e => e.target.dataset.touched = "1");
+$("#fAssign").elements.gcpost.addEventListener("change", e => { $("#asTopicWrap").hidden = !e.target.checked; });
+$("#fAssign").elements.week.addEventListener("input", e => { const t = $("#fAssign").elements.topic; if (!t.dataset.touched) t.value = e.target.value.trim(); });
 // Kiểm tra form giao bài: báo đỏ dưới ô còn thiếu / sai và khoá nút Giao bài cho tới khi hợp lệ
 function checkAssign(){
   const f = $("#fAssign"), v = k => f.elements[k].value.trim(), err = {};
@@ -226,9 +237,9 @@ function checkAssign(){
 for (const ev of ["input", "change"]) $("#fAssign").addEventListener(ev, checkAssign);
 $("#fAssign").addEventListener("submit", async e => {
   e.preventDefault(); if (!checkAssign()) return; const f = e.target, v = k => f.elements[k].value;
-  const body = { class: TC.cls.id, lesson: v("lesson"), title: v("title") || lessonTitle(v("lesson")), week: v("week"), period: v("period"), open_at: fromLocalInput(v("open_at")), due_at: fromLocalInput(v("due_at")) };
+  const body = { class: TC.cls.id, lesson: v("lesson"), title: v("title") || lessonTitle(v("lesson")), week: v("week"), period: v("period"), topic: TC.cls.gc_course_id && f.elements.gcpost.checked ? v("topic").trim() : "", open_at: fromLocalInput(v("open_at")), due_at: fromLocalInput(v("due_at")) };
   try { const j = await api("/api/class?a=assignments", { method: "POST", body: JSON.stringify(body) }); toast("Đã giao bài");
-    if (TC.cls.gc_course_id && f.elements.gcpost.checked){ try { await api("/api/class?a=gc_post", { method: "POST", body: JSON.stringify({ assignment: j.id }) }); toast("Đã giao bài và đăng lên Classroom"); } catch (x){ toast("Đã giao bài, nhưng chưa đăng được lên Classroom: " + x.message); } } f.elements.title.value = ""; delete f.elements.title.dataset.touched; loadAssignments(); if (window.afterAssign) afterAssign(); }
+    if (TC.cls.gc_course_id && f.elements.gcpost.checked){ try { const g = await api("/api/class?a=gc_post", { method: "POST", body: JSON.stringify({ assignment: j.id }) }); toast(g.warn || "Đã giao bài và đăng lên Classroom"); loadTopics(); } catch (x){ toast("Đã giao bài, nhưng chưa đăng được lên Classroom: " + x.message); } } f.elements.title.value = ""; delete f.elements.title.dataset.touched; loadAssignments(); if (window.afterAssign) afterAssign(); }
   catch (x){ toast(x.message); }
 });
 $("#assignList").addEventListener("click", async e => {

@@ -35,8 +35,8 @@ Vercel tự thêm biến `DATABASE_URL`.
    *App domain*: Application home page `https://jetbotlab.vercel.app` · Privacy policy `https://jetbotlab.vercel.app/privacy` ·
    Terms of service `https://jetbotlab.vercel.app/terms` · Authorized domain `jetbotlab.vercel.app`.
    **Không tải logo** (thêm logo buộc Google xét duyệt thương hiệu, mất vài ngày).
-   Scopes: `openid`, `email`, `profile` và 4 scope Classroom: `classroom.courses.readonly`, `classroom.rosters.readonly`,
-   `classroom.profile.emails`, `classroom.coursework.students`. Chuyển **Publishing status → In production**.
+   Scopes: `openid`, `email`, `profile` và 5 scope Classroom: `classroom.courses.readonly`, `classroom.rosters.readonly`,
+   `classroom.profile.emails`, `classroom.coursework.students`, `classroom.topics` (chủ đề bài tập). Chuyển **Publishing status → In production**.
 4. **Credentials → Create credentials → OAuth client ID → Web application**:
    *Authorized redirect URIs*: `https://jetbotlab.vercel.app/api/auth?a=callback`
 5. Chép **Client ID** và **Client secret**.

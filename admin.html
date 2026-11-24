@@ -85,6 +85,7 @@
         <label data-f="period"><span>Tiết học <b class="req">*</b></span><input name="period" maxlength="40" placeholder="VD: Tiết 1–2" required><small class="f-err" data-err="period"></small></label>
         <label data-f="open_at">Mở từ (để trống = mở ngay)<input name="open_at" type="datetime-local"><small class="f-err" data-err="open_at"></small></label>
         <label data-f="due_at"><span>Hạn nộp <b class="req">*</b></span><input name="due_at" type="datetime-local" required><small class="f-err" data-err="due_at"></small></label>
+        <label class="wide" id="asTopicWrap" hidden>Chủ đề trên Classroom <small class="muted">(chọn chủ đề có sẵn hoặc gõ tên mới; để trống = không có chủ đề)</small><input name="topic" maxlength="100" list="gcTopicList" placeholder="VD: Tuần 3 – Tránh vật cản" autocomplete="off"><datalist id="gcTopicList"></datalist></label>
         <label class="check wide" id="asGcWrap" hidden><input type="checkbox" name="gcpost" checked> Đăng lên Google Classroom (học sinh nhận thông báo, có link mở bài, điểm trả về được)</label>
         <div class="wide actions"><button class="btn primary" type="submit" id="asSubmit">Giao bài</button><span class="msg err" id="asMissing"></span></div>
       </form>

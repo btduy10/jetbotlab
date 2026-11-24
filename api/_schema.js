@@ -85,6 +85,7 @@ module.exports = [
     created_at TIMESTAMPTZ NOT NULL DEFAULT now())`,
   `ALTER TABLE classes ADD COLUMN IF NOT EXISTS gc_course_name TEXT`,
   `ALTER TABLE assignments ADD COLUMN IF NOT EXISTS gc_link TEXT`,
+  `ALTER TABLE assignments ADD COLUMN IF NOT EXISTS gc_topic TEXT`,
   `CREATE TABLE IF NOT EXISTS live (
     class_id BIGINT PRIMARY KEY REFERENCES classes(id) ON DELETE CASCADE,
     state JSONB NOT NULL,
