@@ -149,3 +149,6 @@ ul.cfg li.bad b{color:var(--err)}
 .upl.ok .st{color:var(--ok);font-weight:600}
 .upl.bad .st{color:var(--err)}
 @media (max-width:720px){ .upl{grid-template-columns:1fr} }
+/* ô chọn tệp của form Tài liệu (app.css ẩn mọi input file của trang học) */
+#fFiles input[type=file],#fShared input[type=file]{display:block;width:100%;font:inherit;font-weight:400;color:var(--fg);padding:10px;border:1.5px dashed color-mix(in srgb, var(--accent) 55%, var(--line));border-radius:var(--r);background:var(--panel-2);cursor:pointer}
+#fFiles input[type=file]::file-selector-button,#fShared input[type=file]::file-selector-button{font:inherit;font-weight:600;margin-right:12px;padding:6px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel);color:var(--fg);cursor:pointer}
