@@ -225,7 +225,7 @@ ACTIONS.my = { GET: async (req, res) => {
     ORDER BY n.created_at DESC LIMIT 10`, [u.id]);
   const classes = await q(`SELECT c.id, c.name FROM class_members m JOIN classes c ON c.id = m.class_id AND NOT c.archived WHERE m.user_id = $1 ORDER BY c.name`, [u.id]);
   send(res, 200, { assignments: rows.map(r => ({ ...r, id: N(r.id), runs_count: N(r.runs_count), total: N(r.total) })),
-    news: news.map(n => ({ ...n, id: N(n.id) })), classes: classes.map(c => ({ id: N(c.id), name: c.name })) });
+    news: news.map(n => ({ ...n, id: N(n.id) })), classes: classes.map(c => ({ id: N(c.id), name: c.name })), materials: await myMaterials(u.id) });
 } };
 const listAttachments = async sid => (await q("SELECT id, name, size, link, created_at FROM attachments WHERE submission_id = $1 ORDER BY id", [sid])).map(a => ({ ...a, id: N(a.id) }));
 ACTIONS.sub = { GET: async (req, res) => {
@@ -372,6 +372,59 @@ ACTIONS.announcements = {
     await ownClass(u, N(r.class_id)); await q("DELETE FROM announcements WHERE id = $1", [id]); send(res, 200, { ok: true });
   }
 };
+
+// ---------- tài liệu giáo viên chia sẻ cho lớp (lưu trên Google Drive của giáo viên) ----------
+const MAX_MATERIAL = 500 * 1024 * 1024;
+const matRow = m => ({ id: N(m.id), name: m.name, size: N(m.size), mime: m.mime, note: m.note, link: m.link, assignment_id: N(m.assignment_id),
+  download: require("./_drive").downloadUrl(m.drive_file_id), created_at: m.created_at });
+async function teacherDrive(u, cls){
+  const D = require("./_drive"), tid = N(cls.teacher_id);
+  if (!(await D.hasDrive(tid))) throw new HttpError(409, tid === u.id ? "Hãy bấm “Kết nối Google Drive” trước khi tải tài liệu lên" : "Giáo viên của lớp chưa kết nối Google Drive");
+  const tu = (await q("SELECT id, email, name FROM users WHERE id = $1", [tid]))[0];
+  return { D, tok: await D.token(tid), teacher: { id: tid, email: tu.email, name: tu.name } };
+}
+async function classForMaterials(u, id){
+  await ownClass(u, id);
+  return (await q("SELECT id, name, teacher_id, drive_folder_id, materials_folder_id FROM classes WHERE id = $1", [id]))[0];
+}
+ACTIONS.materials = {
+  GET: async (req, res) => {
+    const u = await needTeacher(req), id = intId(query(req).get("class")); await ownClass(u, id);
+    send(res, 200, { materials: (await q("SELECT * FROM materials WHERE class_id = $1 ORDER BY created_at DESC", [id])).map(matRow) });
+  },
+  DELETE: async (req, res) => {
+    const u = await needTeacher(req), id = intId(query(req).get("id"));
+    const m = (await q("SELECT * FROM materials WHERE id = $1", [id]))[0]; if (!m) throw new HttpError(404, "Không có tài liệu này");
+    const cls = await classForMaterials(u, N(m.class_id));
+    try { const { D, tok } = await teacherDrive(u, cls); await D.remove(tok, m.drive_file_id); } catch (e){ if (e.status !== 409) throw e; }
+    await q("DELETE FROM materials WHERE id = $1", [id]); send(res, 200, { ok: true });
+  }
+};
+// Bước 1: mở phiên tải lên thẳng Google Drive. Bước 2 (material_done): ghi nhận tệp, mở quyền xem bằng link.
+ACTIONS.material_start = { POST: async (req, res) => {
+  const u = await needTeacher(req), b = await readJsonBody(req, 4096), cls = await classForMaterials(u, intId(b.class));
+  const name = str(b.name, 200), size = Number(b.size);
+  if (!name) throw new HttpError(400, "Thiếu tên tệp");
+  if (!(size > 0 && size <= MAX_MATERIAL)) throw new HttpError(413, "Tệp tối đa 500 MB");
+  const { D, tok, teacher } = await teacherDrive(u, cls), folder = await D.ensureMaterialsFolder(tok, teacher, cls);
+  const origin = (req.headers.origin || "").trim() || require("./_lib").siteOrigin(req);
+  send(res, 200, { ok: true, upload_url: await D.startResumable(tok, folder, name, str(b.mime, 120) || "application/octet-stream", size, origin) });
+} };
+ACTIONS.material_done = { POST: async (req, res) => {
+  const u = await needTeacher(req), b = await readJsonBody(req, 8192), cls = await classForMaterials(u, intId(b.class));
+  const fid = str(b.file_id, 200); if (!/^[\w-]{1,200}$/.test(fid)) throw new HttpError(400, "Mã tệp không hợp lệ");
+  const { D, tok, teacher } = await teacherDrive(u, cls), folder = await D.ensureMaterialsFolder(tok, teacher, cls);
+  const f = await D.fileInfo(tok, fid);
+  if (f.trashed || !(f.parents || []).includes(folder)) throw new HttpError(400, "Tệp không nằm trong thư mục Tài liệu của lớp");
+  let aid = null; if (b.assignment){ aid = intId(b.assignment); const a = await ownAssignment(u, aid); if (N(a.class_id) !== N(cls.id)) throw new HttpError(400, "Bài được giao không thuộc lớp này"); }
+  await D.makePublic(tok, fid);
+  const r = await q(`INSERT INTO materials (class_id, assignment_id, owner_id, drive_file_id, name, mime, size, link, note) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
+    [N(cls.id), aid, teacher.id, fid, str(f.name, 200), str(f.mimeType, 120), Number(f.size) || 0, f.webViewLink || null, str(b.note, 500)]);
+  send(res, 200, { ok: true, material: matRow(r[0]) });
+} };
+// Học sinh: tài liệu của các lớp em đang học.
+const myMaterials = async uid => (await q(`SELECT t.*, c.name AS class_name FROM materials t JOIN class_members m ON m.class_id = t.class_id AND m.user_id = $1
+  JOIN classes c ON c.id = t.class_id AND NOT c.archived ORDER BY t.created_at DESC LIMIT 200`, [uid])).map(m => ({ ...matRow(m), class_name: m.class_name }));
 
 // ---------- admin: thư mục Drive của các giáo viên, kiểm tra cấu hình ----------
 ACTIONS.drive_overview = { GET: async (req, res) => {

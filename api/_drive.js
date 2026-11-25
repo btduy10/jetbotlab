@@ -91,4 +91,28 @@ async function upload(tok, parent, name, mime, buf){
 const download = (tok, id) => call(tok, "GET", `files/${encodeURIComponent(id)}?alt=media`);
 async function remove(tok, id){ try { await call(tok, "DELETE", `files/${encodeURIComponent(id)}`); } catch (e){ if (e.status !== 404) throw e; } }
 
-module.exports = { SCOPE, hasDrive, token, ensureRoot, ensureClassFolder, ensureAssignmentFolder, upload, download, remove };
+// Tài liệu của lớp: thư mục "Tài liệu" trong thư mục lớp.
+async function ensureMaterialsFolder(tok, teacher, cls){
+  if (cls.materials_folder_id && await folderAlive(tok, cls.materials_folder_id)) return cls.materials_folder_id;
+  const parent = await ensureClassFolder(tok, teacher, cls), f = await createFolder(tok, "Tài liệu", parent);
+  await q("UPDATE classes SET materials_folder_id = $2 WHERE id = $1", [N(cls.id), f.id]);
+  return f.id;
+}
+// Tải lên kiểu resumable: máy chủ mở phiên (kèm Origin của trang), trình duyệt PUT thẳng tệp lên Google,
+// nên tệp lớn (mô hình AI vài chục MB) không đi qua máy chủ Vercel (giới hạn ~4.5 MB mỗi yêu cầu).
+async function startResumable(tok, parent, name, mime, size, origin){
+  const r = await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=resumable&fields=id,name,size,mimeType,webViewLink", {
+    method: "POST", headers: { Authorization: "Bearer " + tok, "Content-Type": "application/json; charset=UTF-8", "X-Upload-Content-Type": mime || "application/octet-stream",
+      "X-Upload-Content-Length": String(size), Origin: origin },
+    body: JSON.stringify({ name: String(name).slice(0, 200), parents: [parent] }) });
+  const url = r.headers.get("location");
+  if (!r.ok || !url){ const j = await r.json().catch(() => ({})); throw new HttpError(502, "Google Drive: không mở được phiên tải lên (" + ((j.error && j.error.message) || r.status) + ")"); }
+  return url;
+}
+const fileInfo = (tok, id) => call(tok, "GET", `files/${encodeURIComponent(id)}?fields=id,name,size,mimeType,parents,webViewLink,trashed`);
+// Ai có link đều xem / tải được (để học sinh tải về không cần quyền trên Drive của giáo viên).
+const makePublic = (tok, id) => call(tok, "POST", `files/${encodeURIComponent(id)}/permissions`, { type: "anyone", role: "reader" });
+const downloadUrl = id => "https://drive.google.com/uc?export=download&id=" + encodeURIComponent(id);
+
+module.exports = { SCOPE, hasDrive, token, ensureRoot, ensureClassFolder, ensureAssignmentFolder, ensureMaterialsFolder, upload, download, remove,
+  startResumable, fileInfo, makePublic, downloadUrl };

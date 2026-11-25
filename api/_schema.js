@@ -122,5 +122,20 @@ module.exports = [
     class_id BIGINT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
     text TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now())`,
-  `CREATE INDEX IF NOT EXISTS announcements_class ON announcements(class_id)`
+  `CREATE INDEX IF NOT EXISTS announcements_class ON announcements(class_id)`,
+  // tài liệu giáo viên chia sẻ (tệp trên Drive của giáo viên, ai có link đều tải được)
+  `ALTER TABLE classes ADD COLUMN IF NOT EXISTS materials_folder_id TEXT`,
+  `CREATE TABLE IF NOT EXISTS materials (
+    id BIGSERIAL PRIMARY KEY,
+    class_id BIGINT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+    assignment_id BIGINT REFERENCES assignments(id) ON DELETE SET NULL,
+    owner_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
+    drive_file_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    mime TEXT NOT NULL DEFAULT '',
+    size BIGINT NOT NULL DEFAULT 0,
+    link TEXT,
+    note TEXT NOT NULL DEFAULT '',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now())`,
+  `CREATE INDEX IF NOT EXISTS materials_class ON materials(class_id)`
 ];

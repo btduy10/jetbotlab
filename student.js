@@ -37,7 +37,7 @@ function asState(a){
 async function loadAssignments(){
   let j = { assignments: [], news: [], classes: [] };
   try { if (ACC.me) j = await api("/api/class?a=my"); } catch (e) {}
-  AS.list = j.assignments || []; AS.news = j.news || []; AS.classes = j.classes || [];
+  AS.list = j.assignments || []; AS.news = j.news || []; AS.classes = j.classes || []; AS.materials = j.materials || [];
   $("#rAs").hidden = !ACC.me;
   const seen = +(store.get("jetbotlab.newsSeen") || 0), newest = AS.news.length ? Date.parse(AS.news[0].created_at) : 0;
   $("#asDot").hidden = !(AS.list.some(a => !a.status && !(a.due_at && new Date(a.due_at) < new Date())) || newest > seen);
@@ -46,17 +46,22 @@ async function loadAssignments(){
 window.renderAssignDrawer = el => {
   const news = AS.news && AS.news.length ? `<div class="news">${AS.news.slice(0, 5).map(n => `<div class="newsitem"><em>${esc(n.class_name)} · ${esc(fmtWhen(n.created_at))}</em><p>${esc(n.text)}</p></div>`).join("")}</div>` : "";
   if (AS.news && AS.news.length) store.set("jetbotlab.newsSeen", Date.parse(AS.news[0].created_at));
+  const mats = (AS.materials || []).filter(m => !m.assignment_id);
+  const files = mats.length ? `<h4 class="lvl">${esc(t("asFiles"))}</h4><div class="mats">${mats.slice(0, 30).map(matLink).join("")}</div>` : "";
   const join = `<form class="joinform" id="joinForm"><input name="code" maxlength="8" placeholder="${attr(t("asJoinPh"))}" aria-label="${attr(t("asJoinPh"))}" autocomplete="off"><button class="go">${esc(t("asJoin"))}</button></form>`
     + (AS.classes && AS.classes.length ? `<p class="drawer-empty myclasses">${esc(t("asMyClasses"))}: ${AS.classes.map(c => esc(c.name)).join(", ")}</p>` : "");
-  if (!AS.list.length){ el.innerHTML = `<h3>${esc(t("asTitle"))}</h3>${news}${join}<p class="drawer-empty">${esc(t(AS.classes && AS.classes.length ? "asEmpty" : "asNoClass"))}</p>`; bindJoin(); return; }
+  if (!AS.list.length){ el.innerHTML = `<h3>${esc(t("asTitle"))}</h3>${news}${join}${files}<p class="drawer-empty">${esc(t(AS.classes && AS.classes.length ? "asEmpty" : "asNoClass"))}</p>`; bindJoin(); return; }
   const weeks = [...new Set(AS.list.map(a => a.week_label || t("asNoWeek")))];
-  el.innerHTML = `<h3>${esc(t("asTitle"))}</h3>${news}${join}` + weeks.map(w => `<h4 class="lvl">${esc(w)}</h4>` + AS.list.filter(a => (a.week_label || t("asNoWeek")) === w).map(a => {
+  el.innerHTML = `<h3>${esc(t("asTitle"))}</h3>${news}${join}${files}` + weeks.map(w => `<h4 class="lvl">${esc(w)}</h4>` + AS.list.filter(a => (a.week_label || t("asNoWeek")) === w).map(a => {
     const [cls, label] = asState(a), title = a.title || (findLesson(a.lesson_id) || {}).title || a.lesson_id;
     return `<button class="lesson asg" data-as="${a.id}"><em>${esc(a.class_name)}${a.period_label ? " · " + esc(a.period_label) : ""}<span class="st ${cls}">· ${esc(label)}</span>${a.completed ? `<span class="st done"> ✓ ${esc(t("asCompleted"))}</span>` : ""}</em>
       <b>${esc(title)}</b><span>${a.due_at ? esc(t("asDue")) + " " + esc(fmtWhen(a.due_at)) : ""}${a.need_photo ? " · 📷" : ""}${a.total !== null ? " · " + esc(t("asScore")) + " " + a.total + "/10" : ""}</span></button>`;
   }).join("")).join("");
   bindJoin();
 };
+// Tài liệu giáo viên chia sẻ: bấm để tải về máy (tệp nằm trên Google Drive của giáo viên).
+const fmtBytes = n => n >= 1048576 ? (n/1048576).toFixed(n >= 10485760 ? 0 : 1) + " MB" : n >= 1024 ? Math.round(n/1024) + " KB" : n + " B";
+const matLink = m => `<a class="mat" href="${attr(m.download)}" target="_blank" rel="noopener" title="${attr(t("asFileDl"))}"><b>⬇ ${esc(m.name)}</b><small>${esc(fmtBytes(m.size))}${m.class_name ? " · " + esc(m.class_name) : ""}${m.note ? " · " + esc(m.note) : ""}</small></a>`;
 function bindJoin(){
   const f = $("#joinForm"); if (!f) return;
   f.onsubmit = e => { e.preventDefault(); joinClass(f.elements.code.value); };
@@ -99,6 +104,7 @@ function renderAsBar(){
     + `<span class="grow"></span><span class="saved">${esc(AS.saving ? t("asSaving") : AS.failed ? t("asSaveFail") : AS.savedAt ? t("asSavedAt").replace("{t}", AS.savedAt) : "")}</span>`
     + `<button class="go" id="asSubmit">${esc(t(a.status === "submitted" ? "asResubmit" : "asSubmit"))}</button><button id="asRobot" title="${attr(t("asRobot"))}">.ipynb</button><button id="asExit">${esc(t("asExit"))}</button>`
     + (a.instructions ? `<p class="instr"><b>${esc(t("asInstr"))}:</b> ${esc(a.instructions)}</p>` : "")
+    + ((AS.materials || []).some(m => m.assignment_id === a.id) ? `<div class="mats inbar"><b>${esc(t("asFiles"))}:</b>${AS.materials.filter(m => m.assignment_id === a.id).map(matLink).join("")}</div>` : "")
     + photos
     + (a.returned && a.comment ? `<p class="cmt"><b>${esc(t("asComment"))}:</b> ${esc(a.comment)}</p>` : "");
   el.hidden = false;

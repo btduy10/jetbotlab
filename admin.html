@@ -65,6 +65,7 @@
       <button data-sub="members" aria-pressed="true">Học sinh</button>
       <button data-sub="assign" aria-pressed="false">Giao bài</button>
       <button data-sub="progress" aria-pressed="false">Tiến độ &amp; chấm bài</button>
+      <button data-sub="files" aria-pressed="false">Tài liệu</button>
       <button data-sub="news" aria-pressed="false">Bảng tin</button>
       <button data-sub="live" aria-pressed="false">Tiết học</button>
     </nav>
@@ -94,6 +95,18 @@
     <div class="subpane" data-sub="progress" hidden>
       <div class="pgbar"><select id="pgWeek" aria-label="Lọc theo tuần"></select><button class="btn ghost" id="pgRefresh">↻ Làm mới</button><button class="btn ghost" id="pgCsv">Tải CSV</button></div>
       <div id="progressTable"></div>
+    </div>
+    <div class="subpane" data-sub="files" hidden>
+      <form id="fFiles" class="card grid2">
+        <label class="wide">Tệp chia sẻ cho học sinh (code .py/.ipynb, mô hình AI .pth, ảnh, PDF, .zip… tối đa 500 MB mỗi tệp)
+          <input type="file" name="files" multiple required></label>
+        <label>Gắn với bài được giao <small class="muted">(tuỳ chọn)</small><select name="assignment" id="mtAssign"><option value="">— Dùng chung cho cả lớp —</option></select></label>
+        <label>Ghi chú<input name="note" maxlength="500" placeholder="VD: Chép vào thư mục Notebooks trên JetBot"></label>
+        <div class="wide actions"><button class="btn primary" type="submit" id="mtSubmit">Tải lên &amp; chia sẻ</button><span class="msg" id="mtMsg"></span></div>
+        <div class="wide" id="mtProgress"></div>
+      </form>
+      <p class="a-hint">Tệp lưu trong Google Drive của bạn (<i>JetBot Lab / Lớp / Tài liệu</i>) và được mở quyền <b>ai có link đều tải được</b> để học sinh bấm tải về máy, chép sang robot thật. Đừng tải lên tài liệu riêng tư.</p>
+      <div id="mtList"></div>
     </div>
     <div class="subpane" data-sub="news" hidden>
       <form id="fNews" class="card">

@@ -442,3 +442,12 @@ input[type=file]{display:none}
 .asbar .addph.busy{opacity:.6;cursor:progress}
 .asbar .rvph b{margin-right:4px}
 .asbar button:disabled{opacity:.5;cursor:default}
+.mats{margin:2px 14px 8px;display:grid;gap:4px}
+.mats .mat{display:block;padding:6px 9px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--fg);text-decoration:none}
+.mats .mat:hover{border-color:var(--accent)}
+.mats .mat b{display:block;font-size:12.5px;font-weight:600;color:var(--accent-ink);overflow-wrap:anywhere}
+.mats .mat small{display:block;color:var(--muted);font-size:11px}
+.asbar .mats.inbar{flex-basis:100%;margin:2px 0 0;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.asbar .mats.inbar .mat{padding:3px 8px}
+.asbar .mats.inbar .mat small{display:inline;margin-left:4px}
+.asbar .mats.inbar .mat b{display:inline}

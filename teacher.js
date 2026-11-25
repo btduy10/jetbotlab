@@ -250,6 +250,56 @@ async function copyGrades(aid){
   catch (e){ const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); try { document.execCommand("copy"); done(); } catch (x){ toast("Không chép được, hãy dùng Tải CSV ở tab Tiến độ"); } ta.remove(); }
 }
 
+/* ---------- tài liệu chia sẻ cho học sinh ---------- */
+const fmtSize = n => n >= 1048576 ? (n/1048576).toFixed(n >= 10485760 ? 0 : 1) + " MB" : n >= 1024 ? Math.round(n/1024) + " KB" : n + " B";
+window.CLASS_SUBTABS.files = loadMaterials;
+async function loadMaterials(){
+  const el = $("#mtList"), sel = $("#mtAssign");
+  $("#mtSubmit").disabled = !ME_USER.drive; msg($("#mtMsg"), ME_USER.drive ? "" : "Hãy bấm “Kết nối Google Drive” ở đầu trang lớp trước.", ME_USER.drive ? "" : "err");
+  try {
+    const [as, ms] = await Promise.all([api("/api/class?a=assignments&class=" + TC.cls.id), api("/api/class?a=materials&class=" + TC.cls.id)]);
+    const cur = sel.value;
+    sel.innerHTML = `<option value="">— Dùng chung cho cả lớp —</option>` + as.assignments.map(a => `<option value="${a.id}">${esc((a.week_label ? a.week_label + " · " : "") + (a.title || lessonTitle(a.lesson_id)))}</option>`).join("");
+    sel.value = cur;
+    const title = id => { const a = as.assignments.find(x => x.id === id); return a ? (a.title || lessonTitle(a.lesson_id)) : ""; };
+    el.innerHTML = ms.materials.length ? `<table class="tbl"><thead><tr><th>Tệp</th><th>Dung lượng</th><th>Gắn với bài</th><th>Ghi chú</th><th>Ngày</th><th></th></tr></thead><tbody>`
+      + ms.materials.map(m => `<tr data-id="${m.id}"><td><a href="${esc(m.download)}" target="_blank" rel="noopener">⬇ ${esc(m.name)}</a>${m.link ? ` · <a href="${esc(m.link)}" target="_blank" rel="noopener">Drive ↗</a>` : ""}</td>
+        <td>${fmtSize(m.size)}</td><td>${m.assignment_id ? esc(title(m.assignment_id)) : '<span class="muted">cả lớp</span>'}</td><td>${esc(m.note || "")}</td><td>${esc(fmtDate(m.created_at))}</td>
+        <td><button class="linkbtn danger" data-a="del">Xoá</button></td></tr>`).join("") + "</tbody></table>"
+      : '<div class="empty">Chưa có tài liệu nào.</div>';
+  } catch (e){ el.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+// Tải thẳng lên Google Drive (phiên resumable do máy chủ mở), có thanh tiến trình.
+function putFile(url, file, onProgress){
+  return new Promise((ok, fail) => {
+    const x = new XMLHttpRequest(); x.open("PUT", url); x.setRequestHeader("Content-Type", file.type || "application/octet-stream");
+    x.upload.onprogress = e => { if (e.lengthComputable) onProgress(e.loaded/e.total); };
+    x.onload = () => { if (x.status >= 200 && x.status < 300){ try { ok(JSON.parse(x.responseText)); } catch (e){ fail(new Error("Google Drive trả về dữ liệu lạ")); } } else fail(new Error("Google Drive từ chối tệp (" + x.status + ")")); };
+    x.onerror = () => fail(new Error("Mất kết nối khi tải lên"));
+    x.send(file);
+  });
+}
+$("#fFiles").addEventListener("submit", async e => {
+  e.preventDefault(); const f = e.target, files = [...f.elements.files.files]; if (!files.length) return;
+  const prog = $("#mtProgress"), btn = $("#mtSubmit"); btn.disabled = true; let okN = 0;
+  prog.innerHTML = files.map((x, i) => `<div class="upl" id="upl${i}"><span>${esc(x.name)} <small class="muted">${fmtSize(x.size)}</small></span><progress max="1" value="0"></progress><small class="st"></small></div>`).join("");
+  for (let i = 0; i < files.length; i++){
+    const file = files[i], row = $("#upl" + i), bar = row.querySelector("progress"), st = row.querySelector(".st");
+    try {
+      if (file.size > 500*1024*1024) throw new Error("Tệp quá 500 MB");
+      const s = await api("/api/class?a=material_start", { method: "POST", body: JSON.stringify({ class: TC.cls.id, name: file.name, mime: file.type, size: file.size }) });
+      const g = await putFile(s.upload_url, file, p => { bar.value = p; st.textContent = Math.round(p*100) + "%"; });
+      await api("/api/class?a=material_done", { method: "POST", body: JSON.stringify({ class: TC.cls.id, file_id: g.id, note: f.elements.note.value, assignment: f.elements.assignment.value ? +f.elements.assignment.value : null }) });
+      bar.value = 1; st.textContent = "✓ đã chia sẻ"; row.classList.add("ok"); okN++;
+    } catch (x){ st.textContent = "✗ " + x.message; row.classList.add("bad"); }
+  }
+  btn.disabled = false; if (okN){ toast(`Đã chia sẻ ${okN} tệp cho lớp`); f.elements.files.value = ""; f.elements.note.value = ""; } loadMaterials();
+});
+$("#mtList").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-a=del]"); if (!b || !confirm("Xoá tài liệu này? Tệp cũng bị xoá khỏi Google Drive của bạn.")) return;
+  try { await api("/api/class?a=materials&id=" + b.closest("tr").dataset.id, { method: "DELETE" }); loadMaterials(); } catch (x){ toast(x.message); }
+});
+
 /* ---------- bảng tin lớp ---------- */
 window.CLASS_SUBTABS.news = loadNews;
 async function loadNews(){

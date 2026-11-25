@@ -20,7 +20,7 @@ Python chạy trong trình duyệt (Skulpt 1.2.0), đồ hoạ Three.js r128. Tr
 |---|---|
 | Bài học, thử thách, sa bàn, ảnh | repo GitHub riêng (mặc định `btduy10/jetbotlab-data`): `content.json` + `assets/` |
 | Tài khoản, lớp, học sinh, giao bài, bài làm, lượt chạy, điểm, bảng tin, tiết học | **Neon Postgres** (Vercel → Storage) |
-| Ảnh học sinh nộp | **Google Drive của giáo viên** chủ lớp (thư mục `JetBot Lab – <tên>`, admin được quyền xem) |
+| Ảnh học sinh nộp, tài liệu giáo viên chia sẻ | **Google Drive của giáo viên** chủ lớp (thư mục `JetBot Lab – <tên>`, admin được quyền xem) |
 | Notebook học tự do (chưa đăng nhập) | trình duyệt của từng máy |
 
 ## Cấu hình một lần (chủ dự án)
@@ -85,8 +85,11 @@ của trường đó. Mỗi trường có CSDL, admin và Drive giáo viên riê
    cờ *Cần hỗ trợ* / *Có thể nâng cấp độ*, tải CSV. Bấm vào ô để mở code và ảnh của em **trong lab ảo**, chạy lại,
    chấm 3 tiêu chí (có gợi ý điểm), nhận xét → **Lưu điểm** → **Trả bài** (học sinh chỉ thấy điểm sau khi trả).
    Trả cả lớp: tab *Giao bài* → **Trả bài (N)**. **Chép điểm** để dán vào Google Sheets / sổ điểm của trường.
-8. **Bảng tin**: đăng thông báo, học sinh thấy ở đầu mục *Bài được giao*.
-9. **Tiết học**: đặt thứ tự nhóm + số phút → *Bắt đầu luân phiên*; học sinh thấy nhóm nào đang ở robot thật.
+8. **Tài liệu**: tải tệp lên (code `.py`/`.ipynb`, mô hình AI `.pth`, PDF, `.zip`…, tối đa 500 MB/tệp), dùng chung cho lớp hoặc gắn
+   với một bài. Tệp đi thẳng từ trình duyệt lên Google Drive của giáo viên (`JetBot Lab / Lớp / Tài liệu`), mở quyền *ai có link
+   đều tải được*; học sinh thấy ở mục *Bài được giao* → **Tài liệu** (hoặc ngay trong bài) và bấm tải về máy để chép sang robot thật.
+9. **Bảng tin**: đăng thông báo, học sinh thấy ở đầu mục *Bài được giao*.
+10. **Tiết học**: đặt thứ tự nhóm + số phút → *Bắt đầu luân phiên*; học sinh thấy nhóm nào đang ở robot thật.
 
 ## Bảo mật
 - Python của học sinh chạy trong sandbox: đã gỡ `jseval`, `open`, `file`, `execfile`; chỉ cho phép thư viện an toàn.

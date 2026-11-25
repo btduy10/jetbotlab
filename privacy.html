@@ -29,7 +29,7 @@
     <li><b>Khi không đăng nhập:</b> notebook bạn soạn, bộ ảnh huấn luyện AI và lựa chọn giao diện chỉ lưu trong trình duyệt trên máy bạn (localStorage), không gửi về máy chủ.</li>
     <li><b>Khi đăng nhập bằng Google:</b> địa chỉ email, họ tên và mã định danh tài khoản Google. Chúng tôi <b>không</b> nhận mật khẩu Google của bạn.</li>
     <li><b>Khi làm bài được giáo viên giao:</b> nội dung code (notebook) bạn lưu và nộp; số liệu các lượt chạy trên sa bàn mô phỏng (thời gian, quãng đường, số va chạm, có đạt tiêu chí hay không); thời gian làm bài; thời điểm nộp; điểm và nhận xét của giáo viên; nhóm học; <b>ảnh</b> bạn nộp kèm bài (ví dụ ảnh chụp robot thật).</li>
-    <li><b>Với giáo viên kết nối Google Drive:</b> ứng dụng xin quyền <code>drive.file</code>, tức <b>chỉ</b> truy cập các thư mục và tệp do chính JetBot Lab tạo trong Drive của giáo viên (không xem được các tệp khác). Ảnh học sinh nộp được lưu trong thư mục <i>JetBot Lab – tên giáo viên</i>, thư mục này được chia sẻ quyền xem cho quản trị viên hệ thống. Mã truy cập Drive được mã hoá (AES-256) trước khi lưu.</li>
+    <li><b>Với giáo viên kết nối Google Drive:</b> ứng dụng xin quyền <code>drive.file</code>, tức <b>chỉ</b> truy cập các thư mục và tệp do chính JetBot Lab tạo trong Drive của giáo viên (không xem được các tệp khác). Ảnh học sinh nộp được lưu trong thư mục <i>JetBot Lab – tên giáo viên</i>, thư mục này được chia sẻ quyền xem cho quản trị viên hệ thống. Tài liệu giáo viên tải lên mục <i>Tài liệu</i> để học sinh tải về được mở quyền xem cho <b>bất kỳ ai có đường link</b>. Mã truy cập Drive được mã hoá (AES-256) trước khi lưu.</li>
     <li><b>Nhật ký kỹ thuật:</b> nhà cung cấp hạ tầng (Vercel) có thể ghi nhật ký truy cập như địa chỉ IP, thời gian, trình duyệt để vận hành và bảo vệ dịch vụ.</li>
   </ul>
 
@@ -83,7 +83,7 @@
     <li><b>Without signing in:</b> your notebooks, AI training images and display settings stay in your own browser (localStorage) and are not sent to our servers.</li>
     <li><b>With Google Sign-In:</b> your email address, name and Google account identifier. We never receive your Google password.</li>
     <li><b>For assigned work:</b> the code (notebook) you save and submit; results of your runs in the simulator (time, distance, collisions, whether the criteria were met); time spent; submission time; teacher scores and comments; your group; <b>photos</b> you attach to your work (for example, photos of the real robot).</li>
-    <li><b>For teachers who connect Google Drive:</b> the app requests the <code>drive.file</code> scope, so it can <b>only</b> access folders and files it created itself in the teacher's Drive (never the teacher's other files). Student photos are stored in a <i>JetBot Lab – teacher name</i> folder, which is shared view-only with the system administrators. Drive access tokens are encrypted (AES-256) at rest.</li>
+    <li><b>For teachers who connect Google Drive:</b> the app requests the <code>drive.file</code> scope, so it can <b>only</b> access folders and files it created itself in the teacher's Drive (never the teacher's other files). Student photos are stored in a <i>JetBot Lab – teacher name</i> folder, which is shared view-only with the system administrators. Files a teacher uploads under <i>Files</i> for students to download are viewable by <b>anyone with the link</b>. Drive access tokens are encrypted (AES-256) at rest.</li>
     <li><b>Technical logs:</b> our hosting provider (Vercel) may log requests (IP address, time, browser) to operate and protect the service.</li>
   </ul>
 
