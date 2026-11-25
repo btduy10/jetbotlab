@@ -387,40 +387,62 @@ async function classForMaterials(u, id){
   await ownClass(u, id);
   return (await q("SELECT id, name, teacher_id, drive_folder_id, materials_folder_id FROM classes WHERE id = $1", [id]))[0];
 }
+// Nơi lưu tệp: thư mục Tài liệu của một lớp, hoặc { global: true } = Tài liệu chung của admin (Drive của chính admin).
+async function materialTarget(u, b){
+  if (b.global === true){
+    if (u.role !== "admin") throw new HttpError(403, "Chỉ admin mới tải tài liệu chung");
+    const { D, tok, teacher } = await teacherDrive(u, { teacher_id: u.id });
+    return { D, tok, teacher, classId: null, folder: await D.ensurePublicFolder(tok, teacher) };
+  }
+  const cls = await classForMaterials(u, intId(b.class)), { D, tok, teacher } = await teacherDrive(u, cls);
+  return { D, tok, teacher, classId: N(cls.id), folder: await D.ensureMaterialsFolder(tok, teacher, cls) };
+}
 ACTIONS.materials = {
   GET: async (req, res) => {
-    const u = await needTeacher(req), id = intId(query(req).get("class")); await ownClass(u, id);
+    const u = await needTeacher(req), p = query(req);
+    if (p.get("global") === "1"){
+      if (u.role !== "admin") throw new HttpError(403, "Chỉ admin");
+      return send(res, 200, { materials: (await q("SELECT * FROM materials WHERE class_id IS NULL ORDER BY created_at DESC")).map(matRow) });
+    }
+    const id = intId(p.get("class")); await ownClass(u, id);
     send(res, 200, { materials: (await q("SELECT * FROM materials WHERE class_id = $1 ORDER BY created_at DESC", [id])).map(matRow) });
   },
   DELETE: async (req, res) => {
     const u = await needTeacher(req), id = intId(query(req).get("id"));
     const m = (await q("SELECT * FROM materials WHERE id = $1", [id]))[0]; if (!m) throw new HttpError(404, "Không có tài liệu này");
-    const cls = await classForMaterials(u, N(m.class_id));
-    try { const { D, tok } = await teacherDrive(u, cls); await D.remove(tok, m.drive_file_id); } catch (e){ if (e.status !== 409) throw e; }
+    let owner;
+    if (m.class_id === null){ if (u.role !== "admin") throw new HttpError(403, "Chỉ admin mới xoá tài liệu chung"); owner = { teacher_id: m.owner_id }; }
+    else owner = await classForMaterials(u, N(m.class_id));
+    try { const { D, tok } = await teacherDrive(u, owner); await D.remove(tok, m.drive_file_id); } catch (e){ if (e.status !== 409) throw e; }
     await q("DELETE FROM materials WHERE id = $1", [id]); send(res, 200, { ok: true });
   }
 };
 // Bước 1: mở phiên tải lên thẳng Google Drive. Bước 2 (material_done): ghi nhận tệp, mở quyền xem bằng link.
 ACTIONS.material_start = { POST: async (req, res) => {
-  const u = await needTeacher(req), b = await readJsonBody(req, 4096), cls = await classForMaterials(u, intId(b.class));
+  const u = await needTeacher(req), b = await readJsonBody(req, 4096);
   const name = str(b.name, 200), size = Number(b.size);
   if (!name) throw new HttpError(400, "Thiếu tên tệp");
   if (!(size > 0 && size <= MAX_MATERIAL)) throw new HttpError(413, "Tệp tối đa 500 MB");
-  const { D, tok, teacher } = await teacherDrive(u, cls), folder = await D.ensureMaterialsFolder(tok, teacher, cls);
+  const { D, tok, folder } = await materialTarget(u, b);
   const origin = (req.headers.origin || "").trim() || require("./_lib").siteOrigin(req);
   send(res, 200, { ok: true, upload_url: await D.startResumable(tok, folder, name, str(b.mime, 120) || "application/octet-stream", size, origin) });
 } };
 ACTIONS.material_done = { POST: async (req, res) => {
-  const u = await needTeacher(req), b = await readJsonBody(req, 8192), cls = await classForMaterials(u, intId(b.class));
+  const u = await needTeacher(req), b = await readJsonBody(req, 8192);
   const fid = str(b.file_id, 200); if (!/^[\w-]{1,200}$/.test(fid)) throw new HttpError(400, "Mã tệp không hợp lệ");
-  const { D, tok, teacher } = await teacherDrive(u, cls), folder = await D.ensureMaterialsFolder(tok, teacher, cls);
+  const { D, tok, teacher, classId, folder } = await materialTarget(u, b);
   const f = await D.fileInfo(tok, fid);
-  if (f.trashed || !(f.parents || []).includes(folder)) throw new HttpError(400, "Tệp không nằm trong thư mục Tài liệu của lớp");
-  let aid = null; if (b.assignment){ aid = intId(b.assignment); const a = await ownAssignment(u, aid); if (N(a.class_id) !== N(cls.id)) throw new HttpError(400, "Bài được giao không thuộc lớp này"); }
+  if (f.trashed || !(f.parents || []).includes(folder)) throw new HttpError(400, "Tệp không nằm trong thư mục Tài liệu");
+  let aid = null; if (b.assignment && classId){ aid = intId(b.assignment); const a = await ownAssignment(u, aid); if (N(a.class_id) !== classId) throw new HttpError(400, "Bài được giao không thuộc lớp này"); }
   await D.makePublic(tok, fid);
   const r = await q(`INSERT INTO materials (class_id, assignment_id, owner_id, drive_file_id, name, mime, size, link, note) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-    [N(cls.id), aid, teacher.id, fid, str(f.name, 200), str(f.mimeType, 120), Number(f.size) || 0, f.webViewLink || null, str(b.note, 500)]);
+    [classId, aid, teacher.id, fid, str(f.name, 200), str(f.mimeType, 120), Number(f.size) || 0, f.webViewLink || null, str(b.note, 500)]);
   send(res, 200, { ok: true, material: matRow(r[0]) });
+} };
+// Tài liệu chung của admin: ai cũng xem được, không cần đăng nhập.
+ACTIONS.public_materials = { GET: async (req, res) => {
+  const rows = await q("SELECT * FROM materials WHERE class_id IS NULL ORDER BY created_at DESC LIMIT 200");
+  send(res, 200, { materials: rows.map(m => { const r = matRow(m); delete r.link; delete r.assignment_id; return r; }) });
 } };
 // Học sinh: tài liệu của các lớp em đang học.
 const myMaterials = async uid => (await q(`SELECT t.*, c.name AS class_name FROM materials t JOIN class_members m ON m.class_id = t.class_id AND m.user_id = $1

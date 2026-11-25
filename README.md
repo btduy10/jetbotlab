@@ -89,6 +89,9 @@ của trường đó. Mỗi trường có CSDL, admin và Drive giáo viên riê
    với một bài. Tệp đi thẳng từ trình duyệt lên Google Drive của giáo viên (`JetBot Lab / Lớp / Tài liệu`), mở quyền *ai có link
    đều tải được*; học sinh thấy ở mục *Bài được giao* → **Tài liệu** (hoặc ngay trong bài) và bấm tải về máy để chép sang robot thật.
 9. **Bảng tin**: đăng thông báo, học sinh thấy ở đầu mục *Bài được giao*.
+
+**Admin – Tài liệu chung**: tab *Tài liệu chung* (cần *Kết nối Google Drive* của admin) → tải tệp lên thư mục
+`JetBot Lab / Tài liệu chung` trong Drive của admin. Tệp hiện ở đầu mục **Bài mẫu** trên trang học cho **mọi người, kể cả chưa đăng nhập**.
 10. **Tiết học**: đặt thứ tự nhóm + số phút → *Bắt đầu luân phiên*; học sinh thấy nhóm nào đang ở robot thật.
 
 ## Bảo mật

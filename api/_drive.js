@@ -98,6 +98,14 @@ async function ensureMaterialsFolder(tok, teacher, cls){
   await q("UPDATE classes SET materials_folder_id = $2 WHERE id = $1", [N(cls.id), f.id]);
   return f.id;
 }
+// Tài liệu chung (admin): thư mục "Tài liệu chung" trong thư mục gốc của admin.
+async function ensurePublicFolder(tok, user){
+  const root = await ensureRoot(tok, user), r = (await q("SELECT public_folder_id FROM teacher_drive WHERE user_id = $1", [user.id]))[0];
+  if (r && r.public_folder_id && await folderAlive(tok, r.public_folder_id)) return r.public_folder_id;
+  const f = await createFolder(tok, "Tài liệu chung", root);
+  await q("UPDATE teacher_drive SET public_folder_id = $2 WHERE user_id = $1", [user.id, f.id]);
+  return f.id;
+}
 // Tải lên kiểu resumable: máy chủ mở phiên (kèm Origin của trang), trình duyệt PUT thẳng tệp lên Google,
 // nên tệp lớn (mô hình AI vài chục MB) không đi qua máy chủ Vercel (giới hạn ~4.5 MB mỗi yêu cầu).
 async function startResumable(tok, parent, name, mime, size, origin){
@@ -114,5 +122,5 @@ const fileInfo = (tok, id) => call(tok, "GET", `files/${encodeURIComponent(id)}?
 const makePublic = (tok, id) => call(tok, "POST", `files/${encodeURIComponent(id)}/permissions`, { type: "anyone", role: "reader" });
 const downloadUrl = id => "https://drive.google.com/uc?export=download&id=" + encodeURIComponent(id);
 
-module.exports = { SCOPE, hasDrive, token, ensureRoot, ensureClassFolder, ensureAssignmentFolder, ensureMaterialsFolder, upload, download, remove,
+module.exports = { SCOPE, hasDrive, token, ensureRoot, ensureClassFolder, ensureAssignmentFolder, ensureMaterialsFolder, ensurePublicFolder, upload, download, remove,
   startResumable, fileInfo, makePublic, downloadUrl };

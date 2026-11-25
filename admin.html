@@ -21,6 +21,7 @@
     <button data-tab="classes" aria-pressed="false">Lớp học</button>
     <button data-tab="lessons" aria-pressed="true">Bài học</button>
     <button data-tab="maps" aria-pressed="false">Sa bàn</button>
+    <button data-tab="shared" aria-pressed="false" hidden>Tài liệu chung</button>
     <button data-tab="teachers" aria-pressed="false" hidden>Giáo viên</button>
   </nav>
   <div class="adm-right">
@@ -129,6 +130,19 @@
       <div class="liveboard" id="lvBoard" hidden></div>
       <div id="liveTable"></div>
     </div>
+  </section>
+
+  <section id="vShared" hidden>
+    <div class="a-bar"><h1>Tài liệu chung</h1></div>
+    <p class="a-hint">Tệp dùng chung cho <b>mọi lớp</b> và cả người <b>chưa đăng nhập</b>: hiện ở đầu mục <b>Bài mẫu</b> trên trang học. Tệp lưu trong Google Drive của bạn (<i>JetBot Lab / Tài liệu chung</i>), ai có link đều tải được.</p>
+    <div class="gcbox drivebox" id="shDrive"></div>
+    <form id="fShared" class="card grid2">
+      <label class="wide">Tệp (code .py/.ipynb, mô hình AI .pth, hướng dẫn PDF, .zip… tối đa 500 MB mỗi tệp)<input type="file" name="files" multiple required></label>
+      <label class="wide">Ghi chú<input name="note" maxlength="500" placeholder="VD: Thư viện jetbot cho robot thật"></label>
+      <div class="wide actions"><button class="btn primary" type="submit" id="shSubmit">Tải lên &amp; chia sẻ</button></div>
+      <div class="wide" id="shProgress"></div>
+    </form>
+    <div id="shList"></div>
   </section>
 
   <section id="vTeachers" hidden>

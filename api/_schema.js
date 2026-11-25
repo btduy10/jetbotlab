@@ -137,5 +137,8 @@ module.exports = [
     link TEXT,
     note TEXT NOT NULL DEFAULT '',
     created_at TIMESTAMPTZ NOT NULL DEFAULT now())`,
-  `CREATE INDEX IF NOT EXISTS materials_class ON materials(class_id)`
+  `CREATE INDEX IF NOT EXISTS materials_class ON materials(class_id)`,
+  // tài liệu chung của admin (class_id NULL): mọi người, kể cả chưa đăng nhập, đều thấy
+  `ALTER TABLE materials ALTER COLUMN class_id DROP NOT NULL`,
+  `ALTER TABLE teacher_drive ADD COLUMN IF NOT EXISTS public_folder_id TEXT`
 ];

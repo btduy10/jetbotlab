@@ -279,25 +279,58 @@ function putFile(url, file, onProgress){
     x.send(file);
   });
 }
-$("#fFiles").addEventListener("submit", async e => {
-  e.preventDefault(); const f = e.target, files = [...f.elements.files.files]; if (!files.length) return;
-  const prog = $("#mtProgress"), btn = $("#mtSubmit"); btn.disabled = true; let okN = 0;
-  prog.innerHTML = files.map((x, i) => `<div class="upl" id="upl${i}"><span>${esc(x.name)} <small class="muted">${fmtSize(x.size)}</small></span><progress max="1" value="0"></progress><small class="st"></small></div>`).join("");
+// Tải nhiều tệp lên một nơi: { class: id } (tài liệu của lớp) hoặc { global: true } (tài liệu chung của admin).
+async function uploadMaterials(files, target, extra, prog){
+  let okN = 0;
+  prog.innerHTML = files.map((x, i) => `<div class="upl" data-i="${i}"><span>${esc(x.name)} <small class="muted">${fmtSize(x.size)}</small></span><progress max="1" value="0"></progress><small class="st"></small></div>`).join("");
   for (let i = 0; i < files.length; i++){
-    const file = files[i], row = $("#upl" + i), bar = row.querySelector("progress"), st = row.querySelector(".st");
+    const file = files[i], row = prog.querySelector(`[data-i="${i}"]`), bar = row.querySelector("progress"), st = row.querySelector(".st");
     try {
       if (file.size > 500*1024*1024) throw new Error("Tệp quá 500 MB");
-      const s = await api("/api/class?a=material_start", { method: "POST", body: JSON.stringify({ class: TC.cls.id, name: file.name, mime: file.type, size: file.size }) });
+      const s = await api("/api/class?a=material_start", { method: "POST", body: JSON.stringify(Object.assign({ name: file.name, mime: file.type, size: file.size }, target)) });
       const g = await putFile(s.upload_url, file, p => { bar.value = p; st.textContent = Math.round(p*100) + "%"; });
-      await api("/api/class?a=material_done", { method: "POST", body: JSON.stringify({ class: TC.cls.id, file_id: g.id, note: f.elements.note.value, assignment: f.elements.assignment.value ? +f.elements.assignment.value : null }) });
+      await api("/api/class?a=material_done", { method: "POST", body: JSON.stringify(Object.assign({ file_id: g.id }, target, extra)) });
       bar.value = 1; st.textContent = "✓ đã chia sẻ"; row.classList.add("ok"); okN++;
     } catch (x){ st.textContent = "✗ " + x.message; row.classList.add("bad"); }
   }
+  return okN;
+}
+$("#fFiles").addEventListener("submit", async e => {
+  e.preventDefault(); const f = e.target, files = [...f.elements.files.files]; if (!files.length) return;
+  const btn = $("#mtSubmit"); btn.disabled = true;
+  const okN = await uploadMaterials(files, { class: TC.cls.id }, { note: f.elements.note.value, assignment: f.elements.assignment.value ? +f.elements.assignment.value : null }, $("#mtProgress"));
   btn.disabled = false; if (okN){ toast(`Đã chia sẻ ${okN} tệp cho lớp`); f.elements.files.value = ""; f.elements.note.value = ""; } loadMaterials();
 });
 $("#mtList").addEventListener("click", async e => {
   const b = e.target.closest("button[data-a=del]"); if (!b || !confirm("Xoá tài liệu này? Tệp cũng bị xoá khỏi Google Drive của bạn.")) return;
   try { await api("/api/class?a=materials&id=" + b.closest("tr").dataset.id, { method: "DELETE" }); loadMaterials(); } catch (x){ toast(x.message); }
+});
+
+/* ---------- admin: tài liệu chung cho mọi lớp và cả người chưa đăng nhập ---------- */
+window.TEACHER_TABS.shared = () => { show("vShared"); loadShared(); };
+VIEWS.push("vShared");
+async function loadShared(){
+  const el = $("#shList");
+  $("#shSubmit").disabled = !ME_USER.drive;
+  $("#shDrive").innerHTML = ME_USER.drive ? `<span class="ok">✓ Đã kết nối Google Drive</span>${ME_USER.driveLink ? ` · <a href="${esc(ME_USER.driveLink)}" target="_blank" rel="noopener">Thư mục gốc ↗</a>` : ""}`
+    : `<span class="muted">Kết nối Google Drive để tải tài liệu lên (lưu trong Drive của bạn).</span> <a class="btn" href="/api/auth?a=google&amp;drive=1&amp;next=${encodeURIComponent("/admin?tab=shared")}">Kết nối Google Drive</a>`;
+  try {
+    const ms = (await api("/api/class?a=materials&global=1")).materials;
+    el.innerHTML = ms.length ? `<table class="tbl"><thead><tr><th>Tệp</th><th>Dung lượng</th><th>Ghi chú</th><th>Ngày</th><th></th></tr></thead><tbody>`
+      + ms.map(m => `<tr data-id="${m.id}"><td><a href="${esc(m.download)}" target="_blank" rel="noopener">⬇ ${esc(m.name)}</a>${m.link ? ` · <a href="${esc(m.link)}" target="_blank" rel="noopener">Drive ↗</a>` : ""}</td>
+        <td>${fmtSize(m.size)}</td><td>${esc(m.note || "")}</td><td>${esc(fmtDate(m.created_at))}</td><td><button class="linkbtn danger" data-a="del">Xoá</button></td></tr>`).join("") + "</tbody></table>"
+      : '<div class="empty">Chưa có tài liệu chung nào.</div>';
+  } catch (e){ el.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
+}
+$("#fShared").addEventListener("submit", async e => {
+  e.preventDefault(); const f = e.target, files = [...f.elements.files.files]; if (!files.length) return;
+  const btn = $("#shSubmit"); btn.disabled = true;
+  const okN = await uploadMaterials(files, { global: true }, { note: f.elements.note.value }, $("#shProgress"));
+  btn.disabled = false; if (okN){ toast(`Đã chia sẻ ${okN} tệp cho mọi người`); f.elements.files.value = ""; f.elements.note.value = ""; } loadShared();
+});
+$("#shList").addEventListener("click", async e => {
+  const b = e.target.closest("button[data-a=del]"); if (!b || !confirm("Xoá tài liệu chung này? Tệp cũng bị xoá khỏi Google Drive của bạn.")) return;
+  try { await api("/api/class?a=materials&id=" + b.closest("tr").dataset.id, { method: "DELETE" }); loadShared(); } catch (x){ toast(x.message); }
 });
 
 /* ---------- bảng tin lớp ---------- */

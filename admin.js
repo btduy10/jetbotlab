@@ -386,6 +386,7 @@ async function boot(){
   if (ME_USER.role !== "admin" && ME_USER.role !== "teacher") return showLogin("Tài khoản " + ME_USER.email + " chưa được admin cấp quyền giáo viên.");
   $("#who").textContent = ME_USER.email || ME_USER.name;
   $('#tabs [data-tab="teachers"]').hidden = ME_USER.role !== "admin";
+  $('#tabs [data-tab="shared"]').hidden = ME_USER.role !== "admin";
   await loadData(); showTab(new URLSearchParams(location.search).get("tab") || (ME_USER.password ? "lessons" : "classes"));
 }
 boot().catch(e => showLogin(e.message));

@@ -451,3 +451,5 @@ input[type=file]{display:none}
 .asbar .mats.inbar .mat{padding:3px 8px}
 .asbar .mats.inbar .mat small{display:inline;margin-left:4px}
 .asbar .mats.inbar .mat b{display:inline}
+.pubfiles{margin:2px 0 6px;border-bottom:1px solid var(--line-2)}
+.pubfiles summary{cursor:pointer;padding:6px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent-ink)}
