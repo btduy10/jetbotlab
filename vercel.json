@@ -50,7 +50,7 @@
       ]
     },
     {
-      "source": "/(app.js|app.css|student.js|index.html|admin|admin.html|admin.js|admin.css|teacher.js)?",
+      "source": "/(app.js|app.css|pfsim.js|student.js|index.html|admin|admin.html|admin.js|admin.css|teacher.js)?",
       "headers": [
         {
           "key": "Cache-Control",

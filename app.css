@@ -453,3 +453,18 @@ input[type=file]{display:none}
 .asbar .mats.inbar .mat b{display:inline}
 .pubfiles{margin:2px 0 6px;border-bottom:1px solid var(--line-2)}
 .pubfiles summary{cursor:pointer;padding:6px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent-ink)}
+/* widget mô phỏng ipywidgets (bài path following) */
+.out .pfw-vbox,.out .pfw-hbox{font-family:var(--f-ui);font-size:12.5px;margin:6px 0}
+.pfw-vbox{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.pfw-hbox{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start}
+.pfw-img canvas{display:block;border-radius:4px;background:#222;max-width:100%}
+.pfw-img.click canvas{cursor:crosshair;outline:2px solid color-mix(in srgb, var(--accent) 55%, transparent)}
+.pfw-row{display:flex;align-items:center;gap:8px;font-family:var(--f-ui);font-size:12.5px}
+.pfw-row .desc{min-width:96px;text-align:right;color:var(--muted)}
+.pfw-row input[type=number]{width:120px;font:inherit;padding:3px 6px;border:1px solid var(--line);border-radius:4px;background:var(--panel)}
+.pfw-slider input{width:200px;accent-color:var(--accent)}
+.pfw-slider .readout{font-family:var(--f-code);min-width:42px}
+.pfw-slider.vertical{flex-direction:column;gap:4px}
+.pfw-slider.vertical .desc{min-width:0;text-align:center}
+.pfw-slider.vertical input{writing-mode:vertical-lr;direction:rtl;width:22px;height:120px}
+.pfw-html h1,.pfw-html h2,.pfw-html h3,.pfw-html h4{margin:4px 0;font-size:14px}

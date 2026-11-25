@@ -3,7 +3,8 @@
 const BUILTIN_LESSONS = [["l0", "0. Bài giảng: Tránh vật cản với JetBot"], ["l1", "1. Làm quen: tiến, quay, dừng"], ["l2", "2. Vòng lặp: đi hình vuông"],
   ["l3", "3. Điều khiển từng động cơ"], ["l4", "4. Encoder: đi đúng 50 cm"], ["l5", "5. IMU: quay chính xác 90°"], ["l6", "6. Lidar: đọc bản quét 360°"],
   ["l7", "7. Lidar: tránh vật cản"], ["l8", "8. Camera: dò line"], ["l9", "9. Mê cung: bám tường phải"], ["l10", "10. OLED: hiển thị cảm biến"],
-  ["l11", "11. AI tránh vật cản ①: thu thập dữ liệu"], ["l12", "12. AI tránh vật cản ②: huấn luyện"], ["l13", "13. AI tránh vật cản ③: chạy mô hình"]];
+  ["l11", "11. AI tránh vật cản ①: thu thập dữ liệu"], ["l12", "12. AI tránh vật cản ②: huấn luyện"], ["l13", "13. AI tránh vật cản ③: chạy mô hình"],
+  ["l14", "14. Đi theo đường dẫn ①: thu thập dữ liệu"], ["l15", "15. Đi theo đường dẫn ②: huấn luyện"], ["l16", "16. Đi theo đường dẫn ③: chạy mô hình"]];
 VIEWS.push("vClasses", "vClass");
 const TC = { classes: [], cls: null, sub: "members" };
 const fmtDate = d => d ? new Date(d).toLocaleString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
