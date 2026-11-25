@@ -60,7 +60,7 @@ const ls = {
   del(k){ try { localStorage.removeItem(k); } catch (e){} }
 };
 function vidx(){ if (!VIDX){ let v = null; try { v = JSON.parse(ls.get(VK)); } catch (e){} VIDX = v && typeof v === "object" ? v : {}; } return VIDX; }
-const vsave = () => ls.set(VK, JSON.stringify(VIDX));
+const vsave = () => { ls.set(VK, JSON.stringify(VIDX)); if (PF.fsChanged) PF.fsChanged(); };
 function norm(p){
   const parts = [];
   for (const x of String(p).replace(/\\/g, "/").replace(/^~?\/?(home\/jetbot\/(Notebooks\/)?)?/, "").split("/")){ if (!x || x === ".") continue; if (x === "..") parts.pop(); else parts.push(x); }
@@ -101,7 +101,7 @@ function vWriteImg(p, fid){
 }
 function vReadImg(p){
   p = norm(p); if (VCACHE.has(p)) return VCACHE.get(p);
-  const m = vMeta(p); if (m.k !== "img") throw new Error("Không đọc được ảnh: " + p);
+  const m = vMeta(p); if (m.k !== "img") throw new Error(/\.(jpe?g|png)$/i.test(p) ? "Ảnh rỗng: " + p + " (chụp khi ô camera chưa có hình). Mở bảng Tệp ở thanh bên trái, vào thư mục ảnh, bấm \"Xoá ảnh hỏng\" rồi chạy lại." : "Không đọc được ảnh: " + p);
   const u = b64d(ls.get(VF + p) || ""); if (u.length !== D) throw new Error("Ảnh hỏng: " + p);
   const d = new Float32Array(D); for (let i = 0; i < D; i++) d[i] = u[i]/255; VCACHE.set(p, d); return d;
 }
@@ -345,9 +345,12 @@ function shell(cmd){
   if (c === "zip"){
     if (args.length < 2) return "zip: cú pháp: !zip -r tên.zip thư_mục";
     let out = args[0]; if (!/\.zip$/i.test(out)) out += ".zip";
-    const n = args.slice(1).reduce((s, p) => { if (!vExists(p)) throw new Error("zip warning: name not matched: " + p); return s + count(p); }, 0);
-    vPut(out, { k: "zip", n, size: n*1200 + 200 }, "");
-    return flags.includes("q") ? "" : `  adding: ${args.slice(1).join(" ")} (${n} tệp) → ${out}`;
+    const list = [];
+    for (const p of args.slice(1)){ if (!vExists(p)) throw new Error("zip warning: name not matched: " + p); for (const k of filesUnder(p)) if (!list.includes(k) && norm(k) !== norm(out)) list.push(k); }
+    const n = list.length, size = list.reduce((s, k) => s + (+vidx()[k].size || 0), 0) + 22 + n*80;
+    vPut(out, { k: "zip", n, size }, JSON.stringify(list));
+    const NL = String.fromCharCode(10);
+    return (flags.includes("q") ? "" : list.slice(0, 20).map(k => "  adding: " + k + " (stored 0%)").join(NL) + (n > 20 ? NL + "  …" : "") + NL) + `(mô phỏng) Đã tạo ${norm(out)} gồm ${n} tệp. Xem và tải về ở bảng Tệp (biểu tượng thư mục bên trái).`;
   }
   if (c === "ls"){ const p = args[0] || ""; if (!vIsDir(p)) return vExists(p) ? p : `ls: cannot access '${p}': No such file or directory`;
     const xs = vList(p).sort(); return flags.includes("l") ? xs.map(n => { const k = norm((p ? p + "/" : "") + n), m = vidx()[k]; return `${m && m.k === "dir" || vIsDir(k) ? "d" : "-"} ${String(m && m.size || count(k)).padStart(8)}  ${n}`; }).join("\n") : xs.join("  "); }
@@ -1261,5 +1264,223 @@ function install(){
     const c = K.cb || K.cur; if (out && c) outText(c, out + "\n"); return N;
   });
 }
+/* ---------- bảng "Tệp" ở thanh bên (giống trình duyệt tệp của Jupyter Lab) ---------- */
+const FM = { dir: "" };
+const L = (vi, en) => (typeof LANG !== "undefined" && LANG === "en") ? en : vi;
+const H = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+const isImgName = n => /\.(jpe?g|png|webp|bmp|gif)$/i.test(n);
+function fmtSize(n){ n = +n || 0; return n < 1024 ? n + " B" : n < 1048576 ? (n/1024).toFixed(1) + " KB" : (n/1048576).toFixed(1) + " MB"; }
+function vEntries(dir){
+  const pre = dir ? dir + "/" : "", x = vidx(), seen = new Map();
+  for (const k of Object.keys(x)){
+    if (!k.startsWith(pre) || k === dir) continue;
+    const name = k.slice(pre.length).split("/")[0], p = pre + name;
+    if (!seen.has(name)) seen.set(name, { name, path: p, dir: x[p] ? x[p].k === "dir" : true, meta: x[p] });
+  }
+  return [...seen.values()].sort((a, b) => (b.dir - a.dir) || a.name.localeCompare(b.name, undefined, { numeric: true }));
+}
+const filesUnder = p => { p = norm(p); const x = vidx(); return Object.keys(x).filter(k => (k === p || k.startsWith(p + "/")) && x[k].k !== "dir"); };
+const isBroken = (name, m) => !!m && m.k !== "img" && m.k !== "dir" && isImgName(name);
+function vUsage(){ let n = 0; try { for (let i = 0; i < localStorage.length; i++){ const k = localStorage.key(i); if (k && k.startsWith("jetbotlab.vfs")) n += k.length + (localStorage.getItem(k) || "").length; } } catch (e){} return n; }
+function vRename(from, to){
+  from = norm(from); to = norm(to); if (!from || !to || from === to) return;
+  if (vExists(to)) throw new Error(L("Đã có tệp/thư mục tên ", "Already exists: ") + to);
+  vNeedDir(to); const x = vidx();
+  for (const k of Object.keys(x).filter(k => k === from || k.startsWith(from + "/"))){
+    const nk = to + k.slice(from.length), d = ls.get(VF + k);
+    if (d !== null) ls.set(VF + nk, d);
+    ls.del(VF + k); x[nk] = x[k]; delete x[k]; VCACHE.delete(k);
+  }
+  vsave();
+}
+
+// ---- zip (không nén khi ghi; đọc được cả kiểu "deflate" bằng DecompressionStream của trình duyệt) ----
+let CRC_T = null;
+function crc32(u){
+  if (!CRC_T){ CRC_T = new Uint32Array(256); for (let n = 0; n < 256; n++){ let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; CRC_T[n] = c >>> 0; } }
+  let c = 0xFFFFFFFF; for (let i = 0; i < u.length; i++) c = CRC_T[(c ^ u[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0;
+}
+function makeZip(files){
+  const enc = new TextEncoder(), parts = [], cen = [], d = new Date();
+  const dt = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate(), tm = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+  let off = 0;
+  for (const f of files){
+    const nm = enc.encode(f.name), crc = crc32(f.data), n = f.data.length, h = new DataView(new ArrayBuffer(30)), c = new DataView(new ArrayBuffer(46));
+    h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(6, 0x0800, true); h.setUint16(10, tm, true); h.setUint16(12, dt, true);
+    h.setUint32(14, crc, true); h.setUint32(18, n, true); h.setUint32(22, n, true); h.setUint16(26, nm.length, true);
+    c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint16(8, 0x0800, true); c.setUint16(12, tm, true); c.setUint16(14, dt, true);
+    c.setUint32(16, crc, true); c.setUint32(20, n, true); c.setUint32(24, n, true); c.setUint16(28, nm.length, true); c.setUint32(42, off, true);
+    parts.push(new Uint8Array(h.buffer), nm, f.data); cen.push(new Uint8Array(c.buffer), nm);
+    off += 30 + nm.length + n;
+  }
+  const csz = cen.reduce((a, b) => a + b.length, 0), e = new DataView(new ArrayBuffer(22));
+  e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, csz, true); e.setUint32(16, off, true);
+  return new Blob([...parts, ...cen, new Uint8Array(e.buffer)], { type: "application/zip" });
+}
+async function readZip(buf){
+  const u = new Uint8Array(buf), v = new DataView(buf); let e = -1;
+  for (let i = u.length - 22; i >= Math.max(0, u.length - 65558); i--) if (v.getUint32(i, true) === 0x06054b50){ e = i; break; }
+  if (e < 0) throw new Error(L("Tệp zip hỏng", "Broken zip file"));
+  const n = v.getUint16(e + 10, true), out = []; let p = v.getUint32(e + 16, true);
+  for (let i = 0; i < n; i++){
+    const m = v.getUint16(p + 10, true), cs = v.getUint32(p + 20, true), nl = v.getUint16(p + 28, true), xl = v.getUint16(p + 30, true), cl = v.getUint16(p + 32, true), lo = v.getUint32(p + 42, true);
+    const name = new TextDecoder().decode(u.subarray(p + 46, p + 46 + nl)); p += 46 + nl + xl + cl;
+    if (name.endsWith("/")){ out.push({ name, dir: true }); continue; }
+    if (/(^|\/)(__MACOSX|\.ipynb_checkpoints)\//.test(name) || /(^|\/)\.DS_Store$/.test(name)) continue;
+    const ds = lo + 30 + v.getUint16(lo + 26, true) + v.getUint16(lo + 28, true); let data = u.subarray(ds, ds + cs);
+    if (m === 8) data = new Uint8Array(await new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer());
+    else if (m !== 0) throw new Error(L("Zip dùng kiểu nén chưa hỗ trợ: ", "Unsupported zip compression: ") + name);
+    out.push({ name, data });
+  }
+  return out;
+}
+
+// ---- chuyển tệp ổ đĩa ảo <-> tệp thật ----
+const MODEL_TAG = "jetbotlab-model";
+function imgToCanvas(p, size){
+  const u = b64d(ls.get(VF + norm(p)) || ""); if (u.length !== D) throw new Error(L("Ảnh hỏng: ", "Broken image: ") + p);
+  const a = document.createElement("canvas"); a.width = a.height = R; const g = a.getContext("2d"), im = g.createImageData(R, R);
+  for (let i = 0; i < R*R; i++){ for (let c = 0; c < 3; c++) im.data[i*4 + c] = u[c*R*R + i]; im.data[i*4 + 3] = 255; }
+  g.putImageData(im, 0, 0); if (!size || size === R) return a;
+  const b = document.createElement("canvas"); b.width = b.height = size; const gb = b.getContext("2d"); gb.imageSmoothingEnabled = true; gb.imageSmoothingQuality = "high"; gb.drawImage(a, 0, 0, size, size); return b;
+}
+async function fileBytes(p){
+  const m = vMeta(p), raw = ls.get(VF + norm(p)) || "";
+  if (m.k === "img"){ const blob = await new Promise(r => imgToCanvas(p, 224).toBlob(r, /\.png$/i.test(p) ? "image/png" : "image/jpeg", 0.92)); return new Uint8Array(await blob.arrayBuffer()); }
+  if (m.k === "model") return new TextEncoder().encode(JSON.stringify({ format: MODEL_TAG, v: 1, out: m.out, H: m.H, data: raw }));
+  if (m.k === "zip"){ let list = []; try { list = JSON.parse(raw || "[]"); } catch (e){} return new Uint8Array(await (await zipOf(list.filter(vExists), "")).arrayBuffer()); }
+  return new TextEncoder().encode(raw);
+}
+async function zipOf(paths, base){
+  const files = []; for (const p of paths){ if (vIsDir(p)) continue; files.push({ name: base && p.startsWith(base + "/") ? p.slice(base.length + 1) : p, data: await fileBytes(p) }); }
+  return makeZip(files);
+}
+function saveBlob(blob, name){ const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+async function putImageBytes(p, bytes){
+  let bmp; try { bmp = await createImageBitmap(new Blob([bytes])); } catch (e){ throw new Error(L("Không đọc được ảnh: ", "Cannot read image: ") + p.split("/").pop()); }
+  const c = document.createElement("canvas"); c.width = c.height = R; const g = c.getContext("2d"); g.imageSmoothingEnabled = true; g.imageSmoothingQuality = "high"; g.drawImage(bmp, 0, 0, R, R);
+  const d = g.getImageData(0, 0, R, R).data, u = new Uint8Array(D);
+  for (let i = 0; i < R*R; i++) for (let k = 0; k < 3; k++) u[k*R*R + i] = d[i*4 + k];
+  vPut(p, { k: "img", size: bytes.length }, b64e(u));
+}
+async function putBytes(p, bytes){
+  p = norm(p); const name = p.split("/").pop();
+  if (parent(p) && !vIsDir(parent(p))) vMakedirs(parent(p));
+  if (isImgName(name)) return putImageBytes(p, bytes);
+  if (/\.(pth|pt)$/i.test(name)){
+    let o = null; try { o = JSON.parse(new TextDecoder().decode(bytes)); } catch (e){}
+    if (!o || o.format !== MODEL_TAG) throw new Error(L(`${name}: mô hình PyTorch thật (resnet18…) không chạy được trong mô phỏng. Chỉ tải lên được tệp .pth đã tải về từ JetBot Lab.`, `${name}: a real PyTorch model cannot run in the simulator. Only .pth files downloaded from JetBot Lab can be uploaded.`));
+    return vPut(p, { k: "model", out: o.out, H: o.H, size: Math.round(o.data.length*0.75) }, o.data);
+  }
+  if (bytes.length > 300000) throw new Error(L(`${name}: tệp quá lớn cho ổ đĩa ảo (tối đa 300 KB).`, `${name}: too large for the virtual disk (max 300 KB).`));
+  const s = new TextDecoder().decode(bytes); vPut(p, { k: "text", size: bytes.length }, s);
+}
+
+// ---- giao diện ----
+const IC = {
+  dir: '<svg width="18" height="18" viewBox="0 0 20 20"><path d="M2.5 6V15a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1V7.5a1 1 0 0 0-1-1H9.5L8 4.5H3.5a1 1 0 0 0-1 1.5z" fill="currentColor" opacity=".9"/></svg>',
+  model: '<svg width="18" height="18" viewBox="0 0 20 20"><path d="M10 2.5l6.5 3.75v7.5L10 17.5l-6.5-3.75v-7.5z M3.5 6.25L10 10l6.5-3.75M10 10v7.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>',
+  zip: '<svg width="18" height="18" viewBox="0 0 20 20"><path d="M5 2.5h7l3.5 3.5v11.5H5z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M9 4h1.5M8 6h1.5M9 8h1.5M8 10h1.5M8 12h2.5v2.5H8z" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>',
+  text: '<svg width="18" height="18" viewBox="0 0 20 20"><path d="M5 2.5h7l3.5 3.5v11.5H5z" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M7.5 10h5M7.5 12.5h5M7.5 15h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>',
+  dl: '<svg width="15" height="15" viewBox="0 0 20 20"><path d="M10 3.5v9M6.5 9l3.5 3.5L13.5 9M4 14v2h12v-2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  ren: '<svg width="15" height="15" viewBox="0 0 20 20"><path d="M4 16l1-3.5 8.5-8.5 2.5 2.5L7.5 15zM11.5 6l2.5 2.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+  del: '<svg width="15" height="15" viewBox="0 0 20 20"><path d="M4.5 6h11M8 6V4h4v2M6 6l.7 10h6.6L14 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+  up: '<svg width="15" height="15" viewBox="0 0 20 20"><path d="M10 13.5v-9M6.5 8L10 4.5 13.5 8M4 14v2h12v-2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  nd: '<svg width="15" height="15" viewBox="0 0 20 20"><path d="M2.5 6V15a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1V7.5a1 1 0 0 0-1-1H9.5L8 4.5H3.5a1 1 0 0 0-1 1.5z M10 9v5M7.5 11.5h5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>',
+  rf: '<svg width="15" height="15" viewBox="0 0 20 20"><path d="M15.5 10a5.5 5.5 0 1 1-1.8-4.1M15.5 3.5v3h-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+};
+const MAXROWS = 300;
+PF.renderFiles = el => {
+  FM.el = el;
+  if (FM.dir && !vIsDir(FM.dir)) FM.dir = "";
+  const rows = vEntries(FM.dir), crumbs = [["", "Notebooks"]].concat(FM.dir ? FM.dir.split("/").map((n, i, a) => [a.slice(0, i + 1).join("/"), n]) : []);
+  const broken = rows.filter(r => isBroken(r.name, r.meta));
+  const row = r => {
+    const m = r.meta || {}, bad = isBroken(r.name, m);
+    const kind = r.dir ? "dir" : m.k === "img" ? "img" : m.k === "model" ? "model" : m.k === "zip" ? "zip" : "text";
+    const info = r.dir ? filesUnder(r.path).length + L(" tệp", " files") : bad ? L("hỏng · ảnh rỗng", "broken · empty image") : fmtSize(m.size || 0);
+    return `<li class="fm-row${bad ? " bad" : ""}" data-p="${H(r.path)}" data-k="${kind}">` +
+      `<span class="fm-ic">${kind === "img" ? `<canvas width="${R}" height="${R}"></canvas>` : IC[kind]}</span>` +
+      `<span class="fm-name" title="${H(r.name)}">${r.dir ? `<button class="fm-open">${H(r.name)}</button>` : H(r.name)}<small>${H(info)}</small></span>` +
+      `<span class="fm-act"><button data-fm="dl" title="${L("Tải về máy", "Download")}">${IC.dl}</button><button data-fm="ren" title="${L("Đổi tên", "Rename")}">${IC.ren}</button><button data-fm="del" title="${L("Xoá", "Delete")}">${IC.del}</button></span></li>`;
+  };
+  const used = vUsage();
+  el.innerHTML = `<h3>${L("Tệp · ổ đĩa ảo", "Files · virtual disk")}</h3>
+    <div class="fm-bar">
+      <button data-fm="upload">${IC.up}<span>${L("Tải lên", "Upload")}</span></button>
+      <button data-fm="mkdir">${IC.nd}<span>${L("Thư mục mới", "New folder")}</span></button>
+      <button data-fm="refresh" title="${L("Làm mới", "Refresh")}">${IC.rf}</button>
+      <input type="file" class="fm-in" multiple>
+    </div>
+    <nav class="fm-path">${crumbs.map(([p, n], i) => (i ? '<i>/</i>' : "") + `<button data-cd="${H(p)}"${i === crumbs.length - 1 ? ' aria-current="true"' : ""}>${H(n)}</button>`).join("")}</nav>
+    ${broken.length ? `<div class="fm-warn">${L(`${broken.length} ảnh rỗng (chụp khi ô camera chưa có hình) sẽ làm lỗi bước huấn luyện.`, `${broken.length} empty images (taken before the camera had a picture) will break training.`)} <button data-fm="clean">${L("Xoá ảnh hỏng", "Delete broken")}</button></div>` : ""}
+    <ul class="fm-list">${rows.length ? rows.slice(0, MAXROWS).map(row).join("") : `<li class="fm-empty">${L("Thư mục trống", "Empty folder")}</li>`}
+    ${rows.length > MAXROWS ? `<li class="fm-empty">${L(`… và ${rows.length - MAXROWS} mục nữa`, `… and ${rows.length - MAXROWS} more`)}</li>` : ""}</ul>
+    <p class="fm-foot">${L("Đã dùng", "Used")} ${fmtSize(used)} / ~5 MB · ${L("Tệp lưu trong trình duyệt của máy này. Ảnh được thu nhỏ còn 24×24; tệp .pth là mô hình của mô phỏng, không dùng cho JetBot thật. Tải lên .zip để giải nén vào thư mục đang mở.", "Files live in this browser. Images are stored at 24×24; .pth files are simulator models, not for the real JetBot. Upload a .zip to extract it here.")}</p>`;
+  el.querySelectorAll('.fm-row[data-k="img"] canvas').forEach(c => { try { const s = imgToCanvas(c.closest(".fm-row").dataset.p); c.getContext("2d").drawImage(s, 0, 0); } catch (e){} });
+  el.onclick = e => fmClick(e).catch(err => toast(err.message));
+  el.querySelector(".fm-in").onchange = e => fmUpload([...e.target.files]).catch(err => toast(err.message)).finally(() => { e.target.value = ""; });
+};
+const rerender = () => { if (FM.el && !FM.el.hidden && typeof DRAWER !== "undefined" && DRAWER === "files") PF.renderFiles(FM.el); };
+async function fmClick(e){
+  const cd = e.target.closest("[data-cd]"); if (cd){ FM.dir = cd.dataset.cd; return rerender(); }
+  const op = e.target.closest(".fm-open"); if (op){ FM.dir = op.closest(".fm-row").dataset.p; return rerender(); }
+  const b = e.target.closest("[data-fm]"); if (!b) return;
+  const a = b.dataset.fm, rowEl = b.closest(".fm-row"), p = rowEl && rowEl.dataset.p, name = p && p.split("/").pop();
+  const join = n => (FM.dir ? FM.dir + "/" : "") + n;
+  if (a === "refresh") return rerender();
+  if (a === "upload") return FM.el.querySelector(".fm-in").click();
+  if (a === "mkdir"){
+    const n = (prompt(L("Tên thư mục mới:", "New folder name:"), "") || "").trim(); if (!n) return;
+    if (/[\\/]/.test(n)) throw new Error(L("Tên không được chứa / hoặc \\", "Name cannot contain / or \\"));
+    if (vExists(join(n))) throw new Error(L("Đã có: ", "Already exists: ") + n);
+    vMakedirs(join(n)); return rerender();
+  }
+  if (a === "clean"){
+    const bad = vEntries(FM.dir).filter(r => isBroken(r.name, r.meta));
+    if (!confirm(L(`Xoá ${bad.length} ảnh hỏng trong thư mục này?`, `Delete ${bad.length} broken images in this folder?`))) return;
+    bad.forEach(r => vRemove(r.path, false)); toast(L(`Đã xoá ${bad.length} ảnh hỏng`, `Deleted ${bad.length} broken images`)); return rerender();
+  }
+  if (!p) return;
+  if (a === "del"){
+    const n = vIsDir(p) ? filesUnder(p).length : 0;
+    if (!confirm(n ? L(`Xoá thư mục "${name}" và ${n} tệp bên trong?`, `Delete folder "${name}" and its ${n} files?`) : L(`Xoá "${name}"?`, `Delete "${name}"?`))) return;
+    vRemove(p, true); return rerender();
+  }
+  if (a === "ren"){
+    const n = (prompt(L("Tên mới:", "New name:"), name) || "").trim(); if (!n || n === name) return;
+    if (/[\\/]/.test(n)) throw new Error(L("Tên không được chứa / hoặc \\", "Name cannot contain / or \\"));
+    vRename(p, join(n)); return rerender();
+  }
+  if (a === "dl"){
+    b.disabled = true;
+    try {
+      if (vIsDir(p)) saveBlob(await zipOf(filesUnder(p), parent(p)), name + ".zip");
+      else { const m = vMeta(p); if (isBroken(name, m)) throw new Error(L("Ảnh này rỗng, không tải về được.", "This image is empty.")); saveBlob(new Blob([await fileBytes(p)], { type: m.k === "zip" ? "application/zip" : "application/octet-stream" }), name); }
+    } finally { b.disabled = false; }
+  }
+}
+async function fmUpload(files){
+  let n = 0; const errs = [];
+  for (const f of files){
+    try {
+      const bytes = new Uint8Array(await f.arrayBuffer());
+      if (/\.zip$/i.test(f.name)){
+        for (const z of await readZip(bytes.buffer)){
+          const dest = norm((FM.dir ? FM.dir + "/" : "") + z.name);
+          if (z.dir){ vMakedirs(dest); continue; }
+          try { await putBytes(dest, z.data); n++; } catch (e){ errs.push(e.message); }
+        }
+      } else { await putBytes((FM.dir ? FM.dir + "/" : "") + f.name.replace(/[\\/]/g, "_"), bytes); n++; }
+    } catch (e){ errs.push(e.message); }
+  }
+  rerender();
+  toast(errs.length ? errs[0] + (errs.length > 1 ? L(` (+${errs.length - 1} lỗi khác)`, ` (+${errs.length - 1} more)`) : "") : L(`Đã tải lên ${n} tệp`, `Uploaded ${n} files`));
+}
+PF._fm = { fileBytes, zipOf, readZip, makeZip, putBytes };   // để kiểm thử
+// tự làm mới bảng Tệp khi code Python ghi/xoá tệp
+let fmT = 0;
+PF.fsChanged = () => { clearTimeout(fmT); fmT = setTimeout(rerender, 250); };
+
 install();
 })();

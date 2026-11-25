@@ -468,3 +468,38 @@ input[type=file]{display:none}
 .pfw-slider.vertical .desc{min-width:0;text-align:center}
 .pfw-slider.vertical input{writing-mode:vertical-lr;direction:rtl;width:22px;height:120px}
 .pfw-html h1,.pfw-html h2,.pfw-html h3,.pfw-html h4{margin:4px 0;font-size:14px}
+/* bảng Tệp (ổ đĩa ảo) */
+.fm-bar{display:flex;gap:6px;padding:4px 14px 8px}
+.fm-bar button{display:inline-flex;align-items:center;gap:5px;height:28px;padding:0 9px;border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--fg);font-size:12px;transition:border-color .12s ease,color .12s ease}
+.fm-bar button:hover{border-color:var(--accent);color:var(--accent-ink)}
+.fm-bar button[data-fm="refresh"]{margin-left:auto;padding:0 7px}
+.fm-path{display:flex;flex-wrap:wrap;align-items:center;gap:2px;padding:2px 14px 6px;font-size:12px}
+.fm-path i{color:var(--muted);font-style:normal}
+.fm-path button{border:0;background:transparent;padding:2px 4px;border-radius:4px;color:var(--accent-ink);font-size:12px}
+.fm-path button:hover{background:var(--panel-2)}
+.fm-path button[aria-current]{color:var(--fg);font-weight:600}
+.fm-warn{margin:0 14px 8px;padding:7px 9px;border-radius:8px;background:#fff4e5;border:1px solid #f3c27a;color:#7a4300;font-size:12px;line-height:1.4}
+.fm-warn button{margin-top:5px;display:block;border:1px solid #d9841a;background:#fff;color:#7a4300;border-radius:6px;font-size:12px;padding:2px 8px}
+.fm-list{list-style:none;margin:0;padding:0 0 6px}
+.fm-row{display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:8px;padding:5px 10px 5px 14px;border-top:1px solid var(--line-2)}
+.fm-row:hover{background:var(--panel-2)}
+.fm-row.bad .fm-name small{color:#c0392b}
+.fm-ic{display:grid;place-items:center;color:var(--muted)}
+.fm-row[data-k="dir"] .fm-ic{color:#d9a03a}
+.fm-row[data-k="model"] .fm-ic{color:var(--accent-ink)}
+.fm-ic canvas{width:26px;height:26px;border-radius:3px;image-rendering:pixelated;background:var(--panel-2)}
+.fm-name{min-width:0;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fm-name small{display:block;font-size:11px;color:var(--muted)}
+.fm-open{border:0;background:transparent;padding:0;font:inherit;font-weight:600;color:var(--fg);cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.fm-open:hover{color:var(--accent-ink);text-decoration:underline}
+.fm-act{display:flex;gap:1px;opacity:.35;transition:opacity .12s ease}
+.fm-row:hover .fm-act,.fm-row:focus-within .fm-act{opacity:1}
+@media (hover:none){.fm-act{opacity:1}}
+.fm-act button{width:26px;height:26px;display:grid;place-items:center;border:0;border-radius:6px;background:transparent;color:var(--muted)}
+.fm-act button:hover{background:var(--panel);color:var(--accent-ink)}
+.fm-act button[data-fm="del"]:hover{color:#c0392b}
+.fm-empty{padding:14px;color:var(--muted);font-size:12px;border-top:1px solid var(--line-2)}
+.fm-foot{margin:6px 14px 16px;font-size:11px;line-height:1.45;color:var(--muted)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .fm-warn{background:#3a2a12;border-color:#7a5520;color:#f3c27a}:root:not([data-theme="light"]) .fm-warn button{background:transparent;color:#f3c27a}}
+:root[data-theme="dark"] .fm-warn{background:#3a2a12;border-color:#7a5520;color:#f3c27a}
+:root[data-theme="dark"] .fm-warn button{background:transparent;color:#f3c27a}

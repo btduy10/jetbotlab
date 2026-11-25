@@ -100,6 +100,7 @@ Ba notebook `path_following` của NVIDIA (`data_collection`, `train_model`, `ru
 - `pfsim.js` mô phỏng các thư viện của notebook: `ipywidgets`, `traitlets`, `IPython.display`, `jupyter_clickable_image_widget`,
   `torch` (+`nn`, `optim`, `utils.data`), `torchvision`, `torch2trt`, `PIL`, `cv2`, `numpy`, `os`, `glob`, `uuid`, `json`, `open()`
   và dòng lệnh `!zip`, `!ls`, `!rm -r`. Tệp (ảnh `dataset_xy/…jpg`, mô hình `.pth`) nằm trong **ổ đĩa ảo** của trình duyệt (localStorage).
+  Bảng **Tệp** ở thanh bên (biểu tượng thư mục) xem / tải lên / tải về / đổi tên / xoá tệp như Jupyter Lab: thư mục tải về thành `.zip`, tải lên `.zip` thì tự giải nén, ảnh rỗng được đánh dấu "hỏng" kèm nút xoá; `.pth` chỉ nhận mô hình đã tải về từ JetBot Lab.
 - Thay `resnet18` trên GPU bằng mạng nhỏ: ảnh thu về 24×24 màu → 48 nơ-ron → 2 đầu ra (x, y), huấn luyện bằng Adam (70 epoch ≈ 20 giây).
 - Bài 14: kéo robot tới nhiều vị trí/góc, bấm vào ảnh camera tại điểm trên tim đường robot nên đi tới (khoảng giữa ảnh); nên có ≥ 80 ảnh.
 - Bài 16: `camera.observe(execute)` lái robot mỗi khung hình; bấm **Dừng** để tắt. Robot cua gắt thì giảm *steering gain* còn 0.02–0.03.
