@@ -94,6 +94,17 @@ của trường đó. Mỗi trường có CSDL, admin và Drive giáo viên riê
 `JetBot Lab / Tài liệu chung` trong Drive của admin. Tệp hiện ở đầu mục **Bài mẫu** trên trang học cho **mọi người, kể cả chưa đăng nhập**.
 10. **Tiết học**: đặt thứ tự nhóm + số phút → *Bắt đầu luân phiên*; học sinh thấy nhóm nào đang ở robot thật.
 
+## Bài AI: đi theo đường dẫn (bài 14–16)
+Ba notebook `path_following` của NVIDIA (`data_collection`, `train_model`, `run_model`) chạy **nguyên văn** trên sa bàn
+**Đường dẫn · path following** (4,0 × 2,23 m: nền xám, mép đường cam, tim đường trắng đứt).
+- `pfsim.js` mô phỏng các thư viện của notebook: `ipywidgets`, `traitlets`, `IPython.display`, `jupyter_clickable_image_widget`,
+  `torch` (+`nn`, `optim`, `utils.data`), `torchvision`, `torch2trt`, `PIL`, `cv2`, `numpy`, `os`, `glob`, `uuid`, `json`, `open()`
+  và dòng lệnh `!zip`, `!ls`, `!rm -r`. Tệp (ảnh `dataset_xy/…jpg`, mô hình `.pth`) nằm trong **ổ đĩa ảo** của trình duyệt (localStorage).
+- Thay `resnet18` trên GPU bằng mạng nhỏ: ảnh thu về 24×24 màu → 48 nơ-ron → 2 đầu ra (x, y), huấn luyện bằng Adam (70 epoch ≈ 20 giây).
+- Bài 14: kéo robot tới nhiều vị trí/góc, bấm vào ảnh camera tại điểm trên tim đường robot nên đi tới (khoảng giữa ảnh); nên có ≥ 80 ảnh.
+- Bài 16: `camera.observe(execute)` lái robot mỗi khung hình; bấm **Dừng** để tắt. Robot cua gắt thì giảm *steering gain* còn 0.02–0.03.
+- Làm lại từ đầu: `!rm -r dataset_xy`.
+
 ## Bảo mật
 - Python của học sinh chạy trong sandbox: đã gỡ `jseval`, `open`, `file`, `execfile`; chỉ cho phép thư viện an toàn.
 - CSP chỉ cho script cùng tên miền và **không cho thuộc tính `style` trong HTML** (style phải gán bằng JavaScript).
