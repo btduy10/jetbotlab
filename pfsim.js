@@ -398,10 +398,16 @@ PF._api = {
   w_display: wDisplay, w_on_click: (id, fn, self) => { const w = PF.widgets.get(id); w.click = fn; w.self = self; },
   // camera
   cam_new: () => ++PF.cid,
-  cam_dlink: (cid, wid, fn, factory) => { PF.factory = factory; cam(cid).links.push({ wid, fn: fn === Sk.builtin.none.none$ ? null : fn }); ensureTimer(); },
+  cam_dlink: (cid, wid, fn, factory) => {
+    PF.factory = factory; cam(cid).links.push({ wid, fn: fn === Sk.builtin.none.none$ ? null : fn });
+    try { wSet(wid, "value", aiCapture()); } catch (e) {}   // có ảnh ngay, không chờ khung đầu tiên
+    ensureTimer();
+  },
   cam_observe: (cid, fn, factory) => { PF.factory = factory; cam(cid).obs.push({ fn, cell: K.cb || K.cur, busy: false }); ensureTimer(); },
   cam_unobserve: (cid, fn) => { const c = cam(cid); c.obs = c.obs.filter(o => o.fn !== fn); },
-  cam_stop: cid => { PF.cams.delete(cid); },
+  // camera.stop(): dừng các hàm gọi lại điều khiển robot. Ảnh xem trực tiếp vẫn chạy khi widget còn trên màn hình,
+  // vì nút "Chạy" chạy cả notebook: ô camera.stop() ngay bên dưới sẽ làm ảnh để bấm gán nhãn bị đứng.
+  cam_stop: cid => { const c = PF.cams.get(cid); if (c) c.obs = []; },
   // khác
   uuid1: () => { const h = n => Array.from(crypto.getRandomValues(new Uint8Array(n)), b => b.toString(16).padStart(2, "0")).join(""); const x = h(16); return `${x.slice(0, 8)}-${x.slice(8, 12)}-1${x.slice(13, 16)}-${x.slice(16, 20)}-${x.slice(20, 32)}`; },
   json_dumps: s => JSON.stringify(s), json_loads: s => JSON.parse(s),
