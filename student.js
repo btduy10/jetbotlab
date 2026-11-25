@@ -26,7 +26,7 @@ async function loadMe(){
   const err = new URLSearchParams(location.search).get("login_error"); if (err) toast(err);
 }
 /* ---------- bài được giao ---------- */
-const AS = { list: [], cur: null, lastSaved: "", saveT: 0, savedAt: null, saving: false, failed: false, deep: new URLSearchParams(location.search).get("assignment") };
+const AS = { list: [], news: [], classes: [], join: new URLSearchParams(location.search).get("join"), uploading: false, cur: null, lastSaved: "", saveT: 0, savedAt: null, saving: false, failed: false, deep: new URLSearchParams(location.search).get("assignment") };
 const fmtWhen = d => new Date(d).toLocaleString(LANG === "en" ? "en-GB" : "vi-VN", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 const nbNow = () => CELLS.map(c => c.meta ? [c.type, c.src, null, c.meta] : [c.type, c.src]);
 function asState(a){
@@ -35,20 +35,38 @@ function asState(a){
   return a.status ? ["", t("asStarted")] : ["", t("asNew")];
 }
 async function loadAssignments(){
-  try { AS.list = ACC.me ? (await api("/api/class?a=my")).assignments : []; } catch (e) { AS.list = []; }
+  let j = { assignments: [], news: [], classes: [] };
+  try { if (ACC.me) j = await api("/api/class?a=my"); } catch (e) {}
+  AS.list = j.assignments || []; AS.news = j.news || []; AS.classes = j.classes || [];
   $("#rAs").hidden = !ACC.me;
-  $("#asDot").hidden = !AS.list.some(a => !a.status && !(a.due_at && new Date(a.due_at) < new Date()));
+  const seen = +(store.get("jetbotlab.newsSeen") || 0), newest = AS.news.length ? Date.parse(AS.news[0].created_at) : 0;
+  $("#asDot").hidden = !(AS.list.some(a => !a.status && !(a.due_at && new Date(a.due_at) < new Date())) || newest > seen);
   if (DRAWER === "as") renderDrawer("as");
 }
 window.renderAssignDrawer = el => {
-  if (!AS.list.length){ el.innerHTML = `<h3>${esc(t("asTitle"))}</h3><p class="drawer-empty">${esc(t("asEmpty"))}</p>`; return; }
+  const news = AS.news && AS.news.length ? `<div class="news">${AS.news.slice(0, 5).map(n => `<div class="newsitem"><em>${esc(n.class_name)} · ${esc(fmtWhen(n.created_at))}</em><p>${esc(n.text)}</p></div>`).join("")}</div>` : "";
+  if (AS.news && AS.news.length) store.set("jetbotlab.newsSeen", Date.parse(AS.news[0].created_at));
+  const join = `<form class="joinform" id="joinForm"><input name="code" maxlength="8" placeholder="${attr(t("asJoinPh"))}" aria-label="${attr(t("asJoinPh"))}" autocomplete="off"><button class="go">${esc(t("asJoin"))}</button></form>`
+    + (AS.classes && AS.classes.length ? `<p class="drawer-empty myclasses">${esc(t("asMyClasses"))}: ${AS.classes.map(c => esc(c.name)).join(", ")}</p>` : "");
+  if (!AS.list.length){ el.innerHTML = `<h3>${esc(t("asTitle"))}</h3>${news}${join}<p class="drawer-empty">${esc(t(AS.classes && AS.classes.length ? "asEmpty" : "asNoClass"))}</p>`; bindJoin(); return; }
   const weeks = [...new Set(AS.list.map(a => a.week_label || t("asNoWeek")))];
-  el.innerHTML = `<h3>${esc(t("asTitle"))}</h3>` + weeks.map(w => `<h4 class="lvl">${esc(w)}</h4>` + AS.list.filter(a => (a.week_label || t("asNoWeek")) === w).map(a => {
+  el.innerHTML = `<h3>${esc(t("asTitle"))}</h3>${news}${join}` + weeks.map(w => `<h4 class="lvl">${esc(w)}</h4>` + AS.list.filter(a => (a.week_label || t("asNoWeek")) === w).map(a => {
     const [cls, label] = asState(a), title = a.title || (findLesson(a.lesson_id) || {}).title || a.lesson_id;
     return `<button class="lesson asg" data-as="${a.id}"><em>${esc(a.class_name)}${a.period_label ? " · " + esc(a.period_label) : ""}<span class="st ${cls}">· ${esc(label)}</span>${a.completed ? `<span class="st done"> ✓ ${esc(t("asCompleted"))}</span>` : ""}</em>
-      <b>${esc(title)}</b><span>${a.due_at ? esc(t("asDue")) + " " + esc(fmtWhen(a.due_at)) : ""}${a.total !== null ? " · " + esc(t("asScore")) + " " + a.total + "/10" : ""}</span></button>`;
+      <b>${esc(title)}</b><span>${a.due_at ? esc(t("asDue")) + " " + esc(fmtWhen(a.due_at)) : ""}${a.need_photo ? " · 📷" : ""}${a.total !== null ? " · " + esc(t("asScore")) + " " + a.total + "/10" : ""}</span></button>`;
   }).join("")).join("");
+  bindJoin();
 };
+function bindJoin(){
+  const f = $("#joinForm"); if (!f) return;
+  f.onsubmit = e => { e.preventDefault(); joinClass(f.elements.code.value); };
+}
+async function joinClass(code){
+  if (!ACC.me){ toast(t("asJoinLogin")); return false; }
+  try { const j = await api("/api/class?a=join", { method: "POST", body: JSON.stringify({ code }) });
+    toast(t(j.already ? "asJoinedAlready" : "asJoined").replace("{c}", j.class_name)); await loadAssignments(); if (DRAWER !== "as") openDrawer("as"); return true; }
+  catch (e){ toast(e.message); return false; }
+}
 $("#rAs").onclick = () => openDrawer("as");
 drawer.addEventListener("click", e => { const b = e.target.closest(".asg"); if (b) openAssignment(+b.dataset.as); });
 
@@ -60,25 +78,65 @@ async function openAssignment(id){
   const a = j.assignment, s = j.submission, cells = s && s.notebook ? sanitizeCells(s.notebook) : null;
   if (!openLesson(a.lesson_id, cells && cells.length ? cells : null)) return toast(t("asNoLesson"));
   const L = findLesson(a.lesson_id);
-  AS.cur = { id: a.id, gc: !!a.gc, lesson: a.lesson_id, title: a.title || (L ? lessonIn(L, LANG).title : a.lesson_id), cls: a.class_name, due: a.due_at,
+  AS.cur = { id: a.id, lesson: a.lesson_id, title: a.title || (L ? lessonIn(L, LANG).title : a.lesson_id), cls: a.class_name, due: a.due_at,
+    instructions: a.instructions || "", needPhoto: !!a.need_photo, photosOn: !!a.photos, photos: s ? s.attachments || [] : [], returned: !!(s && s.returned_at),
     status: s ? s.status : null, submitted_at: s ? s.submitted_at : null, completed: s ? s.completed : false, total: s ? s.total : null, comment: s ? s.comment : "" };
   AS.lastSaved = JSON.stringify(nbNow()); AS.savedAt = null; AS.failed = false;
   renderAsBar(); if (innerWidth < 900) closeDrawer();
 }
 function leaveAssignment(){ clearTimeout(AS.saveT); AS.cur = null; renderAsBar(); }
+const photoUrl = id => "/api/file?a=view&id=" + id;
 function renderAsBar(){
   const el = $("#asBar"), a = AS.cur;
   if (!a){ el.hidden = true; el.innerHTML = ""; return; }
   const [cls, label] = asState({ status: a.status, due_at: a.due, submitted_at: a.submitted_at });
+  const photos = a.photosOn || a.photos.length ? `<div class="photos">${a.photos.map(p => `<span class="ph"><a href="${attr(photoUrl(p.id))}" target="_blank" rel="noopener"><img src="${attr(photoUrl(p.id))}" alt="${attr(p.name)}" loading="lazy"></a>${a.returned ? "" : `<button class="del" data-del="${p.id}" title="${attr(t("asPhotoDel"))}" aria-label="${attr(t("asPhotoDel"))}">×</button>`}</span>`).join("")}`
+      + (a.photosOn && !a.returned && a.photos.length < 10 ? `<label class="addph${AS.uploading ? " busy" : ""}">📷 ${esc(AS.uploading ? t("asPhotoUploading") : t("asPhotoAdd"))}<input type="file" id="asPhotoIn" accept="image/*" multiple hidden></label>` : "")
+      + (a.needPhoto && !a.photos.length ? `<small class="muted">${esc(t(a.photosOn ? "asPhotoNeed" : "asPhotoOff"))}</small>` : "") + `</div>`
+    : (a.needPhoto ? `<div class="photos"><small class="muted">${esc(t("asPhotoOff"))}</small></div>` : "");
   el.innerHTML = `<span class="bar-lbl">${esc(t("asLabel"))}</span><b>${esc(a.title)}</b><span class="muted">${esc(a.cls)}${a.due ? " · " + esc(t("asDue")) + " " + esc(fmtWhen(a.due)) : ""}</span>`
-    + `<span class="st ${cls}">${esc(label)}</span>${a.completed ? `<span class="st done">✓ ${esc(t("asCompleted"))}</span>` : ""}${a.total !== null && a.total !== undefined ? `<span class="st sub">${esc(t("asScore"))} ${a.total}/10</span>` : ""}`
+    + `<span class="st ${cls}">${esc(label)}</span>${a.completed ? `<span class="st done">✓ ${esc(t("asCompleted"))}</span>` : ""}${a.returned && a.total !== null ? `<span class="st sub">${esc(t("asScore"))} ${a.total}/10</span>` : ""}`
     + `<span class="grow"></span><span class="saved">${esc(AS.saving ? t("asSaving") : AS.failed ? t("asSaveFail") : AS.savedAt ? t("asSavedAt").replace("{t}", AS.savedAt) : "")}</span>`
     + `<button class="go" id="asSubmit">${esc(t(a.status === "submitted" ? "asResubmit" : "asSubmit"))}</button><button id="asRobot" title="${attr(t("asRobot"))}">.ipynb</button><button id="asExit">${esc(t("asExit"))}</button>`
-    + (a.comment ? `<p class="cmt"><b>${esc(t("asComment"))}:</b> ${esc(a.comment)}</p>` : "");
+    + (a.instructions ? `<p class="instr"><b>${esc(t("asInstr"))}:</b> ${esc(a.instructions)}</p>` : "")
+    + photos
+    + (a.returned && a.comment ? `<p class="cmt"><b>${esc(t("asComment"))}:</b> ${esc(a.comment)}</p>` : "");
   el.hidden = false;
-  $("#asSubmit").onclick = async () => { if (confirm(t(a.gc && !(ACC.me && ACC.me.turnin) ? "asSubmitConfirmGc" : "asSubmitConfirm"))) await saveAssignment(true); };
+  $("#asSubmit").onclick = async () => {
+    if (a.needPhoto && a.photosOn && !a.photos.length) return toast(t("asPhotoNeed"));
+    if (confirm(t("asSubmitConfirm"))) await saveAssignment(true);
+  };
   $("#asExit").onclick = async () => { await flushAssignment(); leaveAssignment(); };
   $("#asRobot").onclick = () => saveFile();
+  const inp = $("#asPhotoIn"); if (inp) inp.onchange = () => { addPhotos([...inp.files]); inp.value = ""; };
+  el.querySelectorAll("[data-del]").forEach(b => b.onclick = () => delPhoto(+b.dataset.del));
+}
+// Ảnh: thu nhỏ trên máy (cạnh dài 1600 px, JPEG) rồi gửi lên; máy chủ lưu vào Google Drive của giáo viên.
+async function shrinkPhoto(file){
+  const bmp = await createImageBitmap(file), k = Math.min(1, 1600/Math.max(bmp.width, bmp.height));
+  const c = document.createElement("canvas"); c.width = Math.round(bmp.width*k); c.height = Math.round(bmp.height*k);
+  const g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, c.width, c.height); g.drawImage(bmp, 0, 0, c.width, c.height);
+  for (const q of [0.85, 0.75, 0.6]){ const b = await new Promise(r => c.toBlob(r, "image/jpeg", q)); if (b && b.size <= 3.3e6) return b; }
+  throw new Error(t("asPhotoBig"));
+}
+const toB64 = buf => { const u = new Uint8Array(buf); let s = ""; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
+async function addPhotos(files){
+  const a = AS.cur; if (!a || AS.uploading) return;
+  files = files.filter(f => /^image\//.test(f.type)).slice(0, 10 - a.photos.length);
+  if (!files.length) return;
+  AS.uploading = true; renderAsBar();
+  for (const f of files){
+    try {
+      const blob = await shrinkPhoto(f);
+      const j = await api("/api/file?a=upload", { method: "POST", body: JSON.stringify({ assignment: a.id, data: toB64(await blob.arrayBuffer()) }) });
+      if (AS.cur === a) a.photos.push(j.attachment);
+    } catch (e){ toast(e.message); if (e.status === 409){ a.photosOn = false; break; } }
+  }
+  AS.uploading = false; renderAsBar(); toast(t("asPhotoDone"));
+}
+async function delPhoto(id){
+  const a = AS.cur; if (!a || !confirm(t("asPhotoDelQ"))) return;
+  try { await api("/api/file?id=" + id, { method: "DELETE" }); a.photos = a.photos.filter(p => p.id !== id); renderAsBar(); } catch (e){ toast(e.message); }
 }
 async function saveAssignment(final){
   const a = AS.cur; if (!a) return;
@@ -90,20 +148,9 @@ async function saveAssignment(final){
     const j = await api("/api/class?a=" + (final ? "submit" : "save"), { method: "POST", body: JSON.stringify({ assignment: a.id, notebook: nb }) });
     AS.lastSaved = js; AS.failed = false; AS.savedAt = new Date().toLocaleTimeString(LANG === "en" ? "en-GB" : "vi-VN", { hour: "2-digit", minute: "2-digit" });
     if (AS.cur === a){ a.status = j.submission.status; a.submitted_at = j.submission.submitted_at; }
-    if (final){ loadAssignments(); afterSubmitGc(a, j.gc); }
-  } catch (e){ AS.failed = true; if (final) toast(e.message); else AS.saveT = setTimeout(() => saveAssignment(false), 30000); }
+    if (final){ loadAssignments(); toast(t("asSubmittedToast")); }
+  } catch (e){ AS.failed = !final; if (final) toast(e.message); else AS.saveT = setTimeout(() => saveAssignment(false), 30000); }
   AS.saving = false; renderAsBar();
-}
-// Kết quả nộp trên Classroom. Lần đầu: chuyển sang Google để em cho phép, quay về thì tự nộp tiếp.
-function afterSubmitGc(a, gc){
-  if (gc === "need_connect"){
-    toast(t("asGcConnecting"));
-    location.href = "/api/auth?a=google&classroom=student&next=" + encodeURIComponent("/?assignment=" + a.id + "&gcturnin=1");
-    return;
-  }
-  if (gc === "turned_in") toast(t("asSubmittedGc"));
-  else if (gc) toast(t("asSubmittedNoGc") + " " + gc.replace(/^error: /, ""));
-  else toast(t("asSubmittedToast"));
 }
 const flushAssignment = () => AS.cur && JSON.stringify(nbNow()) !== AS.lastSaved ? saveAssignment(false) : Promise.resolve();
 document.addEventListener("jbl:save", () => {
@@ -166,8 +213,9 @@ function renderReview(){
     + `<b class="total" id="rvTotal"></b></div>`
     + `<textarea id="rvComment" rows="2" placeholder="${attr(t("rvCommentPh"))}">${esc(g ? g.comment : "")}</textarea>`
     + `<label class="vf"><input type="checkbox" id="rvVerified"${s.robot_verified ? " checked" : ""}> ${esc(t("rvVerified"))}</label>`
-    + `<span class="grow"></span><span class="saved" id="rvMsg">${g ? esc(t("rvGraded").replace("{t}", fmtWhen(g.graded_at))) : ""}</span>`
-    + `<button class="go" id="rvSave">${esc(t("rvSave"))}</button>${s.gc ? `<button id="rvPush">${esc(t("rvPush"))}</button>` : ""}`
+    + `<span class="grow"></span><span class="saved" id="rvMsg">${g ? esc(t("rvGraded").replace("{t}", fmtWhen(g.graded_at))) + " · " + esc(g.returned_at ? t("rvReturned").replace("{t}", fmtWhen(g.returned_at)) : t("rvNotReturned")) : ""}</span>`
+    + `<button class="go" id="rvSave">${esc(t("rvSave"))}</button><button id="rvReturn"${g ? "" : " disabled"}>${esc(t("rvReturn"))}</button>`
+    + (s.attachments && s.attachments.length ? `<div class="photos rvph"><b>${esc(t("rvPhotos"))} (${s.attachments.length})</b>${s.attachments.map(p => `<span class="ph"><a href="${attr(photoUrl(p.id))}" target="_blank" rel="noopener"><img src="${attr(photoUrl(p.id))}" alt="${attr(p.name)}" loading="lazy"></a>${p.link ? `<a class="drv" href="${attr(p.link)}" target="_blank" rel="noopener">Drive ↗</a>` : ""}</span>`).join("")}</div>` : "")
     + `<details class="runs"><summary>${esc(t("rvRuns"))} (${d.runs.length})</summary><ul>${d.runs.map(r => `<li class="${r.completed ? "ok" : ""}">${esc(fmtWhen(r.at))} · ${r.completed ? "✓" : r.ok ? "•" : "✗"} ${esc(t("critStats").replace("{t}", (+keyT(r.metrics)).toFixed(1)).replace("{d}", (+r.metrics.dist).toFixed(2)).replace("{k}", r.metrics.coll))}</li>`).join("")}</ul></details>`;
   el.hidden = false; el.classList.add("review");
   const total = () => { const v = k => +el.querySelector(`select[data-k=${k}]`).value; $("#rvTotal").textContent = t("rvTotal").replace("{n}", (Math.round((v("task") + v("optim") + v("code"))/12*100)/10).toFixed(1)); };
@@ -175,16 +223,16 @@ function renderReview(){
   $("#rvSave").onclick = async () => {
     const v = k => +el.querySelector(`select[data-k=${k}]`).value;
     try { const j = await api("/api/class?a=grade", { method: "POST", body: JSON.stringify({ submission: s.id, scores: { task: v("task"), optim: v("optim"), code: v("code") }, comment: $("#rvComment").value }) });
-      RV.d.grade = { scores: { task: v("task"), optim: v("optim"), code: v("code") }, total: j.total, comment: $("#rvComment").value, graded_at: new Date().toISOString() }; toast(t("rvSaved").replace("{n}", j.total)); renderReview(); }
+      RV.d.grade = { scores: { task: v("task"), optim: v("optim"), code: v("code") }, total: j.total, comment: $("#rvComment").value, graded_at: new Date().toISOString(), returned_at: RV.d.grade ? RV.d.grade.returned_at : null }; toast(t("rvSaved").replace("{n}", j.total)); renderReview(); }
     catch (e){ toast(e.message); }
   };
-  if ($("#rvPush")) $("#rvPush").onclick = () => window.pushGrade && pushGrade(s.id);
+  $("#rvReturn").onclick = async () => {
+    if (!RV.d.grade) return toast(t("rvSaveFirst"));
+    try { await api("/api/class?a=return", { method: "POST", body: JSON.stringify({ submission: s.id }) }); RV.d.grade.returned_at = new Date().toISOString(); toast(t("rvReturnedToast")); renderReview(); }
+    catch (e){ toast(e.message); }
+  };
   $("#rvVerified").onchange = async e => { try { await api("/api/class?a=verify", { method: "POST", body: JSON.stringify({ submission: s.id, value: e.target.checked }) }); s.robot_verified = e.target.checked; } catch (x){ e.target.checked = !e.target.checked; toast(x.message); } };
 }
-window.pushGrade = async sid => {
-  if (!RV.d || !RV.d.grade) return toast(t("rvPushFirst"));
-  try { const j = await api("/api/class?a=gc_grade", { method: "POST", body: JSON.stringify({ submission: sid }) }); toast(t(j.returned === false ? "rvPushedNoReturn" : "rvPushed")); } catch (e){ toast(e.message); }
-};
 async function openReview(){
   if (!ACC.me || ACC.me.role === "student") return toast(t("rvNoRight"));
   let j; try { j = await api("/api/class?a=review&submission=" + RV.id); } catch (e) { return toast(e.message); }
@@ -198,17 +246,14 @@ document.addEventListener("jbl:auth", async () => {
   if (RV.id && !RV.d){ openReview(); return; }
   await loadAssignments();
   if (!ACC.me) leaveAssignment();
-  if (AS.deep){
-    const id = +AS.deep, sp = new URLSearchParams(location.search), retry = sp.get("gcturnin") === "1"; AS.deep = null;
-    if (!ACC.me){ toast(t("asNeedLogin")); return; }
-    await openAssignment(id);
-    if (retry){
-      sp.delete("gcturnin"); history.replaceState(null, "", location.pathname + (sp.toString() ? "?" + sp : ""));
-      if (sp.get("login_error")) return;
-      try { const j = await api("/api/class?a=gc_turnin", { method: "POST", body: JSON.stringify({ assignment: id }) });
-        if (j.gc === "need_connect") toast(t("asGcDenied")); else afterSubmitGc(AS.cur || { id }, j.gc); loadMe(); } catch (e){ toast(e.message); }
-    }
+  // link mời /?join=MÃ: đăng nhập xong thì tự vào lớp
+  if (AS.join){
+    if (!ACC.me){ toast(t("asJoinLogin")); return; }
+    const code = AS.join; AS.join = null;
+    const sp = new URLSearchParams(location.search); sp.delete("join"); history.replaceState(null, "", location.pathname + (sp.toString() ? "?" + sp : ""));
+    await joinClass(code);
   }
+  if (AS.deep){ const id = +AS.deep; AS.deep = null; if (ACC.me) openAssignment(id); else toast(t("asNeedLogin")); }
 });
 
 loadMe();

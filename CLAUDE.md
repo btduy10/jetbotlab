@@ -1,7 +1,8 @@
 # JetBot Lab — ghi chú cho Claude
 
 Trang web (không build) dạy lập trình JetBot ROS AI Kit: notebook Python kiểu Jupyter bên trái, sa bàn 3D mô phỏng
-robot bên phải, cộng trang Giáo viên (lớp, giao bài, tiến độ, chấm điểm, Google Classroom).
+robot bên phải, cộng trang Giáo viên (lớp tự quản kiểu Classroom: mã lớp, giao bài, tiến độ, chấm và trả bài, bảng tin; ảnh bài làm lưu trên Google Drive của giáo viên).
+Không dùng Google Classroom API nữa (quyền nhạy cảm, giới hạn 100 tài khoản). Chỉ dùng scope không nhạy cảm: openid email profile + drive.file (giáo viên).
 Người dùng: giáo viên STEM-Robotics THPT FPT Cần Thơ và học sinh. Triển khai: Vercel tự deploy khi push `main`.
 Giao tiếp với chủ dự án bằng tiếng Việt. Góp ý của học sinh thu riêng bên ngoài (không có trong app).
 
@@ -17,7 +18,7 @@ Giao tiếp với chủ dự án bằng tiếng Việt. Góp ý của học sinh
   gửi lượt chạy + nhịp thời gian, chế độ chấm `/?review=<submission>` (`RV`), dải tiết học (`LIVE`), góp ý.
   Sự kiện: `jbl:auth` (đăng nhập xong), `jbl:save` (notebook đổi, từ `save()`), `jbl:run` (kết thúc lượt chạy).
 - `admin.html`/`admin.css`/`admin.js` – trang Giáo viên `/admin` (+ rewrite `/teacher`), chỉ tiếng Việt: bài học, sa bàn, giáo viên.
-  `teacher.js` – lớp học (tab Học sinh, Giao bài, Tiến độ & chấm bài, Tiết học) + Google Classroom; hook vào admin qua `TEACHER_TABS`, `CLASS_SUBTABS`, `VIEWS`.
+  `teacher.js` – lớp học (tab Học sinh, Giao bài, Tiến độ & chấm bài, Bảng tin, Tiết học) + mã lớp, kết nối Drive, Drive/kiểm tra cấu hình cho admin (`loadAdminExtras`); hook vào admin qua `TEACHER_TABS`, `CLASS_SUBTABS`, `VIEWS`.
 - `api/` – Vercel Functions Node CommonJS. **Gói Hobby tối đa 12 function**: gom endpoint mới vào function có sẵn, định tuyến bằng `?a=`.
   - `_lib.js` lưu trữ nội dung GitHub (`GITHUB_TOKEN`, `GITHUB_DATA_REPO`) hoặc `JBL_DATA_DIR`; phiên `jbl_s` ký HMAC (`AUTH_SECRET`);
     `currentUser` đọc lại vai trò từ CSDL; `requireRole`; mã hoá token (`TOKEN_ENC_KEY`).
@@ -26,7 +27,7 @@ Giao tiếp với chủ dự án bằng tiếng Việt. Góp ý của học sinh
   - `auth.js` Google OAuth (PKCE, state cookie `jbl_oa`), mật khẩu admin dự phòng, `me`, `logout`, `dev` (chỉ localhost + `JBL_DEV_LOGIN=1`).
   - `content.js` content.json (bài học: `level`, `kind`, `criteria`; sa bàn) – admin + giáo viên ghi. `asset.js` ảnh.
   - `class.js` mọi thứ lớp học: teachers, classes, members, assignments, my/sub/save/submit, run/beat, progress, review/grade, verify,
-    live/my_live, gc_* (Classroom). Giáo viên chỉ thao tác lớp của mình (`ownClass`), học sinh chỉ bài lớp mình (`myAssignment`).
+    live/my_live, class_code/join (mã lớp), return (trả bài), announcements, drive_overview/config (admin). `api/file.js`: ảnh bài làm (upload base64 ≤3.5 MB, view qua máy chủ, delete); `api/_drive.js`: token, thư mục `JetBot Lab – GV / Lớp / Bài`, chia sẻ cho ADMIN_EMAILS. Giáo viên chỉ thao tác lớp của mình (`ownClass`), học sinh chỉ bài lớp mình (`myAssignment`).
 - Vai trò: `admin` = email trong `ADMIN_EMAILS` (không lưu CSDL), `teacher` do admin cấp, `student` mặc định.
 - `vendor/` – Three.js 0.128.0, OrbitControls, Skulpt 1.2.0. `vercel.json` – CSP, cache, rewrite `/teacher`.
 
@@ -53,10 +54,10 @@ Hằng số ở `RB` trong `app.js`; mô hình 3D ở `buildRobot()`.
 ## Chạy thử
 Thử giao diện phải có header CSP như `vercel.json` (server tĩnh thường che lỗi `style=`). Thử đầy đủ bằng server Node gọi các hàm `api/` với
 `JBL_DATA_DIR`, `JBL_PGLITE` (+ `@electric-sql/pglite` cài ngoài repo), `JBL_DEV_LOGIN=1`, các biến `AUTH_SECRET`, `TOKEN_ENC_KEY`, `ADMIN_EMAILS`;
-có thể giả lập Google bằng cách thay `global.fetch` cho `oauth2.googleapis.com/token` và `classroom.googleapis.com`.
+có thể giả lập Google bằng cách thay `global.fetch` cho `oauth2.googleapis.com/token` và `www.googleapis.com/drive/v3` + `/upload/drive/v3` (Drive giả lập).
 Kiểm tra sáng/tối, VI/EN, điện thoại (~400 px), và phân quyền (học sinh / giáo viên khác / admin).
 
 ## Việc đang chờ
 - Phần lắp ráp robot ảo (chủ dự án sẽ yêu cầu sau).
 - Số xung encoder thật của DCGM-370 bản 333 RPM (đang giả định 1320).
-- Gửi Google xác minh ứng dụng OAuth để giáo viên không còn thấy cảnh báo khi kết nối Classroom.
+- Điểm chỉ hiện cho học sinh sau khi giáo viên Trả bài (`grades.returned_at`).

@@ -64,6 +64,7 @@ $("#bLogout").onclick = async () => { try { await api("/api/auth?a=logout", { me
 /* ---------- giáo viên (chỉ admin) ---------- */
 async function loadTeachers(){
   const el = $("#teacherList");
+  if (window.loadAdminExtras) loadAdminExtras();
   try {
     const j = await api("/api/class?a=teachers");
     el.innerHTML = j.teachers.length ? j.teachers.map(t => `<div class="row"><div></div><div><b>${esc(t.email)}</b><div class="a-meta">${esc(t.name || "chưa đăng nhập lần nào")}${t.last_login ? " · đăng nhập " + new Date(t.last_login).toLocaleString("vi-VN") : ""}</div></div>

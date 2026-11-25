@@ -422,3 +422,23 @@ input[type=file]{display:none}
   .toast{transform:translate(-50%, 0)}
   .tb:active,.chip:active,.rail button:active,.btn-reset:active,.seg button:active,.addrow button:active{transform:none}
 }
+/* lớp học tự quản: bảng tin, vào lớp bằng mã, ảnh bài làm */
+.news{margin:4px 14px 8px;display:grid;gap:6px}
+.newsitem{padding:7px 9px;border-radius:8px;background:var(--note-bg);border:1px solid var(--note-line)}
+.newsitem em{display:block;font-style:normal;font-size:10.5px;color:var(--note-ink);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.newsitem p{margin:2px 0 0;font-size:12.5px;white-space:pre-wrap;overflow-wrap:anywhere}
+.joinform{display:flex;gap:6px;margin:6px 14px 4px}
+.joinform input{flex:1;min-width:0;font:600 13px var(--f-code);letter-spacing:.12em;text-transform:uppercase;border:1px solid var(--line);border-radius:var(--r);padding:6px 8px;background:var(--panel)}
+.joinform input::placeholder{font-family:var(--f-ui);letter-spacing:0;text-transform:none;font-weight:400}
+.joinform .go{border:0;border-radius:var(--r);padding:0 12px;background:var(--accent);color:var(--on-accent);font-weight:600}
+.myclasses{margin-top:2px;font-size:12px}
+.asbar .instr{flex-basis:100%;margin:2px 0 0;white-space:pre-wrap}
+.asbar .photos{flex-basis:100%;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:2px}
+.asbar .ph{position:relative;display:inline-flex;flex-direction:column;align-items:center;gap:2px}
+.asbar .ph img{width:64px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--line);background:var(--panel);display:block}
+.asbar .ph .del{position:absolute;top:-6px;right:-6px;width:20px;height:20px;padding:0;border-radius:50%;font-size:13px;line-height:1;color:var(--err)}
+.asbar .ph .drv{font-size:10.5px;color:var(--muted)}
+.asbar .addph{display:inline-flex;align-items:center;gap:4px;height:48px;padding:0 12px;border:1px dashed color-mix(in srgb, var(--accent) 60%, var(--line));border-radius:6px;background:var(--panel);font-weight:600;cursor:pointer}
+.asbar .addph.busy{opacity:.6;cursor:progress}
+.asbar .rvph b{margin-right:4px}
+.asbar button:disabled{opacity:.5;cursor:default}

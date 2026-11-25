@@ -7,16 +7,9 @@ const { q } = require("./_db");
 
 const OA = "jbl_oa";
 const SCOPE_BASIC = "openid email profile";
-// Quyền Classroom chỉ xin khi giáo viên bấm "Kết nối Classroom".
-const SCOPE_CLASSROOM = [
-  "https://www.googleapis.com/auth/classroom.courses.readonly",
-  "https://www.googleapis.com/auth/classroom.rosters.readonly",
-  "https://www.googleapis.com/auth/classroom.profile.emails",
-  "https://www.googleapis.com/auth/classroom.coursework.students",
-  "https://www.googleapis.com/auth/classroom.topics"
-].join(" ");
-// Học sinh: chỉ xin quyền nộp bài của chính mình, khi em nộp bài được giao có đăng trên Classroom (một lần).
-const SCOPE_TURNIN = "https://www.googleapis.com/auth/classroom.coursework.me";
+// Giáo viên bấm "Kết nối Google Drive": quyền drive.file (không nhạy cảm, app chỉ thấy tệp do chính app tạo)
+// để lưu ảnh bài làm của học sinh vào Drive của giáo viên.
+const SCOPE_DRIVE = require("./_drive").SCOPE;
 
 const redirectUri = req => siteOrigin(req) + "/api/auth?a=callback";
 const safeNext = n => typeof n === "string" && /^\/(?!\/)[\w\-./?=&%#]*$/.test(n) && n.length < 300 ? n : "/";
@@ -49,25 +42,25 @@ module.exports = handle(async (req, res) => {
   if (a === "me" && req.method === "GET"){
     let user = null;
     try { user = await currentUser(req); } catch (e) { if (e.status !== 500) throw e; }
-    let classroom = false, turnin = false;
-    if (user && user.id){
-      try { const t = await q("SELECT scopes FROM teacher_tokens WHERE user_id = $1", [user.id]);
-        if (t.length){ turnin = String(t[0].scopes || "").includes("classroom.coursework.me"); classroom = (user.role === "teacher" || user.role === "admin") && String(t[0].scopes || "").includes("classroom.courses"); } } catch (e) {}
+    let drive = false, driveLink = null;
+    if (user && user.id && (user.role === "teacher" || user.role === "admin")){
+      try { const t = await q("SELECT t.scopes, d.root_link FROM teacher_tokens t LEFT JOIN teacher_drive d ON d.user_id = t.user_id WHERE t.user_id = $1", [user.id]);
+        if (t.length){ drive = String(t[0].scopes || "").includes("drive.file"); driveLink = drive ? t[0].root_link || null : null; } } catch (e) {}
     }
-    return send(res, 200, { user: user && { id: user.id, email: user.email, name: user.name, role: user.role, password: !!user.password, classroom, turnin },
+    return send(res, 200, { user: user && { id: user.id, email: user.email, name: user.name, role: user.role, password: !!user.password, drive, driveLink },
       google: !!(env("GOOGLE_CLIENT_ID") && env("GOOGLE_CLIENT_SECRET")) });
   }
 
   if (a === "google" && req.method === "GET"){
     const { id } = clientConf(), state = b64u(crypto.randomBytes(18)), verifier = b64u(crypto.randomBytes(32));
-    const mode = p.get("classroom") === "1" ? "t" : p.get("classroom") === "student" ? "s" : "", classroom = !!mode;
+    const mode = p.get("drive") === "1" ? "d" : "";
     const params = new URLSearchParams({
       client_id: id, redirect_uri: redirectUri(req), response_type: "code", state,
-      scope: mode === "t" ? SCOPE_BASIC + " " + SCOPE_CLASSROOM : mode === "s" ? SCOPE_BASIC + " " + SCOPE_TURNIN : SCOPE_BASIC,
+      scope: mode === "d" ? SCOPE_BASIC + " " + SCOPE_DRIVE : SCOPE_BASIC,
       code_challenge: b64u(crypto.createHash("sha256").update(verifier).digest()), code_challenge_method: "S256",
-      prompt: classroom ? "consent" : "select_account"
+      prompt: mode ? "consent" : "select_account"
     });
-    if (classroom){ params.set("access_type", "offline"); params.set("include_granted_scopes", "true"); }
+    if (mode) params.set("access_type", "offline");
     // Lax: cookie này phải đi kèm lần Google chuyển hướng quay về
     const st = sealed({ s: state, v: verifier, n: safeNext(p.get("next")), c: mode, x: Date.now() + 10*60e3 });
     return redirect(res, "https://accounts.google.com/o/oauth2/v2/auth?" + params, { "Set-Cookie": cookieStr(req, OA, st, 600, "Lax") });
@@ -88,11 +81,14 @@ module.exports = handle(async (req, res) => {
     if (!["https://accounts.google.com", "accounts.google.com"].includes(c.iss) || c.aud !== id || !(c.exp*1000 > Date.now()) || !c.email || c.email_verified !== true)
       return fail("Tài khoản Google chưa xác minh email");
     const u = await upsertUser({ email: c.email, name: String(c.name || "").slice(0, 120), sub: String(c.sub) });
-    if (st.c){
+    if (st.c === "d"){
       const role = effectiveRole(u.email, u.role);
-      if (st.c !== "s" && role !== "teacher" && role !== "admin") return fail("Chỉ giáo viên mới kết nối Google Classroom");
+      if (role !== "teacher" && role !== "admin") return fail("Chỉ giáo viên mới kết nối Google Drive");
+      if (!String(tok.scope || "").includes("drive.file")) return fail("Chưa cấp quyền Google Drive: hãy tick ô cho phép JetBot Lab tạo tệp trong Drive");
       if (tok.refresh_token) await q(`INSERT INTO teacher_tokens (user_id, refresh_enc, scopes, updated_at) VALUES ($1, $2, $3, now())
         ON CONFLICT (user_id) DO UPDATE SET refresh_enc = EXCLUDED.refresh_enc, scopes = EXCLUDED.scopes, updated_at = now()`, [u.id, encrypt(tok.refresh_token), String(tok.scope || "")]);
+      // tạo thư mục gốc + chia sẻ cho admin ngay; lỗi ở đây không chặn đăng nhập (lần tải ảnh đầu tiên sẽ thử lại)
+      try { const D = require("./_drive"); await D.ensureRoot(tok.access_token, { id: Number(u.id), email: u.email, name: u.name }); } catch (e) { console.error(e); }
     }
     return redirect(res, st.n, { "Set-Cookie": [sessionCookie(req, Number(u.id), 30), clearCookie(req, OA)] });
   }

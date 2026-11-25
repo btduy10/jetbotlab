@@ -1,6 +1,7 @@
-// Lớp học: CSDL, giáo viên, lớp, học sinh, giao bài, bài làm, tiến độ, chấm điểm, Classroom, phản hồi.
+// Lớp học: CSDL, giáo viên, lớp, mã lớp, học sinh, giao bài, bài làm, tiến độ, chấm và trả bài, bảng tin, tiết học.
 // Định tuyến bằng ?a=… để gói gọn trong một function (Vercel Hobby giới hạn 12 function).
-const { HttpError, env, decrypt, siteOrigin, readJsonBody, requireRole, currentUser, sameOrigin, query, send, handle } = require("./_lib");
+const crypto = require("crypto");
+const { HttpError, env, adminEmails, readJsonBody, requireRole, currentUser, sameOrigin, query, send, handle } = require("./_lib");
 const { q, migrate } = require("./_db");
 
 const EMAIL = /^[^\s@<>"',;]{1,64}@[^\s@<>"',;]{1,190}\.[a-z]{2,24}$/i;
@@ -14,7 +15,7 @@ const date = v => { if (v === null || v === undefined || v === "") return null; 
 
 // Giáo viên chỉ thao tác trên lớp của mình; admin được mọi lớp.
 async function ownClass(u, classId){
-  const rows = await q("SELECT id, teacher_id, name, gc_course_id, gc_course_name FROM classes WHERE id = $1", [classId]);
+  const rows = await q("SELECT id, teacher_id, name, join_code, join_open, drive_folder_id, drive_link FROM classes WHERE id = $1", [classId]);
   if (!rows.length) throw new HttpError(404, "Không có lớp này");
   if (u.role !== "admin" && N(rows[0].teacher_id) !== u.id) throw new HttpError(403, "Đây không phải lớp của bạn");
   return rows[0];
@@ -26,7 +27,8 @@ async function ownAssignment(u, id){
 }
 // Học sinh chỉ mở được bài giao cho lớp mình (và đã tới ngày mở).
 async function myAssignment(u, id){
-  const rows = await q(`SELECT a.id, a.lesson_id, a.title, a.week_label, a.period_label, a.due_at, c.name AS class_name, a.gc_coursework_id, c.gc_course_id
+  const rows = await q(`SELECT a.id, a.lesson_id, a.title, a.week_label, a.period_label, a.due_at, a.instructions, a.need_photo, a.class_id,
+      c.name AS class_name, c.teacher_id, c.drive_folder_id AS class_folder
     FROM assignments a JOIN class_members m ON m.class_id = a.class_id JOIN classes c ON c.id = a.class_id
     WHERE a.id = $1 AND m.user_id = $2 AND NOT c.archived AND (a.open_at IS NULL OR a.open_at <= now())`, [id, u.id]);
   if (!rows.length) throw new HttpError(404, "Không tìm thấy bài được giao (hoặc chưa tới ngày mở)");
@@ -70,21 +72,33 @@ ACTIONS.teachers = {
 };
 
 // ---------- lớp ----------
+// Mã lớp 6 ký tự, bỏ các ký tự dễ nhầm (0/O, 1/I/L).
+const CODE_CHARS = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+const newCode = () => Array.from({ length: 6 }, () => CODE_CHARS[crypto.randomInt(CODE_CHARS.length)]).join("");
+async function setNewCode(classId){
+  for (let i = 0; i < 8; i++){
+    try { const c = newCode(); await q("UPDATE classes SET join_code = $2 WHERE id = $1", [classId, c]); return c; }
+    catch (e){ if (e.code !== "23505") throw e; }   // trùng mã: thử mã khác
+  }
+  throw new HttpError(500, "Không tạo được mã lớp, hãy thử lại");
+}
 ACTIONS.classes = {
   GET: async (req, res) => {
     const u = await needTeacher(req);
-    const rows = await q(`SELECT c.id, c.name, c.note, c.gc_course_id, c.gc_course_name, c.archived, c.created_at, u.email AS teacher_email,
+    const rows = await q(`SELECT c.id, c.name, c.note, c.join_code, c.join_open, c.drive_link, c.archived, c.created_at, u.email AS teacher_email,
         (SELECT count(*) FROM class_members m WHERE m.class_id = c.id) AS members,
         (SELECT count(*) FROM assignments a WHERE a.class_id = c.id) AS assignments
       FROM classes c JOIN users u ON u.id = c.teacher_id
       WHERE ($1::bigint IS NULL OR c.teacher_id = $1) ORDER BY c.archived, c.created_at DESC`, [u.role === "admin" ? null : u.id]);
+    for (const r of rows) if (!r.join_code) r.join_code = await setNewCode(N(r.id));   // lớp tạo trước khi có mã lớp
     send(res, 200, { classes: rows.map(r => ({ ...r, id: N(r.id), members: N(r.members), assignments: N(r.assignments), mine: r.teacher_email === u.email })) });
   },
   POST: async (req, res) => {
     const u = await needTeacher(req), b = await readJsonBody(req, 8192), name = str(b.name, 120);
     if (!name) throw new HttpError(400, "Hãy nhập tên lớp");
     const r = await q("INSERT INTO classes (teacher_id, name, note) VALUES ($1, $2, $3) RETURNING id", [u.id, name, str(b.note, 500)]);
-    send(res, 200, { ok: true, id: N(r[0].id) });
+    const id = N(r[0].id); await setNewCode(id);
+    send(res, 200, { ok: true, id });
   },
   DELETE: async (req, res) => {
     const u = await needTeacher(req), id = intId(query(req).get("id"));
@@ -96,6 +110,26 @@ ACTIONS.class_edit = { POST: async (req, res) => {
   const name = str(b.name, 120); if (!name) throw new HttpError(400, "Hãy nhập tên lớp");
   await q("UPDATE classes SET name = $2, note = $3, archived = $4 WHERE id = $1", [id, name, str(b.note, 500), b.archived === true]);
   send(res, 200, { ok: true });
+} };
+// Giáo viên: đổi mã lớp, khoá / mở cho học sinh tự tham gia.
+ACTIONS.class_code = { POST: async (req, res) => {
+  const u = await needTeacher(req), b = await readJsonBody(req, 1024), id = intId(b.class); await ownClass(u, id);
+  if (b.reset === true) await setNewCode(id);
+  if (typeof b.open === "boolean") await q("UPDATE classes SET join_open = $2 WHERE id = $1", [id, b.open]);
+  const r = (await q("SELECT join_code, join_open FROM classes WHERE id = $1", [id]))[0];
+  send(res, 200, { ok: true, join_code: r.join_code, join_open: r.join_open });
+} };
+// Học sinh tự vào lớp bằng mã (hoặc link /?join=MÃ).
+ACTIONS.join = { POST: async (req, res) => {
+  const u = await needUser(req), b = await readJsonBody(req, 1024), code = str(b.code, 12).toUpperCase().replace(/[^A-Z0-9]/g, "");
+  if (code.length !== 6) throw new HttpError(400, "Mã lớp gồm 6 ký tự");
+  const c = (await q("SELECT id, name, join_open, archived FROM classes WHERE join_code = $1", [code]))[0];
+  if (!c || c.archived) throw new HttpError(404, "Không tìm thấy lớp có mã này");
+  const already = (await q("SELECT 1 FROM class_members WHERE class_id = $1 AND (user_id = $2 OR email = $3)", [N(c.id), u.id, u.email])).length > 0;
+  if (!already && !c.join_open) throw new HttpError(403, "Lớp này đang khoá, không nhận thêm học sinh. Hãy báo giáo viên.");
+  await q(`INSERT INTO class_members (class_id, email, name, user_id) VALUES ($1, $2, $3, $4)
+    ON CONFLICT (class_id, email) DO UPDATE SET user_id = EXCLUDED.user_id`, [N(c.id), u.email, str(u.name, 120), u.id]);
+  send(res, 200, { ok: true, class_id: N(c.id), class_name: c.name, already });
 } };
 
 // ---------- học sinh trong lớp ----------
@@ -144,21 +178,23 @@ function assignmentFields(b){
   const lesson = str(b.lesson, 60); if (!LESSON_ID.test(lesson)) throw new HttpError(400, "Bài học không hợp lệ");
   const open = date(b.open_at), due = date(b.due_at);
   if (open && due && due < open) throw new HttpError(400, "Hạn nộp phải sau ngày mở");
-  return [lesson, str(b.title, 160), str(b.week, 40), str(b.period, 40), open, due];
+  return [lesson, str(b.title, 160), str(b.week, 40), str(b.period, 40), open, due, str(b.instructions, 4000), b.need_photo === true];
 }
 ACTIONS.assignments = {
   GET: async (req, res) => {
     const u = await needTeacher(req), id = intId(query(req).get("class")); await ownClass(u, id);
-    const rows = await q(`SELECT a.id, a.lesson_id, a.title, a.week_label, a.period_label, a.open_at, a.due_at, a.gc_coursework_id, a.gc_topic, a.created_at,
+    const rows = await q(`SELECT a.id, a.lesson_id, a.title, a.week_label, a.period_label, a.open_at, a.due_at, a.instructions, a.need_photo, a.created_at,
         (SELECT count(*) FROM submissions s WHERE s.assignment_id = a.id AND s.status = 'submitted') AS submitted,
-        (SELECT count(*) FROM submissions s WHERE s.assignment_id = a.id AND s.completed) AS completed
+        (SELECT count(*) FROM submissions s WHERE s.assignment_id = a.id AND s.completed) AS completed,
+        (SELECT count(*) FROM submissions s JOIN grades g ON g.submission_id = s.id WHERE s.assignment_id = a.id) AS graded,
+        (SELECT count(*) FROM submissions s JOIN grades g ON g.submission_id = s.id WHERE s.assignment_id = a.id AND g.returned_at IS NOT NULL) AS returned
       FROM assignments a WHERE a.class_id = $1 ORDER BY a.week_label, a.period_label, a.created_at`, [id]);
-    send(res, 200, { assignments: rows.map(r => ({ ...r, id: N(r.id), submitted: N(r.submitted), completed: N(r.completed) })) });
+    send(res, 200, { assignments: rows.map(r => ({ ...r, id: N(r.id), submitted: N(r.submitted), completed: N(r.completed), graded: N(r.graded), returned: N(r.returned) })) });
   },
   POST: async (req, res) => {
-    const u = await needTeacher(req), b = await readJsonBody(req, 8192), id = intId(b.class); await ownClass(u, id);
-    const r = await q(`INSERT INTO assignments (class_id, lesson_id, title, week_label, period_label, open_at, due_at, gc_topic) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
-      [id, ...assignmentFields(b), str(b.topic, 100) || null]);
+    const u = await needTeacher(req), b = await readJsonBody(req, 16384), id = intId(b.class); await ownClass(u, id);
+    const r = await q(`INSERT INTO assignments (class_id, lesson_id, title, week_label, period_label, open_at, due_at, instructions, need_photo)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`, [id, ...assignmentFields(b)]);
     send(res, 200, { ok: true, id: N(r[0].id) });
   },
   DELETE: async (req, res) => {
@@ -167,28 +203,40 @@ ACTIONS.assignments = {
   }
 };
 ACTIONS.assignment_edit = { POST: async (req, res) => {
-  const u = await needTeacher(req), b = await readJsonBody(req, 8192), id = intId(b.id); await ownAssignment(u, id);
-  await q("UPDATE assignments SET lesson_id = $2, title = $3, week_label = $4, period_label = $5, open_at = $6, due_at = $7 WHERE id = $1", [id, ...assignmentFields(b)]);
+  const u = await needTeacher(req), b = await readJsonBody(req, 16384), id = intId(b.id); await ownAssignment(u, id);
+  await q(`UPDATE assignments SET lesson_id = $2, title = $3, week_label = $4, period_label = $5, open_at = $6, due_at = $7, instructions = $8, need_photo = $9
+    WHERE id = $1`, [id, ...assignmentFields(b)]);
   send(res, 200, { ok: true });
 } };
 
 // ---------- phía học sinh ----------
+// Điểm và nhận xét chỉ hiện cho học sinh sau khi giáo viên "Trả bài".
 ACTIONS.my = { GET: async (req, res) => {
   const u = await needUser(req);
-  const rows = await q(`SELECT a.id, a.lesson_id, a.title, a.week_label, a.period_label, a.open_at, a.due_at, c.name AS class_name,
-      s.status, s.completed, s.runs_count, s.submitted_at, s.last_at, g.total, g.comment
+  const rows = await q(`SELECT a.id, a.lesson_id, a.title, a.week_label, a.period_label, a.open_at, a.due_at, a.need_photo, c.name AS class_name,
+      s.status, s.completed, s.runs_count, s.submitted_at, s.last_at,
+      CASE WHEN g.returned_at IS NOT NULL THEN g.total END AS total, CASE WHEN g.returned_at IS NOT NULL THEN g.comment END AS comment, g.returned_at
     FROM class_members m JOIN classes c ON c.id = m.class_id AND NOT c.archived JOIN assignments a ON a.class_id = c.id
     LEFT JOIN submissions s ON s.assignment_id = a.id AND s.user_id = $1 LEFT JOIN grades g ON g.submission_id = s.id
     WHERE m.user_id = $1 AND (a.open_at IS NULL OR a.open_at <= now())
     ORDER BY a.week_label DESC, a.period_label DESC, a.created_at DESC`, [u.id]);
-  send(res, 200, { assignments: rows.map(r => ({ ...r, id: N(r.id), runs_count: N(r.runs_count), total: N(r.total) })) });
+  const news = await q(`SELECT n.id, n.text, n.created_at, c.name AS class_name FROM announcements n
+    JOIN class_members m ON m.class_id = n.class_id AND m.user_id = $1 JOIN classes c ON c.id = n.class_id AND NOT c.archived
+    ORDER BY n.created_at DESC LIMIT 10`, [u.id]);
+  const classes = await q(`SELECT c.id, c.name FROM class_members m JOIN classes c ON c.id = m.class_id AND NOT c.archived WHERE m.user_id = $1 ORDER BY c.name`, [u.id]);
+  send(res, 200, { assignments: rows.map(r => ({ ...r, id: N(r.id), runs_count: N(r.runs_count), total: N(r.total) })),
+    news: news.map(n => ({ ...n, id: N(n.id) })), classes: classes.map(c => ({ id: N(c.id), name: c.name })) });
 } };
+const listAttachments = async sid => (await q("SELECT id, name, size, link, created_at FROM attachments WHERE submission_id = $1 ORDER BY id", [sid])).map(a => ({ ...a, id: N(a.id) }));
 ACTIONS.sub = { GET: async (req, res) => {
   const u = await needUser(req), id = intId(query(req).get("assignment")), a = await myAssignment(u, id);
-  const s = await q(`SELECT s.notebook, s.status, s.completed, s.runs_count, s.submitted_at, g.total, g.scores, g.comment
+  const s = await q(`SELECT s.id, s.notebook, s.status, s.completed, s.runs_count, s.submitted_at, g.returned_at,
+      CASE WHEN g.returned_at IS NOT NULL THEN g.total END AS total, CASE WHEN g.returned_at IS NOT NULL THEN g.comment END AS comment
     FROM submissions s LEFT JOIN grades g ON g.submission_id = s.id WHERE s.assignment_id = $1 AND s.user_id = $2`, [id, u.id]);
+  const D = require("./_drive");
   send(res, 200, { assignment: { id: N(a.id), lesson_id: a.lesson_id, title: a.title, week_label: a.week_label, period_label: a.period_label, due_at: a.due_at,
-    class_name: a.class_name, gc: !!(a.gc_coursework_id && a.gc_course_id) }, submission: s[0] ? { ...s[0], runs_count: N(s[0].runs_count), total: N(s[0].total) } : null });
+      class_name: a.class_name, instructions: a.instructions, need_photo: a.need_photo, photos: await D.hasDrive(N(a.teacher_id)) },
+    submission: s[0] ? { ...s[0], id: N(s[0].id), runs_count: N(s[0].runs_count), total: N(s[0].total), attachments: await listAttachments(N(s[0].id)) } : null });
 } };
 async function upsertSubmission(u, id, notebook, submit){
   await myAssignment(u, id);
@@ -206,33 +254,12 @@ ACTIONS.save = { POST: async (req, res) => {
   send(res, 200, { ok: true, submission: await upsertSubmission(u, intId(b.assignment), b.notebook, false) });
 } };
 ACTIONS.submit = { POST: async (req, res) => {
-  const u = await needUser(req), b = await readJsonBody(req, 600000), id = intId(b.assignment);
-  const submission = await upsertSubmission(u, id, b.notebook, true);
-  send(res, 200, { ok: true, submission, gc: await turnIn(u, await myAssignment(u, id)) });
-} };
-// Nộp luôn trên Google Classroom bằng quyền của chính học sinh (Google chỉ cho chủ bài nộp).
-// Kết quả: null (bài không đăng Classroom) · "turned_in" · "need_connect" (em chưa cho phép) · "error: …"
-async function turnIn(u, a){
-  if (!a.gc_coursework_id || !a.gc_course_id) return null;
-  const tok = await q("SELECT scopes FROM teacher_tokens WHERE user_id = $1", [u.id]);
-  if (!tok.length || !String(tok[0].scopes || "").includes("classroom.coursework.me")) return "need_connect";
-  try {
-    const token = await gcToken(u), base = `courses/${enc(a.gc_course_id)}/courseWork/${enc(a.gc_coursework_id)}/studentSubmissions`;
-    const s = ((await gc(token, "GET", base + "?userId=me", null, "tìm bài của em")).studentSubmissions || [])[0];
-    if (!s) return "error: Em không có trong khoá học Classroom này";
-    if (s.state !== "TURNED_IN") await gc(token, "POST", `${base}/${enc(s.id)}:turnIn`, {}, "nộp bài");
-    return "turned_in";
-  } catch (e){
-    if (e.status === 409 || (e.status === 403 && /scope|insufficient/i.test(e.message))) return "need_connect";
-    return "error: " + e.message;
+  const u = await needUser(req), b = await readJsonBody(req, 600000), id = intId(b.assignment), a = await myAssignment(u, id);
+  if (a.need_photo){
+    const n = await q("SELECT count(*) AS n FROM attachments t JOIN submissions s ON s.id = t.submission_id WHERE s.assignment_id = $1 AND s.user_id = $2", [id, u.id]);
+    if (!N(n[0].n)) throw new HttpError(400, "Bài này cần nộp kèm ít nhất 1 ảnh (bấm “Thêm ảnh”)");
   }
-}
-// Sau khi em cho phép trên Google: nộp lại trên Classroom bài đã nộp ở JetBot Lab.
-ACTIONS.gc_turnin = { POST: async (req, res) => {
-  const u = await needUser(req), b = await readJsonBody(req, 1024), id = intId(b.assignment), a = await myAssignment(u, id);
-  const s = await q("SELECT status FROM submissions WHERE assignment_id = $1 AND user_id = $2", [id, u.id]);
-  if (!s.length || s[0].status !== "submitted") throw new HttpError(400, "Em chưa nộp bài này trên JetBot Lab");
-  send(res, 200, { ok: true, gc: await turnIn(u, a) });
+  send(res, 200, { ok: true, submission: await upsertSubmission(u, id, b.notebook, true) });
 } };
 
 // ---------- tiến độ: lượt chạy, thời gian làm bài ----------
@@ -271,21 +298,22 @@ ACTIONS.beat = { POST: async (req, res) => {
 
 ACTIONS.progress = { GET: async (req, res) => {
   const u = await needTeacher(req), id = intId(query(req).get("class")); await ownClass(u, id);
-  const assignments = (await q(`SELECT id, lesson_id, title, week_label, period_label, open_at, due_at, gc_coursework_id FROM assignments
+  const assignments = (await q(`SELECT id, lesson_id, title, week_label, period_label, open_at, due_at, need_photo FROM assignments
     WHERE class_id = $1 ORDER BY week_label, period_label, created_at`, [id])).map(r => ({ ...r, id: N(r.id) }));
   const members = (await q(`SELECT m.email, m.name, m.group_name, m.user_id, u.name AS account_name FROM class_members m
     LEFT JOIN users u ON u.id = m.user_id WHERE m.class_id = $1 ORDER BY m.group_name, m.name, m.email`, [id]))
     .map(r => ({ email: r.email, name: r.name || r.account_name || "", group: r.group_name, joined: r.user_id !== null }));
   const subs = await q(`SELECT s.id, s.assignment_id, m.email, s.status, s.completed, s.runs_count, s.active_seconds, s.best, s.robot_verified,
-      s.first_at, s.last_at, s.submitted_at, g.total, g.scores, g.comment, g.pushed_gc_at
+      s.first_at, s.last_at, s.submitted_at, g.total, g.scores, g.comment, g.returned_at,
+      (SELECT count(*) FROM attachments t WHERE t.submission_id = s.id) AS photos
     FROM submissions s JOIN assignments a ON a.id = s.assignment_id JOIN class_members m ON m.class_id = a.class_id AND m.user_id = s.user_id
     LEFT JOIN grades g ON g.submission_id = s.id WHERE a.class_id = $1`, [id]);
-  send(res, 200, { assignments, members, subs: subs.map(s => ({ ...s, id: N(s.id), assignment_id: N(s.assignment_id), runs_count: N(s.runs_count), active_seconds: N(s.active_seconds), total: N(s.total) })) });
+  send(res, 200, { assignments, members, subs: subs.map(s => ({ ...s, id: N(s.id), assignment_id: N(s.assignment_id), runs_count: N(s.runs_count), active_seconds: N(s.active_seconds), total: N(s.total), photos: N(s.photos) })) });
 } };
 
 // ---------- xem bài làm và chấm ----------
 async function ownSubmission(u, sid){
-  const rows = await q(`SELECT s.*, a.lesson_id, a.title, a.class_id, a.due_at, a.gc_coursework_id, m.name AS member_name, us.email, us.name AS account_name
+  const rows = await q(`SELECT s.*, a.lesson_id, a.title, a.class_id, a.due_at, a.need_photo, m.name AS member_name, us.email, us.name AS account_name
     FROM submissions s JOIN assignments a ON a.id = s.assignment_id JOIN users us ON us.id = s.user_id
     LEFT JOIN class_members m ON m.class_id = a.class_id AND m.user_id = s.user_id WHERE s.id = $1`, [sid]);
   if (!rows.length) throw new HttpError(404, "Không có bài làm này");
@@ -294,11 +322,11 @@ async function ownSubmission(u, sid){
 ACTIONS.review = { GET: async (req, res) => {
   const u = await needTeacher(req), sid = intId(query(req).get("submission")), s = await ownSubmission(u, sid);
   const runs = await q("SELECT at, ok, completed, metrics FROM runs WHERE submission_id = $1 ORDER BY at DESC LIMIT 30", [sid]);
-  const g = await q("SELECT scores, total, comment, graded_at, pushed_gc_at FROM grades WHERE submission_id = $1", [sid]);
+  const g = await q("SELECT scores, total, comment, graded_at, returned_at FROM grades WHERE submission_id = $1", [sid]);
   send(res, 200, { submission: { id: sid, assignment_id: N(s.assignment_id), lesson_id: s.lesson_id, title: s.title, due_at: s.due_at, class_id: N(s.class_id),
     student: { email: s.email, name: s.member_name || s.account_name || "" }, notebook: s.notebook, status: s.status, completed: s.completed,
     runs_count: N(s.runs_count), active_seconds: N(s.active_seconds), best: s.best, submitted_at: s.submitted_at, first_at: s.first_at, last_at: s.last_at,
-    robot_verified: s.robot_verified, gc: !!s.gc_coursework_id }, runs, grade: g[0] ? { ...g[0], total: N(g[0].total) } : null });
+    robot_verified: s.robot_verified, need_photo: s.need_photo, attachments: await listAttachments(sid) }, runs, grade: g[0] ? { ...g[0], total: N(g[0].total) } : null });
 } };
 ACTIONS.grade = { POST: async (req, res) => {
   const u = await needTeacher(req), b = await readJsonBody(req, 16384), sid = intId(b.submission); await ownSubmission(u, sid);
@@ -310,144 +338,65 @@ ACTIONS.grade = { POST: async (req, res) => {
   send(res, 200, { ok: true, total });
 } };
 
-// ---------- Google Classroom: liên kết khoá học, nhập học sinh, đăng bài, trả điểm ----------
-async function gcToken(u){
-  const rows = await q("SELECT refresh_enc FROM teacher_tokens WHERE user_id = $1", [u.id]);
-  if (!rows.length) throw new HttpError(409, "Chưa kết nối Google Classroom. Bấm “Kết nối Google Classroom” trước.");
-  const r = await fetch("https://oauth2.googleapis.com/token", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ client_id: env("GOOGLE_CLIENT_ID"), client_secret: env("GOOGLE_CLIENT_SECRET"), refresh_token: decrypt(rows[0].refresh_enc), grant_type: "refresh_token" }) });
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok || !j.access_token){
-    if (j.error === "invalid_grant"){ await q("DELETE FROM teacher_tokens WHERE user_id = $1", [u.id]); throw new HttpError(409, "Kết nối Classroom đã hết hạn hoặc bị thu hồi. Hãy bấm “Kết nối Google Classroom” lại."); }
-    throw new HttpError(502, "Google không cấp quyền Classroom (" + (j.error || r.status) + ")");
+// ---------- trả bài: học sinh chỉ thấy điểm + nhận xét sau khi giáo viên trả ----------
+// { submission } trả một em, hoặc { assignment } trả mọi bài đã chấm của bài được giao đó.
+ACTIONS.return = { POST: async (req, res) => {
+  const u = await needTeacher(req), b = await readJsonBody(req, 1024);
+  let r;
+  if (b.submission){
+    const sid = intId(b.submission); await ownSubmission(u, sid);
+    r = await q("UPDATE grades SET returned_at = now() WHERE submission_id = $1 RETURNING submission_id", [sid]);
+    if (!r.length) throw new HttpError(400, "Hãy lưu điểm trước khi trả bài");
+  } else {
+    const id = intId(b.assignment); await ownAssignment(u, id);
+    r = await q(`UPDATE grades SET returned_at = now() WHERE returned_at IS NULL AND submission_id IN (SELECT id FROM submissions WHERE assignment_id = $1)
+      RETURNING submission_id`, [id]);
   }
-  return j.access_token;
-}
-async function gc(token, method, path, body, step){
-  const r = await fetch("https://classroom.googleapis.com/v1/" + path, { method, headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
-  const j = await r.json().catch(() => ({}));
-  if (!r.ok){
-    const e = new HttpError(r.status === 404 ? 404 : r.status === 403 ? 403 : 502, "Google Classroom" + (step ? " (" + step + ")" : "") + ": " + ((j.error && j.error.message) || "lỗi " + r.status));
-    e.gstatus = j.error && j.error.status; throw e;
+  send(res, 200, { ok: true, returned: r.length });
+} };
+
+// ---------- bảng tin lớp ----------
+ACTIONS.announcements = {
+  GET: async (req, res) => {
+    const u = await needTeacher(req), id = intId(query(req).get("class")); await ownClass(u, id);
+    send(res, 200, { list: (await q("SELECT id, text, created_at FROM announcements WHERE class_id = $1 ORDER BY created_at DESC LIMIT 50", [id])).map(n => ({ ...n, id: N(n.id) })) });
+  },
+  POST: async (req, res) => {
+    const u = await needTeacher(req), b = await readJsonBody(req, 8192), id = intId(b.class); await ownClass(u, id);
+    const text = str(b.text, 2000); if (!text) throw new HttpError(400, "Hãy nhập nội dung thông báo");
+    await q("INSERT INTO announcements (class_id, text) VALUES ($1, $2)", [id, text]); send(res, 200, { ok: true });
+  },
+  DELETE: async (req, res) => {
+    const u = await needTeacher(req), id = intId(query(req).get("id"));
+    const r = (await q("SELECT class_id FROM announcements WHERE id = $1", [id]))[0]; if (!r) throw new HttpError(404, "Không có thông báo này");
+    await ownClass(u, N(r.class_id)); await q("DELETE FROM announcements WHERE id = $1", [id]); send(res, 200, { ok: true });
   }
-  return j;
-}
-const enc = encodeURIComponent;
-async function gcRoster(token, courseId){
-  const out = []; let page = "", skipped = 0;
-  for (let i = 0; i < 20; i++){
-    const j = await gc(token, "GET", `courses/${enc(courseId)}/students?pageSize=100${page ? "&pageToken=" + enc(page) : ""}`);
-    for (const s of j.students || []){ const p = s.profile || {}; if (p.emailAddress && EMAIL.test(p.emailAddress)) out.push({ email: p.emailAddress.toLowerCase(), name: str(p.name && p.name.fullName, 120) }); else skipped++; }
-    if (!j.nextPageToken) break; page = j.nextPageToken;
-  }
-  return { list: out, skipped };
-}
-async function importRoster(u, cls){
-  const { list, skipped } = await gcRoster(await gcToken(u), cls.gc_course_id);
-  for (const m of list) await q(`INSERT INTO class_members (class_id, email, name, user_id) VALUES ($1, $2, $3, (SELECT id FROM users WHERE email = $2))
-    ON CONFLICT (class_id, email) DO UPDATE SET name = CASE WHEN class_members.name = '' THEN EXCLUDED.name ELSE class_members.name END`, [N(cls.id), m.email, m.name]);
-  return { imported: list.length, skipped };
-}
-ACTIONS.gc_courses = { GET: async (req, res) => {
-  const u = await needTeacher(req), token = await gcToken(u), out = []; let page = "";
-  for (let i = 0; i < 5; i++){
-    const j = await gc(token, "GET", `courses?teacherId=me&courseStates=ACTIVE&pageSize=100${page ? "&pageToken=" + enc(page) : ""}`);
-    for (const c of j.courses || []) out.push({ id: c.id, name: c.name, section: c.section || "" });
-    if (!j.nextPageToken) break; page = j.nextPageToken;
-  }
-  send(res, 200, { courses: out });
+};
+
+// ---------- admin: thư mục Drive của các giáo viên, kiểm tra cấu hình ----------
+ACTIONS.drive_overview = { GET: async (req, res) => {
+  await requireRole(req, ["admin"]);
+  const t = await q(`SELECT u.id, u.email, u.name, d.root_link, d.shared_with, (tk.scopes LIKE '%drive.file%') AS connected,
+      (SELECT count(*) FROM classes c WHERE c.teacher_id = u.id) AS classes
+    FROM users u LEFT JOIN teacher_drive d ON d.user_id = u.id LEFT JOIN teacher_tokens tk ON tk.user_id = u.id
+    WHERE u.role = 'teacher' OR d.user_id IS NOT NULL OR EXISTS (SELECT 1 FROM classes c WHERE c.teacher_id = u.id) ORDER BY u.email`);
+  const c = await q(`SELECT c.id, c.name, c.teacher_id, c.drive_link, c.archived, (SELECT count(*) FROM class_members m WHERE m.class_id = c.id) AS members
+    FROM classes c ORDER BY c.archived, c.name`);
+  send(res, 200, { teachers: t.map(x => ({ id: N(x.id), email: x.email, name: x.name, connected: !!x.connected, root_link: x.root_link, shared: String(x.shared_with || "").split(",").filter(Boolean), classes: N(x.classes) })),
+    classes: c.map(x => ({ id: N(x.id), name: x.name, teacher_id: N(x.teacher_id), drive_link: x.drive_link, archived: x.archived, members: N(x.members) })) });
 } };
-ACTIONS.gc_link = { POST: async (req, res) => {
-  const u = await needTeacher(req), b = await readJsonBody(req, 4096), id = intId(b.class), cls = await ownClass(u, id);
-  const course = str(b.course, 40); if (!/^\d{1,30}$/.test(course)) throw new HttpError(400, "Mã khoá học không hợp lệ");
-  const c = await gc(await gcToken(u), "GET", "courses/" + enc(course));   // chỉ liên kết khoá học giáo viên này thấy được
-  await q("UPDATE classes SET gc_course_id = $2, gc_course_name = $3 WHERE id = $1", [id, course, str(c.name + (c.section ? " · " + c.section : ""), 160)]);
-  send(res, 200, { ok: true, ...(await importRoster(u, { ...cls, gc_course_id: course })) });
-} };
-ACTIONS.gc_import = { POST: async (req, res) => {
-  const u = await needTeacher(req), b = await readJsonBody(req, 1024), cls = await ownClass(u, intId(b.class));
-  if (!cls.gc_course_id) throw new HttpError(400, "Lớp chưa liên kết Google Classroom");
-  send(res, 200, { ok: true, ...(await importRoster(u, cls)) });
-} };
-ACTIONS.gc_unlink = { POST: async (req, res) => {
-  const u = await needTeacher(req), b = await readJsonBody(req, 1024), id = intId(b.class); await ownClass(u, id);
-  await q("UPDATE classes SET gc_course_id = NULL, gc_course_name = NULL WHERE id = $1", [id]); send(res, 200, { ok: true });
-} };
-// Chủ đề (topic) trong Classroom: tìm theo tên (không phân biệt hoa thường), chưa có thì tạo.
-async function gcTopics(token, courseId){
-  const out = []; let page = "";
-  for (let i = 0; i < 5; i++){
-    const j = await gc(token, "GET", `courses/${enc(courseId)}/topics?pageSize=100${page ? "&pageToken=" + enc(page) : ""}`);
-    for (const t of j.topic || []) out.push({ id: t.topicId, name: t.name });
-    if (!j.nextPageToken) break; page = j.nextPageToken;
-  }
-  return out;
-}
-async function gcTopicId(token, courseId, name){
-  const key = name.trim().toLowerCase(), hit = (await gcTopics(token, courseId)).find(t => t.name.trim().toLowerCase() === key);
-  return hit ? hit.id : (await gc(token, "POST", `courses/${enc(courseId)}/topics`, { name: name.trim() })).topicId;
-}
-ACTIONS.gc_topics = { GET: async (req, res) => {
-  const u = await needTeacher(req), cls = await ownClass(u, intId(query(req).get("class")));
-  if (!cls.gc_course_id) return send(res, 200, { topics: [] });
-  try { send(res, 200, { topics: (await gcTopics(await gcToken(u), cls.gc_course_id)).map(t => t.name) }); }
-  catch (e){ if (e.status === 403) return send(res, 200, { topics: [], needScope: true }); throw e; }
-} };
-ACTIONS.gc_post = { POST: async (req, res) => {
-  const u = await needTeacher(req), b = await readJsonBody(req, 1024), id = intId(b.assignment);
-  const a = (await q("SELECT * FROM assignments WHERE id = $1", [id]))[0]; if (!a) throw new HttpError(404, "Không có bài được giao này");
-  const cls = await ownClass(u, N(a.class_id));
-  if (!cls.gc_course_id) throw new HttpError(400, "Lớp chưa liên kết Google Classroom");
-  if (a.gc_coursework_id) return send(res, 200, { ok: true, already: true });
-  const link = siteOrigin(req) + "/?assignment=" + id;
-  const body = { title: str(a.title || a.lesson_id, 160), workType: "ASSIGNMENT", state: "PUBLISHED", maxPoints: 10,
-    description: `Làm bài trên JetBot Lab (đăng nhập bằng Gmail này): ${link}${a.week_label ? "\n" + a.week_label : ""}${a.period_label ? " · " + a.period_label : ""}`,
-    materials: [{ link: { url: link, title: "Mở bài trên JetBot Lab" } }] };
-  if (a.due_at){ const d = new Date(a.due_at); body.dueDate = { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1, day: d.getUTCDate() }; body.dueTime = { hours: d.getUTCHours(), minutes: d.getUTCMinutes() }; }
-  const token = await gcToken(u); let warn = null;
-  if (a.gc_topic){
-    try { body.topicId = await gcTopicId(token, cls.gc_course_id, a.gc_topic); }
-    catch (e){ if (e.status !== 403) throw e; warn = "Chưa có quyền tạo Chủ đề: hãy bấm “Kết nối Google Classroom” lại để cấp thêm quyền. Bài đã đăng, chưa gắn chủ đề."; }
-  }
-  const cw = await gc(token, "POST", `courses/${enc(cls.gc_course_id)}/courseWork`, body);
-  await q("UPDATE assignments SET gc_coursework_id = $2, gc_link = $3 WHERE id = $1", [id, String(cw.id), cw.alternateLink || null]);
-  send(res, 200, { ok: true, link: cw.alternateLink || null, warn });
-} };
-// Classroom chỉ cho ứng dụng chấm bài tập do chính ứng dụng tạo (gc_post).
-// Ghi điểm rồi "trả bài". Nếu Classroom không cho trả (thường do em chưa bấm Nộp trên Classroom), điểm vẫn được ghi:
-// trả về returned = false để báo giáo viên bấm "Trả bài" trong Classroom, thay vì báo lỗi cả thao tác.
-async function pushOne(token, courseId, cwId, email, total){
-  const subs = await gc(token, "GET", `courses/${enc(courseId)}/courseWork/${enc(cwId)}/studentSubmissions?userId=${enc(email)}`, null, "tìm bài của học sinh");
-  const s = (subs.studentSubmissions || [])[0]; if (!s) throw new HttpError(404, "Học sinh không có trong khoá học Classroom");
-  const base = `courses/${enc(courseId)}/courseWork/${enc(cwId)}/studentSubmissions/${enc(s.id)}`;
-  await gc(token, "PATCH", base + "?updateMask=assignedGrade,draftGrade", { assignedGrade: total, draftGrade: total }, "ghi điểm");
-  if (s.state === "RETURNED") return { returned: true, state: s.state };
-  try { await gc(token, "POST", base + ":return", {}, "trả bài"); return { returned: true, state: s.state }; }
-  catch (e){ if (e.gstatus === "FAILED_PRECONDITION") return { returned: false, state: s.state }; throw e; }
-}
-async function gradedRows(where, params){
-  return q(`SELECT s.id, us.email, g.total, a.gc_coursework_id, c.gc_course_id, a.class_id FROM grades g JOIN submissions s ON s.id = g.submission_id
-    JOIN assignments a ON a.id = s.assignment_id JOIN classes c ON c.id = a.class_id JOIN users us ON us.id = s.user_id WHERE ${where}`, params);
-}
-ACTIONS.gc_grade = { POST: async (req, res) => {
-  const u = await needTeacher(req), b = await readJsonBody(req, 1024), sid = intId(b.submission);
-  const r = (await gradedRows("s.id = $1", [sid]))[0]; if (!r) throw new HttpError(400, "Bài này chưa được chấm");
-  await ownClass(u, N(r.class_id));
-  if (!r.gc_coursework_id) throw new HttpError(400, "Bài được giao chưa đăng lên Google Classroom (bấm “Đăng lên Classroom” ở tab Giao bài)");
-  const p = await pushOne(await gcToken(u), r.gc_course_id, r.gc_coursework_id, r.email, Number(r.total));
-  await q("UPDATE grades SET pushed_gc_at = now() WHERE submission_id = $1", [sid]);
-  send(res, 200, { ok: true, returned: p.returned });
-} };
-ACTIONS.gc_grade_all = { POST: async (req, res) => {
-  const u = await needTeacher(req), b = await readJsonBody(req, 1024), id = intId(b.assignment); await ownAssignment(u, id);
-  const rows = await gradedRows("s.assignment_id = $1", [id]); if (!rows.length) return send(res, 200, { ok: true, pushed: 0, failed: [] });
-  if (!rows[0].gc_coursework_id) throw new HttpError(400, "Bài được giao chưa đăng lên Google Classroom");
-  const token = await gcToken(u), failed = []; let pushed = 0, notReturned = 0;
-  for (const r of rows){
-    try { const p = await pushOne(token, r.gc_course_id, r.gc_coursework_id, r.email, Number(r.total)); await q("UPDATE grades SET pushed_gc_at = now() WHERE submission_id = $1", [N(r.id)]); pushed++; if (!p.returned) notReturned++; }
-    catch (e){ failed.push({ email: r.email, error: e.message }); }
-  }
-  send(res, 200, { ok: true, pushed, notReturned, failed });
+ACTIONS.config = { GET: async (req, res) => {
+  await requireRole(req, ["admin"]);
+  let db = null; try { await q("SELECT 1 FROM users LIMIT 1"); db = true; } catch (e){ db = e.message; }
+  const k = n => (env(n) || "").length;
+  send(res, 200, { checks: [
+    { key: "google", ok: !!(env("GOOGLE_CLIENT_ID") && env("GOOGLE_CLIENT_SECRET")), fix: "Vercel → Environment Variables: GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET (Google Cloud → Credentials → OAuth client Web)" },
+    { key: "db", ok: db === true, detail: db === true ? "" : db, fix: "Vercel → Storage → Neon Postgres gắn vào dự án (biến DATABASE_URL), rồi Redeploy" },
+    { key: "auth_secret", ok: k("AUTH_SECRET") >= 16, fix: "AUTH_SECRET: chuỗi ngẫu nhiên ≥ 16 ký tự" },
+    { key: "token_key", ok: k("TOKEN_ENC_KEY") >= 16 && env("TOKEN_ENC_KEY") !== env("AUTH_SECRET"), fix: "TOKEN_ENC_KEY: chuỗi ngẫu nhiên ≥ 16 ký tự, khác AUTH_SECRET" },
+    { key: "admins", ok: adminEmails().length > 0, detail: adminEmails().join(", "), fix: "ADMIN_EMAILS: Gmail của admin, cách nhau dấu phẩy" },
+    { key: "content", ok: !!(env("GITHUB_TOKEN") && env("GITHUB_DATA_REPO")) || !!env("JBL_DATA_DIR"), fix: "GITHUB_TOKEN + GITHUB_DATA_REPO: repo riêng lưu bài học, sa bàn (không bắt buộc nếu chỉ dùng bài có sẵn)" }
+  ] });
 } };
 
 // ---------- tiết học trực tiếp: luân phiên nhóm dùng robot thật ----------
@@ -491,4 +440,4 @@ module.exports = handle(async (req, res) => {
   await h(req, res);
 });
 module.exports.ACTIONS = ACTIONS;
-module.exports.helpers = { q, N, str, intId, ownClass, ownAssignment, myAssignment, needUser, needTeacher, cleanNotebook };
+module.exports.helpers = { q, N, str, intId, ownClass, ownAssignment, myAssignment, ownSubmission, ensureSubmission, needUser, needTeacher, cleanNotebook };

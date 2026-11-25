@@ -89,5 +89,38 @@ module.exports = [
   `CREATE TABLE IF NOT EXISTS live (
     class_id BIGINT PRIMARY KEY REFERENCES classes(id) ON DELETE CASCADE,
     state JSONB NOT NULL,
-    updated_at TIMESTAMPTZ NOT NULL DEFAULT now())`
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now())`,
+  // giai đoạn 3: tự quản lý lớp (mã lớp, trả bài, bảng tin) + ảnh bài làm lưu trên Google Drive của giáo viên
+  `ALTER TABLE classes ADD COLUMN IF NOT EXISTS join_code TEXT`,
+  `ALTER TABLE classes ADD COLUMN IF NOT EXISTS join_open BOOLEAN NOT NULL DEFAULT true`,
+  `ALTER TABLE classes ADD COLUMN IF NOT EXISTS drive_folder_id TEXT`,
+  `ALTER TABLE classes ADD COLUMN IF NOT EXISTS drive_link TEXT`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS classes_join_code ON classes(join_code)`,
+  `ALTER TABLE assignments ADD COLUMN IF NOT EXISTS instructions TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE assignments ADD COLUMN IF NOT EXISTS need_photo BOOLEAN NOT NULL DEFAULT false`,
+  `ALTER TABLE assignments ADD COLUMN IF NOT EXISTS drive_folder_id TEXT`,
+  `ALTER TABLE grades ADD COLUMN IF NOT EXISTS returned_at TIMESTAMPTZ`,
+  `CREATE TABLE IF NOT EXISTS teacher_drive (
+    user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    root_folder_id TEXT NOT NULL,
+    root_link TEXT,
+    shared_with TEXT NOT NULL DEFAULT '',
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now())`,
+  `CREATE TABLE IF NOT EXISTS attachments (
+    id BIGSERIAL PRIMARY KEY,
+    submission_id BIGINT NOT NULL REFERENCES submissions(id) ON DELETE CASCADE,
+    owner_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
+    drive_file_id TEXT NOT NULL,
+    link TEXT,
+    name TEXT NOT NULL DEFAULT '',
+    mime TEXT NOT NULL DEFAULT '',
+    size INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now())`,
+  `CREATE INDEX IF NOT EXISTS attachments_submission ON attachments(submission_id)`,
+  `CREATE TABLE IF NOT EXISTS announcements (
+    id BIGSERIAL PRIMARY KEY,
+    class_id BIGINT NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+    text TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now())`,
+  `CREATE INDEX IF NOT EXISTS announcements_class ON announcements(class_id)`
 ];

@@ -60,11 +60,12 @@
   <section id="vClass" hidden>
     <div class="a-bar"><div class="titlebox"><button class="btn ghost" id="clsBack">← Các lớp</button><h1 id="clsName"></h1></div>
       <div class="acts-top"><button class="btn ghost" id="clsRename">Đổi tên</button><button class="btn ghost" id="clsArchive">Lưu trữ lớp</button><button class="btn ghost dangerbtn" id="clsDelete">Xoá lớp</button></div></div>
-    <div class="gcbox" id="gcBox"></div>
+    <div class="gcbox clsbox" id="clsBox"></div>
     <nav class="subtabs" id="clsTabs">
       <button data-sub="members" aria-pressed="true">Học sinh</button>
       <button data-sub="assign" aria-pressed="false">Giao bài</button>
       <button data-sub="progress" aria-pressed="false">Tiến độ &amp; chấm bài</button>
+      <button data-sub="news" aria-pressed="false">Bảng tin</button>
       <button data-sub="live" aria-pressed="false">Tiết học</button>
     </nav>
     <div class="subpane" data-sub="members">
@@ -73,7 +74,7 @@
           <textarea name="text" rows="4" placeholder="a@gmail.com, Nguyễn Văn A&#10;b@gmail.com, Trần Thị B" required></textarea></label>
         <div class="actions"><button class="btn primary" type="submit">+ Thêm vào lớp</button><span class="muted" id="memberCount"></span></div>
       </form>
-      <p class="a-hint">Học sinh đăng nhập bằng đúng Gmail này sẽ tự vào lớp. Cột <b>Nhóm</b> dùng để chia nhóm luân phiên robot thật.</p>
+      <p class="a-hint">Cách nhanh nhất: gửi <b>link mời</b> (hoặc mã lớp) ở trên cho học sinh, em đăng nhập Google là vào lớp. Học sinh có email trong danh sách dán ở đây cũng tự vào lớp khi đăng nhập. Cột <b>Nhóm</b> dùng để chia nhóm luân phiên robot thật.</p>
       <div id="memberList"></div>
     </div>
     <div class="subpane" data-sub="assign" hidden>
@@ -84,8 +85,8 @@
         <label data-f="period"><span>Tiết học <b class="req">*</b></span><input name="period" maxlength="40" placeholder="VD: Tiết 1–2" required><small class="f-err" data-err="period"></small></label>
         <label data-f="open_at">Mở từ (để trống = mở ngay)<input name="open_at" type="datetime-local"><small class="f-err" data-err="open_at"></small></label>
         <label data-f="due_at"><span>Hạn nộp <b class="req">*</b></span><input name="due_at" type="datetime-local" required><small class="f-err" data-err="due_at"></small></label>
-        <label class="wide" id="asTopicWrap" hidden>Chủ đề trên Classroom <small class="muted">(chọn chủ đề có sẵn hoặc gõ tên mới; để trống = không có chủ đề)</small><input name="topic" maxlength="100" list="gcTopicList" placeholder="VD: Tuần 3 – Tránh vật cản" autocomplete="off"><datalist id="gcTopicList"></datalist></label>
-        <label class="check wide" id="asGcWrap" hidden><input type="checkbox" name="gcpost" checked> Đăng lên Google Classroom (học sinh nhận thông báo, có link mở bài, điểm trả về được)</label>
+        <label class="wide">Hướng dẫn cho học sinh <small class="muted">(tuỳ chọn)</small><textarea name="instructions" rows="2" maxlength="4000" placeholder="VD: Chạy robot về ô xanh, chụp ảnh robot thật ở vạch đích rồi nộp kèm."></textarea></label>
+        <label class="check wide"><input type="checkbox" name="need_photo"> Bắt buộc nộp kèm ảnh (VD: ảnh chụp robot thật, sản phẩm) – ảnh lưu vào Google Drive của bạn</label>
         <div class="wide actions"><button class="btn primary" type="submit" id="asSubmit">Giao bài</button><span class="msg err" id="asMissing"></span></div>
       </form>
       <div id="assignList" class="list"></div>
@@ -93,6 +94,14 @@
     <div class="subpane" data-sub="progress" hidden>
       <div class="pgbar"><select id="pgWeek" aria-label="Lọc theo tuần"></select><button class="btn ghost" id="pgRefresh">↻ Làm mới</button><button class="btn ghost" id="pgCsv">Tải CSV</button></div>
       <div id="progressTable"></div>
+    </div>
+    <div class="subpane" data-sub="news" hidden>
+      <form id="fNews" class="card">
+        <label>Thông báo cho cả lớp (học sinh thấy ở đầu mục <b>Bài được giao</b>)
+          <textarea name="text" rows="3" maxlength="2000" placeholder="VD: Tuần này cả lớp mang robot thật lên phòng Lab, nhóm 1 bắt đầu lúc 7h30." required></textarea></label>
+        <div class="actions"><button class="btn primary" type="submit">Đăng thông báo</button></div>
+      </form>
+      <div id="newsList" class="list"></div>
     </div>
     <div class="subpane" data-sub="live" hidden>
       <div class="card">
@@ -117,6 +126,13 @@
       <button class="btn primary" type="submit">+ Cấp quyền giáo viên</button>
     </form>
     <div id="teacherList" class="list"></div>
+    <h2 class="sec">Google Drive của giáo viên</h2>
+    <p class="a-hint">Ảnh học sinh nộp được lưu trong Drive của giáo viên chủ lớp. Thư mục gốc của mỗi giáo viên tự chia sẻ quyền xem cho email admin.</p>
+    <div id="driveOverview"></div>
+    <div class="card dbcard">
+      <b>Kiểm tra cấu hình</b>
+      <ul class="cfg" id="configList"></ul>
+    </div>
     <div class="card dbcard">
       <b>Cơ sở dữ liệu</b>
       <p class="a-hint">Bấm sau lần cấu hình đầu tiên và mỗi khi cập nhật phiên bản có thay đổi CSDL. Chạy lại nhiều lần không mất dữ liệu.</p>
