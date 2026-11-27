@@ -263,9 +263,11 @@ async function loadMaterials(){
     sel.innerHTML = `<option value="">— Dùng chung cho cả lớp —</option>` + as.assignments.map(a => `<option value="${a.id}">${esc((a.week_label ? a.week_label + " · " : "") + (a.title || lessonTitle(a.lesson_id)))}</option>`).join("");
     sel.value = cur;
     const title = id => { const a = as.assignments.find(x => x.id === id); return a ? (a.title || lessonTitle(a.lesson_id)) : ""; };
-    el.innerHTML = ms.materials.length ? `<table class="tbl"><thead><tr><th>Tệp</th><th>Dung lượng</th><th>Gắn với bài</th><th>Ghi chú</th><th>Ngày</th><th></th></tr></thead><tbody>`
-      + ms.materials.map(m => `<tr data-id="${m.id}"><td><a href="${esc(m.download)}" target="_blank" rel="noopener">⬇ ${esc(m.name)}</a>${m.link ? ` · <a href="${esc(m.link)}" target="_blank" rel="noopener">Drive ↗</a>` : ""}</td>
-        <td>${fmtSize(m.size)}</td><td>${m.assignment_id ? esc(title(m.assignment_id)) : '<span class="muted">cả lớp</span>'}</td><td>${esc(m.note || "")}</td><td>${esc(fmtDate(m.created_at))}</td>
+    $("#mtGroups").innerHTML = [...new Set(ms.materials.map(m => m.group).filter(Boolean))].sort((a, b) => a.localeCompare(b, "vi")).map(g => `<option value="${esc(g)}">`).join("");
+    const sorted = [...ms.materials].sort((a, b) => (a.group || "").localeCompare(b.group || "", "vi"));
+    el.innerHTML = sorted.length ? `<table class="tbl"><thead><tr><th>Tệp</th><th>Dung lượng</th><th>Nhóm</th><th>Gắn với bài</th><th>Ghi chú</th><th>Ngày</th><th></th></tr></thead><tbody>`
+      + sorted.map(m => `<tr data-id="${m.id}"><td><a href="${esc(m.download)}" target="_blank" rel="noopener">⬇ ${esc(m.name)}</a>${m.link ? ` · <a href="${esc(m.link)}" target="_blank" rel="noopener">Drive ↗</a>` : ""}</td>
+        <td>${fmtSize(m.size)}</td><td>${m.group ? esc(m.group) : '<span class="muted">—</span>'}</td><td>${m.assignment_id ? esc(title(m.assignment_id)) : '<span class="muted">cả lớp</span>'}</td><td>${esc(m.note || "")}</td><td>${esc(fmtDate(m.created_at))}</td>
         <td><button class="linkbtn danger" data-a="del">Xoá</button></td></tr>`).join("") + "</tbody></table>"
       : '<div class="empty">Chưa có tài liệu nào.</div>';
   } catch (e){ el.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
@@ -299,8 +301,8 @@ async function uploadMaterials(files, target, extra, prog){
 $("#fFiles").addEventListener("submit", async e => {
   e.preventDefault(); const f = e.target, files = [...f.elements.files.files]; if (!files.length) return;
   const btn = $("#mtSubmit"); btn.disabled = true;
-  const okN = await uploadMaterials(files, { class: TC.cls.id }, { note: f.elements.note.value, assignment: f.elements.assignment.value ? +f.elements.assignment.value : null }, $("#mtProgress"));
-  btn.disabled = false; if (okN){ toast(`Đã chia sẻ ${okN} tệp cho lớp`); f.elements.files.value = ""; f.elements.note.value = ""; } loadMaterials();
+  const okN = await uploadMaterials(files, { class: TC.cls.id, group: f.elements.group.value }, { note: f.elements.note.value, assignment: f.elements.assignment.value ? +f.elements.assignment.value : null }, $("#mtProgress"));
+  btn.disabled = false; if (okN){ toast(`Đã chia sẻ ${okN} tệp cho lớp`); f.elements.files.value = ""; f.elements.group.value = ""; f.elements.note.value = ""; } loadMaterials();
 });
 $("#mtList").addEventListener("click", async e => {
   const b = e.target.closest("button[data-a=del]"); if (!b || !confirm("Xoá tài liệu này? Tệp cũng bị xoá khỏi Google Drive của bạn.")) return;
@@ -317,17 +319,19 @@ async function loadShared(){
     : `<span class="muted">Kết nối Google Drive để tải tài liệu lên (lưu trong Drive của bạn).</span> <a class="btn" href="/api/auth?a=google&amp;drive=1&amp;next=${encodeURIComponent("/admin?tab=shared")}">Kết nối Google Drive</a>`;
   try {
     const ms = (await api("/api/class?a=materials&global=1")).materials;
-    el.innerHTML = ms.length ? `<table class="tbl"><thead><tr><th>Tệp</th><th>Dung lượng</th><th>Ghi chú</th><th>Ngày</th><th></th></tr></thead><tbody>`
-      + ms.map(m => `<tr data-id="${m.id}"><td><a href="${esc(m.download)}" target="_blank" rel="noopener">⬇ ${esc(m.name)}</a>${m.link ? ` · <a href="${esc(m.link)}" target="_blank" rel="noopener">Drive ↗</a>` : ""}</td>
-        <td>${fmtSize(m.size)}</td><td>${esc(m.note || "")}</td><td>${esc(fmtDate(m.created_at))}</td><td><button class="linkbtn danger" data-a="del">Xoá</button></td></tr>`).join("") + "</tbody></table>"
+    $("#shGroups").innerHTML = [...new Set(ms.map(m => m.group).filter(Boolean))].sort((a, b) => a.localeCompare(b, "vi")).map(g => `<option value="${esc(g)}">`).join("");
+    const sorted = [...ms].sort((a, b) => (a.group || "").localeCompare(b.group || "", "vi"));
+    el.innerHTML = sorted.length ? `<table class="tbl"><thead><tr><th>Tệp</th><th>Dung lượng</th><th>Nhóm</th><th>Ghi chú</th><th>Ngày</th><th></th></tr></thead><tbody>`
+      + sorted.map(m => `<tr data-id="${m.id}"><td><a href="${esc(m.download)}" target="_blank" rel="noopener">⬇ ${esc(m.name)}</a>${m.link ? ` · <a href="${esc(m.link)}" target="_blank" rel="noopener">Drive ↗</a>` : ""}</td>
+        <td>${fmtSize(m.size)}</td><td>${m.group ? esc(m.group) : '<span class="muted">—</span>'}</td><td>${esc(m.note || "")}</td><td>${esc(fmtDate(m.created_at))}</td><td><button class="linkbtn danger" data-a="del">Xoá</button></td></tr>`).join("") + "</tbody></table>"
       : '<div class="empty">Chưa có tài liệu chung nào.</div>';
   } catch (e){ el.innerHTML = `<div class="empty">${esc(e.message)}</div>`; }
 }
 $("#fShared").addEventListener("submit", async e => {
   e.preventDefault(); const f = e.target, files = [...f.elements.files.files]; if (!files.length) return;
   const btn = $("#shSubmit"); btn.disabled = true;
-  const okN = await uploadMaterials(files, { global: true }, { note: f.elements.note.value }, $("#shProgress"));
-  btn.disabled = false; if (okN){ toast(`Đã chia sẻ ${okN} tệp cho mọi người`); f.elements.files.value = ""; f.elements.note.value = ""; } loadShared();
+  const okN = await uploadMaterials(files, { global: true, group: f.elements.group.value }, { note: f.elements.note.value }, $("#shProgress"));
+  btn.disabled = false; if (okN){ toast(`Đã chia sẻ ${okN} tệp cho mọi người`); f.elements.files.value = ""; f.elements.group.value = ""; f.elements.note.value = ""; } loadShared();
 });
 $("#shList").addEventListener("click", async e => {
   const b = e.target.closest("button[data-a=del]"); if (!b || !confirm("Xoá tài liệu chung này? Tệp cũng bị xoá khỏi Google Drive của bạn.")) return;

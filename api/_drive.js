@@ -110,6 +110,28 @@ async function ensurePublicFolder(tok, user){
   await q("UPDATE teacher_drive SET public_folder_id = $2 WHERE user_id = $1", [user.id, f.id]);
   return f.id;
 }
+// Thư mục con theo "nhóm" do giáo viên tự đặt tên, bên trong thư mục Tài liệu của lớp.
+// ID thư mục từng nhóm được cache ở classes.material_groups (JSON: tên nhóm → id thư mục) để không tạo trùng.
+async function ensureClassGroupFolder(tok, teacher, cls, name){
+  const parent = await ensureMaterialsFolder(tok, teacher, cls);
+  const groups = cls.material_groups || {};
+  if (groups[name] && await folderAlive(tok, groups[name])) return groups[name];
+  const f = await createFolder(tok, name, parent);
+  groups[name] = f.id;
+  await q("UPDATE classes SET material_groups = $2 WHERE id = $1", [N(cls.id), JSON.stringify(groups)]);
+  return f.id;
+}
+// Thư mục con theo nhóm bên trong "Tài liệu chung" của admin (cache ở teacher_drive.public_material_groups).
+async function ensurePublicGroupFolder(tok, user, name){
+  const parent = await ensurePublicFolder(tok, user);
+  const row = (await q("SELECT public_material_groups FROM teacher_drive WHERE user_id = $1", [user.id]))[0];
+  const groups = (row && row.public_material_groups) || {};
+  if (groups[name] && await folderAlive(tok, groups[name])) return groups[name];
+  const f = await createFolder(tok, name, parent);
+  groups[name] = f.id;
+  await q("UPDATE teacher_drive SET public_material_groups = $2 WHERE user_id = $1", [user.id, JSON.stringify(groups)]);
+  return f.id;
+}
 // Tải lên kiểu resumable: máy chủ mở phiên (kèm Origin của trang), trình duyệt PUT thẳng tệp lên Google,
 // nên tệp lớn (mô hình AI vài chục MB) không đi qua máy chủ Vercel (giới hạn ~4.5 MB mỗi yêu cầu).
 async function startResumable(tok, parent, name, mime, size, origin){
@@ -126,5 +148,5 @@ const fileInfo = (tok, id) => call(tok, "GET", `files/${encodeURIComponent(id)}?
 const makePublic = (tok, id) => call(tok, "POST", `files/${encodeURIComponent(id)}/permissions`, { type: "anyone", role: "reader" });
 const downloadUrl = id => "https://drive.google.com/uc?export=download&id=" + encodeURIComponent(id);
 
-module.exports = { SCOPE, hasDrive, token, ensureRoot, ensureClassFolder, ensureAssignmentFolder, ensureMaterialsFolder, ensurePublicFolder, upload, download, remove,
-  startResumable, fileInfo, makePublic, downloadUrl };
+module.exports = { SCOPE, hasDrive, token, ensureRoot, ensureClassFolder, ensureAssignmentFolder, ensureMaterialsFolder, ensurePublicFolder,
+  ensureClassGroupFolder, ensurePublicGroupFolder, upload, download, remove, startResumable, fileInfo, makePublic, downloadUrl };

@@ -375,7 +375,7 @@ ACTIONS.announcements = {
 
 // ---------- tài liệu giáo viên chia sẻ cho lớp (lưu trên Google Drive của giáo viên) ----------
 const MAX_MATERIAL = 500 * 1024 * 1024;
-const matRow = m => ({ id: N(m.id), name: m.name, size: N(m.size), mime: m.mime, note: m.note, link: m.link, assignment_id: N(m.assignment_id),
+const matRow = m => ({ id: N(m.id), name: m.name, size: N(m.size), mime: m.mime, note: m.note, link: m.link, assignment_id: N(m.assignment_id), group: m.group_name || "",
   download: require("./_drive").downloadUrl(m.drive_file_id), created_at: m.created_at });
 async function teacherDrive(u, cls){
   const D = require("./_drive"), tid = N(cls.teacher_id);
@@ -385,17 +385,22 @@ async function teacherDrive(u, cls){
 }
 async function classForMaterials(u, id){
   await ownClass(u, id);
-  return (await q("SELECT id, name, teacher_id, drive_folder_id, materials_folder_id FROM classes WHERE id = $1", [id]))[0];
+  return (await q("SELECT id, name, teacher_id, drive_folder_id, materials_folder_id, material_groups FROM classes WHERE id = $1", [id]))[0];
 }
 // Nơi lưu tệp: thư mục Tài liệu của một lớp, hoặc { global: true } = Tài liệu chung của admin (Drive của chính admin).
+// b.group (tuỳ chọn): tên nhóm do giáo viên đặt, lưu vào một thư mục con riêng để dễ quản lý.
 async function materialTarget(u, b){
+  const group = str(b.group, 100);
+  if (/^(__proto__|prototype|constructor)$/.test(group)) throw new HttpError(400, "Tên nhóm không hợp lệ");
   if (b.global === true){
     if (u.role !== "admin") throw new HttpError(403, "Chỉ admin mới tải tài liệu chung");
     const { D, tok, teacher } = await teacherDrive(u, { teacher_id: u.id });
-    return { D, tok, teacher, classId: null, folder: await D.ensurePublicFolder(tok, teacher) };
+    const folder = group ? await D.ensurePublicGroupFolder(tok, teacher, group) : await D.ensurePublicFolder(tok, teacher);
+    return { D, tok, teacher, classId: null, folder, group };
   }
   const cls = await classForMaterials(u, intId(b.class)), { D, tok, teacher } = await teacherDrive(u, cls);
-  return { D, tok, teacher, classId: N(cls.id), folder: await D.ensureMaterialsFolder(tok, teacher, cls) };
+  const folder = group ? await D.ensureClassGroupFolder(tok, teacher, cls, group) : await D.ensureMaterialsFolder(tok, teacher, cls);
+  return { D, tok, teacher, classId: N(cls.id), folder, group };
 }
 ACTIONS.materials = {
   GET: async (req, res) => {
@@ -435,8 +440,8 @@ ACTIONS.material_done = { POST: async (req, res) => {
   if (f.trashed || !(f.parents || []).includes(folder)) throw new HttpError(400, "Tệp không nằm trong thư mục Tài liệu");
   let aid = null; if (b.assignment && classId){ aid = intId(b.assignment); const a = await ownAssignment(u, aid); if (N(a.class_id) !== classId) throw new HttpError(400, "Bài được giao không thuộc lớp này"); }
   await D.makePublic(tok, fid);
-  const r = await q(`INSERT INTO materials (class_id, assignment_id, owner_id, drive_file_id, name, mime, size, link, note) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *`,
-    [classId, aid, teacher.id, fid, str(f.name, 200), str(f.mimeType, 120), Number(f.size) || 0, f.webViewLink || null, str(b.note, 500)]);
+  const r = await q(`INSERT INTO materials (class_id, assignment_id, owner_id, drive_file_id, name, mime, size, link, note, group_name) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+    [classId, aid, teacher.id, fid, str(f.name, 200), str(f.mimeType, 120), Number(f.size) || 0, f.webViewLink || null, str(b.note, 500), str(b.group, 100)]);
   send(res, 200, { ok: true, material: matRow(r[0]) });
 } };
 // Tài liệu chung của admin: ai cũng xem được, không cần đăng nhập.

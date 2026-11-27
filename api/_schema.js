@@ -140,5 +140,9 @@ module.exports = [
   `CREATE INDEX IF NOT EXISTS materials_class ON materials(class_id)`,
   // tài liệu chung của admin (class_id NULL): mọi người, kể cả chưa đăng nhập, đều thấy
   `ALTER TABLE materials ALTER COLUMN class_id DROP NOT NULL`,
-  `ALTER TABLE teacher_drive ADD COLUMN IF NOT EXISTS public_folder_id TEXT`
+  `ALTER TABLE teacher_drive ADD COLUMN IF NOT EXISTS public_folder_id TEXT`,
+  // nhóm/thư mục con do giáo viên tự đặt tên khi tải tài liệu lên, để dễ quản lý
+  `ALTER TABLE materials ADD COLUMN IF NOT EXISTS group_name TEXT NOT NULL DEFAULT ''`,
+  `ALTER TABLE classes ADD COLUMN IF NOT EXISTS material_groups JSONB NOT NULL DEFAULT '{}'::jsonb`,
+  `ALTER TABLE teacher_drive ADD COLUMN IF NOT EXISTS public_material_groups JSONB NOT NULL DEFAULT '{}'::jsonb`
 ];
