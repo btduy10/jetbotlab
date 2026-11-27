@@ -1045,11 +1045,27 @@ function runCells(list){
   list.filter(c => c.type === "code").forEach(c => { if (!K.queue.includes(c) && K.cur !== c){ c.state = "queued"; gutter(c); K.queue.push(c); } });
   if (!K.running) pump();
 }
+// Chạy tất cả: tự cuộn tới ô đang chạy để học sinh biết đang tới đâu (người dùng tự cuộn thì thôi theo)
+const RM = matchMedia("(prefers-reduced-motion: reduce)");
+function followCell(c){
+  if (!K.follow) return;
+  setActive(c);
+  const r = c.el.getBoundingClientRect(), b = cellsEl.getBoundingClientRect();
+  if (r.top < b.top + 8 || r.top > b.bottom - 80){
+    const top = cellsEl.scrollTop + r.top - b.top - 12;
+    cellsEl.scrollTo({ top, behavior: RM.matches ? "auto" : "smooth" });
+    // máy đang bận (huấn luyện…) có thể làm cuộn mượt bị đứng: sau 0,5 s chưa tới thì nhảy thẳng
+    setTimeout(() => { if (K.follow && K.cur === c && Math.abs(cellsEl.scrollTop - top) > 40) cellsEl.scrollTop = top; }, 500);
+  }
+}
+["wheel", "touchmove"].forEach(ev => cellsEl.addEventListener(ev, () => { if (K.running) K.follow = false; }, { passive: true }));
+cellsEl.addEventListener("keydown", e => { if (/^(PageUp|PageDown|Home|End)$/.test(e.key)) K.follow = false; });
 async function pump(){
-  if (!K.queue.length){ setBusy(false); K.cur = null; return; }
+  if (!K.queue.length){ setBusy(false); K.cur = null; K.follow = false; return; }
   setBusy(true);
   const c = K.queue.shift(); K.cur = c; K.stop = false; K.cb = null;
   c.state = "running"; c.out.innerHTML = ""; c.errLine = 0; c.errbar.hidden = true; gutter(c);
+  followCell(c);
   let ok = true;
   try {
     if (window.PF) await PF.preload(c.src);
@@ -1094,6 +1110,7 @@ function restartKernel(){
 $("#bRun").onclick = () => {
   const codes = CELLS.filter(c => c.type === "code"), stopRe = /\.unobserve\(|robot\.stop\(\)|camera\.stop\(\)/;
   const i = codes.findIndex((c, k) => /\.observe\(/.test(c.src) && codes.slice(k + 1).some(d => stopRe.test(d.src)));
+  K.follow = true;
   if (i < 0) return runCells(CELLS);
   runCells(codes.slice(0, i + 1)); markStep(CELLS[CELLS.indexOf(codes[i]) + 1]); toast(t("runAllObs"));
 };
