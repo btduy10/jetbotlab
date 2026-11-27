@@ -27,6 +27,9 @@ async function token(userId){
   }
   return j.access_token;
 }
+// Dự án Google Cloud chưa bật Google Drive API: báo cách sửa thay cho câu tiếng Anh dài của Google.
+const DISABLED_MSG = "Google Drive API chưa được bật cho dự án Google Cloud của JetBot Lab. Người quản trị vào console.cloud.google.com → APIs & Services → Library → Google Drive API → Enable, đợi vài phút rồi thử lại.";
+const apiDisabled = j => { const er = j && j.error; return !!er && (/has not been used in project|is disabled/i.test(er.message || "") || (er.details || []).some(d => d && d.reason === "SERVICE_DISABLED")); };
 async function call(tok, method, url, body, headers){
   const r = await fetch(url.startsWith("http") ? url : API + url, { method, headers: Object.assign({ Authorization: "Bearer " + tok }, body && !headers ? { "Content-Type": "application/json" } : {}, headers || {}),
     body: body === undefined || body === null ? undefined : headers ? body : JSON.stringify(body) });
@@ -35,6 +38,7 @@ async function call(tok, method, url, body, headers){
     return { buf: Buffer.from(await r.arrayBuffer()), mime: r.headers.get("content-type") || "application/octet-stream" };
   }
   const j = r.status === 204 ? {} : await r.json().catch(() => ({}));
+  if (!r.ok && apiDisabled(j)) throw new HttpError(503, DISABLED_MSG);
   if (!r.ok){ const e = new HttpError(r.status === 404 ? 404 : r.status === 403 ? 403 : 502, "Google Drive: " + ((j.error && j.error.message) || "lỗi " + r.status)); e.gstatus = r.status; throw e; }
   return j;
 }
@@ -114,7 +118,7 @@ async function startResumable(tok, parent, name, mime, size, origin){
       "X-Upload-Content-Length": String(size), Origin: origin },
     body: JSON.stringify({ name: String(name).slice(0, 200), parents: [parent] }) });
   const url = r.headers.get("location");
-  if (!r.ok || !url){ const j = await r.json().catch(() => ({})); throw new HttpError(502, "Google Drive: không mở được phiên tải lên (" + ((j.error && j.error.message) || r.status) + ")"); }
+  if (!r.ok || !url){ const j = await r.json().catch(() => ({})); if (apiDisabled(j)) throw new HttpError(503, DISABLED_MSG); throw new HttpError(502, "Google Drive: không mở được phiên tải lên (" + ((j.error && j.error.message) || r.status) + ")"); }
   return url;
 }
 const fileInfo = (tok, id) => call(tok, "GET", `files/${encodeURIComponent(id)}?fields=id,name,size,mimeType,parents,webViewLink,trashed`);
