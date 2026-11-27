@@ -5,7 +5,7 @@
    ipywidgets · traitlets · IPython.display · jupyter_clickable_image_widget · uuid · os · glob · json
    numpy · cv2 · PIL.Image · torch (+nn, optim, utils.data) · torchvision · torch2trt · open() · lệnh "!zip"
    Tệp nằm trong "ổ đĩa ảo" của trình duyệt (localStorage). Mạng nơ-ron thay cho resnet18 trên GPU:
-   ảnh thu về 24×24 màu → lớp ẩn 48 nơ-ron (ReLU) → 2 đầu ra (x, y), huấn luyện bằng Adam ngay trong trình duyệt.
+   ảnh thu về 24×24 màu → mạng tích chập nhỏ (2 lớp Conv3×3 + ReLU + AvgPool) → 2 đầu ra (x, y), huấn luyện bằng Adam ngay trong trình duyệt.
    Dùng chung biến toàn cục của app.js: AI, aiCapture, K, outText, outError, PYLIB, PY_ALLOWED, b64e, b64d, t.
    ===================================================================== */
 (() => {
@@ -109,17 +109,25 @@ function vReadImg(p){
 const f32b = new Float32Array(1), u32b = new Uint32Array(f32b.buffer);
 function toHalf(v){ f32b[0] = v; const x = u32b[0], s = (x >>> 16) & 0x8000, e = ((x >>> 23) & 0xff) - 112, m = x & 0x7fffff; if (e <= 0) return s; if (e >= 31) return s | 0x7bff; return s | (e << 10) | (m >>> 13); }
 function fromHalf(h){ const s = h & 0x8000 ? -1 : 1, e = (h >>> 10) & 0x1f, m = h & 0x3ff; return e === 0 ? s*m*Math.pow(2, -24) : s*(1 + m/1024)*Math.pow(2, e - 15); }
-const PARAMS = ["W1", "b1", "W2", "b2"];
+// Hai kiến trúc: "cnn" (mặc định, giống resnet ở chỗ dùng bộ lọc tích chập chung nên học được cả ảnh lật ngang)
+// và "mlp" (bản cũ 24×24×3 → 48 → out; vẫn đọc được tệp .pth học sinh đã lưu trước đây).
+const C1 = 8, C2 = 16, R1 = R/2, R2 = R/4, FEAT = C2*R2*R2;
+const ARCH = {
+  mlp: { params: ["W1", "b1", "W2", "b2"], sizes: m => [HID*D, HID, m.out*HID, m.out] },
+  cnn: { params: ["K1", "B1", "K2", "B2", "W", "BW"], sizes: m => [C1*27, C1, C2*C1*9, C2, m.out*FEAT, m.out] }
+};
+const archOf = m => ARCH[m.arch] ? m.arch : "mlp";
+const pnames = m => ARCH[archOf(m)].params;
 function vWriteModel(p, st){
-  const n = PARAMS.reduce((a, k) => a + st[k].length, 0), h = new Uint16Array(n); let o = 0;
-  for (const k of PARAMS) for (const v of st[k]) h[o++] = toHalf(v);
-  vPut(p, { k: "model", out: st.out, H: st.H, size: n*2 }, b64e(new Uint8Array(h.buffer)));
+  const names = pnames(st), n = names.reduce((a, k) => a + st[k].length, 0), h = new Uint16Array(n); let o = 0;
+  for (const k of names) for (const v of st[k]) h[o++] = toHalf(v);
+  vPut(p, { k: "model", arch: archOf(st), out: st.out, H: st.H, size: n*2 }, b64e(new Uint8Array(h.buffer)));
 }
 function vReadModel(p){
   const m = vMeta(p); if (m.k !== "model") throw new Error("Tệp không phải mô hình PyTorch: " + p);
   const u = b64d(ls.get(VF + norm(p)) || ""), h = new Uint16Array(u.buffer, u.byteOffset, u.length >> 1);
-  const st = { k: "st", out: m.out, H: m.H, W1: new Float32Array(m.H*D), b1: new Float32Array(m.H), W2: new Float32Array(m.out*m.H), b2: new Float32Array(m.out) };
-  let o = 0; for (const k of PARAMS) for (let i = 0; i < st[k].length; i++) st[k][i] = fromHalf(h[o++]);
+  const st = { k: "st", arch: archOf(m), out: m.out, H: m.H || HID }, A = ARCH[st.arch], sz = A.sizes(st);
+  let o = 0; A.params.forEach((k, i) => { const a = new Float32Array(sz[i]); for (let q = 0; q < a.length; q++) a[q] = fromHalf(h[o++]); st[k] = a; });
   return st;
 }
 
@@ -179,17 +187,58 @@ function tStack(ids){
 
 /* ---------- mô hình (thay resnet18): 24×24×3 → 48 ReLU → out ---------- */
 function rnd(){ let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
-function mNew(out){
-  const m = { k: "m", pin: true, out, H: HID, W1: new Float32Array(HID*D), b1: new Float32Array(HID), W2: new Float32Array(out*HID), b2: new Float32Array(out) };
-  for (let i = 0; i < m.W1.length; i++) m.W1[i] = rnd()*Math.sqrt(2/D);
-  for (let i = 0; i < m.W2.length; i++) m.W2[i] = rnd()*Math.sqrt(1/HID);
-  PARAMS.forEach(k => m["g" + k] = new Float32Array(m[k].length));
+function mAlloc(m){ const sz = ARCH[archOf(m)].sizes(m); pnames(m).forEach((k, i) => { m[k] = new Float32Array(sz[i]); m["g" + k] = new Float32Array(sz[i]); }); }
+function mNew(out, arch){
+  const m = { k: "m", pin: true, out, arch: arch || "cnn", H: HID }; mAlloc(m);
+  const he = (a, fan) => { for (let i = 0; i < a.length; i++) a[i] = rnd()*Math.sqrt(2/fan); };
+  if (m.arch === "cnn"){ he(m.K1, 27); he(m.K2, 9*C1); for (let i = 0; i < m.W.length; i++) m.W[i] = rnd()*Math.sqrt(1/FEAT); }
+  else { he(m.W1, D); for (let i = 0; i < m.W2.length; i++) m.W2[i] = rnd()*Math.sqrt(1/HID); }
   return put(m);
 }
+// tích chập 3×3 (đệm 1) + ReLU; trả về cả đầu vào đã đệm để dùng lại khi lan truyền ngược
+function padIn(inp, C, S){ const P = S + 2, o = new Float32Array(C*P*P); for (let c = 0; c < C; c++) for (let y = 0; y < S; y++) o.set(inp.subarray((c*S + y)*S, (c*S + y)*S + S), (c*P + y + 1)*P + 1); return o; }
+function convF(inp, Ci, S, K, B, Co){
+  const P = S + 2, xp = padIn(inp, Ci, S), o = new Float32Array(Co*S*S);
+  for (let co = 0; co < Co; co++){
+    const ob = co*S*S; o.fill(B[co], ob, ob + S*S);
+    for (let ci = 0; ci < Ci; ci++){ const kb = (co*Ci + ci)*9, ib = ci*P*P;
+      for (let ky = 0; ky < 3; ky++) for (let kx = 0; kx < 3; kx++){ const w = K[kb + ky*3 + kx];
+        for (let y = 0; y < S; y++){ const r = ib + (y + ky)*P + kx, orow = ob + y*S; for (let x = 0; x < S; x++) o[orow + x] += w*xp[r + x]; } } }
+  }
+  for (let i = 0; i < o.length; i++) if (o[i] < 0) o[i] = 0;
+  return { o, xp };
+}
+function convB(xp, Ci, S, K, Co, out, gOut, gK, gB, needIn){
+  const P = S + 2, gp = needIn ? new Float32Array(Ci*P*P) : null, g = new Float32Array(gOut.length);
+  for (let i = 0; i < g.length; i++) g[i] = out[i] > 0 ? gOut[i] : 0;
+  for (let co = 0; co < Co; co++){
+    const ob = co*S*S; let sb = 0; for (let i = 0; i < S*S; i++) sb += g[ob + i]; gB[co] += sb;
+    for (let ci = 0; ci < Ci; ci++){ const kb = (co*Ci + ci)*9, ib = ci*P*P;
+      for (let ky = 0; ky < 3; ky++) for (let kx = 0; kx < 3; kx++){ const w = K[kb + ky*3 + kx]; let acc = 0;
+        for (let y = 0; y < S; y++){ const r = ib + (y + ky)*P + kx, orow = ob + y*S;
+          if (gp) for (let x = 0; x < S; x++){ const gv = g[orow + x]; acc += gv*xp[r + x]; gp[r + x] += gv*w; }
+          else for (let x = 0; x < S; x++) acc += g[orow + x]*xp[r + x]; }
+        gK[kb + ky*3 + kx] += acc; } }
+  }
+  if (!gp) return null;
+  const gi = new Float32Array(Ci*S*S); for (let c = 0; c < Ci; c++) for (let y = 0; y < S; y++) gi.set(gp.subarray((c*P + y + 1)*P + 1, (c*P + y + 1)*P + 1 + S), (c*S + y)*S); return gi;
+}
+function pool2(inp, C, S){ const h = S/2, o = new Float32Array(C*h*h); for (let c = 0; c < C; c++) for (let y = 0; y < h; y++) for (let x = 0; x < h; x++){ const a = (c*S + 2*y)*S + 2*x; o[(c*h + y)*h + x] = 0.25*(inp[a] + inp[a + 1] + inp[a + S] + inp[a + S + 1]); } return o; }
+function unpool2(g, C, S){ const h = S/2, o = new Float32Array(C*S*S); for (let c = 0; c < C; c++) for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) o[(c*S + y)*S + x] = 0.25*g[(c*h + (y >> 1))*h + (x >> 1)]; return o; }
 function mForward(mid, tid){
   const m = get(mid), x = get(tid).d, B = x.length / D;
   if (!Number.isInteger(B) || B < 1) throw new Error("Đầu vào mô hình phải là ảnh 3×224×224 (hoặc lô N×3×224×224)");
-  const { H, out, W1, b1, W2, b2 } = m, hs = new Float32Array(B*H), o = new Float32Array(B*out);
+  const out = m.out, o = new Float32Array(B*out);
+  if (archOf(m) === "cnn"){
+    const { K1, B1, K2, B2, W, BW } = m, cs = [];
+    for (let b = 0; b < B; b++){
+      const l1 = convF(x.subarray(b*D, (b + 1)*D), 3, R, K1, B1, C1), p1 = pool2(l1.o, C1, R), l2 = convF(p1, C1, R1, K2, B2, C2), p2 = pool2(l2.o, C2, R1);
+      for (let k = 0; k < out; k++){ let s = BW[k]; const w = k*FEAT; for (let i = 0; i < FEAT; i++) s += W[w + i]*p2[i]; o[b*out + k] = s; }
+      cs.push({ xp1: l1.xp, a1: l1.o, xp2: l2.xp, a2: l2.o, p2 });
+    }
+    return T(o, [B, out], { cache: { mid, B, cs } });
+  }
+  const { H, W1, b1, W2, b2 } = m, hs = new Float32Array(B*H);
   for (let b = 0; b < B; b++){
     const xo = b*D;
     for (let j = 0; j < H; j++){ let s = b1[j]; const w = j*D; for (let i = 0; i < D; i++) s += W1[w + i]*x[xo + i]; hs[b*H + j] = s > 0 ? s : 0; }
@@ -205,7 +254,18 @@ function mse(oid, lid){
 }
 function backward(lid){
   const L = get(lid); if (!L.back || !L.back.cache) throw new Error("backward(): giá trị loss này không gắn với mô hình nào");
-  const { cache: { mid, x, hs, B }, g } = L.back, m = get(mid), { H, out, W2, gW1, gb1, gW2, gb2 } = m, dh = new Float32Array(H);
+  const { cache, g } = L.back, m = get(cache.mid), out = m.out;
+  if (cache.cs){
+    const { K2, W, gK1, gB1, gK2, gB2, gW, gBW } = m;
+    cache.cs.forEach((c, b) => {
+      const gp2 = new Float32Array(FEAT);
+      for (let k = 0; k < out; k++){ const go = g[b*out + k]; if (!go) continue; gBW[k] += go; const w = k*FEAT; for (let i = 0; i < FEAT; i++){ gW[w + i] += go*c.p2[i]; gp2[i] += go*W[w + i]; } }
+      const gp1 = convB(c.xp2, C1, R1, K2, C2, c.a2, unpool2(gp2, C2, R1), gK2, gB2, true);
+      convB(c.xp1, 3, R, m.K1, C1, c.a1, unpool2(gp1, C1, R), gK1, gB1, false);
+    });
+    return;
+  }
+  const { x, hs, B } = cache, { H, W2, gW1, gb1, gW2, gb2 } = m, dh = new Float32Array(H);
   for (let b = 0; b < B; b++){
     dh.fill(0);
     for (let k = 0; k < out; k++){ const go = g[b*out + k]; gb2[k] += go; for (let j = 0; j < H; j++){ gW2[k*H + j] += go*hs[b*H + j]; dh[j] += go*W2[k*H + j]; } }
@@ -213,21 +273,23 @@ function backward(lid){
     for (let j = 0; j < H; j++){ if (hs[b*H + j] <= 0 || !dh[j]) continue; const d = dh[j], w = j*D; gb1[j] += d; for (let i = 0; i < D; i++) gW1[w + i] += d*x[xo + i]; }
   }
 }
-function optNew(mid, lr){ const m = get(mid), o = { k: "opt", pin: true, mid, lr: lr || 0.001, t: 0 }; PARAMS.forEach(k => { o["m" + k] = new Float32Array(m[k].length); o["v" + k] = new Float32Array(m[k].length); }); return put(o); }
-function optZero(oid){ const m = get(get(oid).mid); PARAMS.forEach(k => m["g" + k].fill(0)); }
+function optNew(mid, lr){ const o = { k: "opt", pin: true, mid, lr: lr || 0.001, t: 0 }; optFit(o, get(mid)); return put(o); }
+// bộ nhớ Adam theo đúng các tham số hiện có của mô hình (mô hình có thể được nạp lại kiến trúc khác)
+function optFit(o, m){ if (o.arch === archOf(m) && o.out === m.out) return; o.arch = archOf(m); o.out = m.out; o.t = 0; pnames(m).forEach(k => { o["m" + k] = new Float32Array(m[k].length); o["v" + k] = new Float32Array(m[k].length); }); }
+function optZero(oid){ const m = get(get(oid).mid); pnames(m).forEach(k => m["g" + k].fill(0)); }
 function optStep(oid){
-  const o = get(oid), m = get(o.mid), b1 = 0.9, b2 = 0.999, eps = 1e-8; o.t++;
+  const o = get(oid), m = get(o.mid), b1 = 0.9, b2 = 0.999, eps = 1e-8; optFit(o, m); o.t++;
   const c1 = 1 - Math.pow(b1, o.t), c2 = 1 - Math.pow(b2, o.t);
-  for (const k of PARAMS){ const p = m[k], g = m["g" + k], mm = o["m" + k], vv = o["v" + k];
+  for (const k of pnames(m)){ const p = m[k], g = m["g" + k], mm = o["m" + k], vv = o["v" + k];
     for (let i = 0; i < p.length; i++){ const gi = g[i]; if (!gi && !mm[i]) continue; mm[i] = b1*mm[i] + (1 - b1)*gi; vv[i] = b2*vv[i] + (1 - b2)*gi*gi; p[i] -= o.lr*(mm[i]/c1)/(Math.sqrt(vv[i]/c2) + eps); } }
 }
-function mState(mid){ const m = get(mid), st = { k: "st", out: m.out, H: m.H }; PARAMS.forEach(k => st[k] = new Float32Array(m[k])); return put(st); }
+function mState(mid){ const m = get(mid), st = { k: "st", arch: archOf(m), out: m.out, H: m.H }; pnames(m).forEach(k => st[k] = new Float32Array(m[k])); return put(st); }
 function mLoad(mid, sid){
   const m = get(mid), st = get(sid); if (st.k !== "st") throw new Error("load_state_dict: cần state_dict (từ torch.load hoặc model.state_dict())");
-  if (st.out !== m.out || st.H !== m.H) throw new Error(`load_state_dict: mô hình có ${m.out} đầu ra nhưng state_dict có ${st.out}`);
-  PARAMS.forEach(k => m[k].set(st[k]));
+  if (archOf(m) !== archOf(st) || m.out !== st.out){ m.arch = archOf(st); m.out = st.out; m.H = st.H || HID; mAlloc(m); }
+  pnames(m).forEach(k => m[k].set(st[k]));
 }
-function mFromState(sid){ const st = get(sid), id = mNew(st.out); mLoad(id, sid); return id; }
+function mFromState(sid){ const st = get(sid), id = mNew(st.out, archOf(st)); mLoad(id, sid); return id; }
 
 /* ---------- widget (ipywidgets) ---------- */
 const SAFE_TAGS = /^(h[1-6]|b|i|em|strong|p|br|small|code|span|div|ul|li)$/i;
@@ -335,6 +397,7 @@ function pyErr(msg){
 PF.pyErr = pyErr;
 // tham số giữ nguyên là đối tượng Python (hàm gọi lại, lớp, widget)
 PF.raw = { w_on_click: [1, 2], cam_dlink: [2, 3], cam_observe: [1, 2], cam_unobserve: [1], call_noyield: [0, 1] };
+PF._tick = tick;   // để kiểm thử: chạy một nhịp camera
 PF.stopAll = () => { PF.cams.clear(); if (PF.timer){ clearInterval(PF.timer); PF.timer = 0; } };
 
 /* ---------- lệnh shell "!..." (như Jupyter) trên ổ đĩa ảo ---------- */
@@ -570,7 +633,7 @@ class _Params(object):
         self.net = net
 
 class _Net(Module):
-    """Mô hình mô phỏng: ảnh 24x24 màu → 48 nơ-ron → số đầu ra của lớp fc"""
+    """Mô hình mô phỏng: mạng tích chập nhỏ trên ảnh 24x24 màu → số đầu ra của lớp fc"""
     def __init__(self, out=1000):
         self.fc = Linear(512, out)
         self._m = None
@@ -593,7 +656,7 @@ class _Net(Module):
         _pf.m_load(self._core(), sd._s)
         return self
     def __repr__(self):
-        return 'ResNet(\\n  (mô phỏng): ảnh 24x24x3 → Linear(1728, 48) → ReLU → Linear(48, %d)\\n  (fc): %r\\n)' % (self.fc.out_features, self.fc)
+        return 'ResNet(\\n  (mô phỏng): ảnh 24x24x3 → Conv3x3(8) → ReLU → AvgPool → Conv3x3(16) → ReLU → AvgPool → Linear(576, %d)\\n  (fc): %r\\n)' % (self.fc.out_features, self.fc)
 
 class _StateDict(object):
     def __init__(self, s, out=None):
@@ -1347,7 +1410,7 @@ function imgToCanvas(p, size){
 async function fileBytes(p){
   const m = vMeta(p), raw = ls.get(VF + norm(p)) || "";
   if (m.k === "img"){ const blob = await new Promise(r => imgToCanvas(p, 224).toBlob(r, /\.png$/i.test(p) ? "image/png" : "image/jpeg", 0.92)); return new Uint8Array(await blob.arrayBuffer()); }
-  if (m.k === "model") return new TextEncoder().encode(JSON.stringify({ format: MODEL_TAG, v: 1, out: m.out, H: m.H, data: raw }));
+  if (m.k === "model") return new TextEncoder().encode(JSON.stringify({ format: MODEL_TAG, v: 1, arch: m.arch || "mlp", out: m.out, H: m.H, data: raw }));
   if (m.k === "zip"){ let list = []; try { list = JSON.parse(raw || "[]"); } catch (e){} return new Uint8Array(await (await zipOf(list.filter(vExists), "")).arrayBuffer()); }
   return new TextEncoder().encode(raw);
 }
@@ -1370,7 +1433,7 @@ async function putBytes(p, bytes){
   if (/\.(pth|pt)$/i.test(name)){
     let o = null; try { o = JSON.parse(new TextDecoder().decode(bytes)); } catch (e){}
     if (!o || o.format !== MODEL_TAG) throw new Error(L(`${name}: mô hình PyTorch thật (resnet18…) không chạy được trong mô phỏng. Chỉ tải lên được tệp .pth đã tải về từ JetBot Lab.`, `${name}: a real PyTorch model cannot run in the simulator. Only .pth files downloaded from JetBot Lab can be uploaded.`));
-    return vPut(p, { k: "model", out: o.out, H: o.H, size: Math.round(o.data.length*0.75) }, o.data);
+    return vPut(p, { k: "model", arch: ARCH[o.arch] ? o.arch : "mlp", out: o.out, H: o.H, size: Math.round(o.data.length*0.75) }, o.data);
   }
   if (bytes.length > 300000) throw new Error(L(`${name}: tệp quá lớn cho ổ đĩa ảo (tối đa 300 KB).`, `${name}: too large for the virtual disk (max 300 KB).`));
   const s = new TextDecoder().decode(bytes); vPut(p, { k: "text", size: bytes.length }, s);

@@ -101,7 +101,8 @@ Ba notebook `path_following` của NVIDIA (`data_collection`, `train_model`, `ru
   `torch` (+`nn`, `optim`, `utils.data`), `torchvision`, `torch2trt`, `PIL`, `cv2`, `numpy`, `os`, `glob`, `uuid`, `json`, `open()`
   và dòng lệnh `!zip`, `!ls`, `!rm -r`. Tệp (ảnh `dataset_xy/…jpg`, mô hình `.pth`) nằm trong **ổ đĩa ảo** của trình duyệt (localStorage).
   Bảng **Tệp** ở thanh bên (biểu tượng thư mục) xem / tải lên / tải về / đổi tên / xoá tệp như Jupyter Lab: thư mục tải về thành `.zip`, tải lên `.zip` thì tự giải nén, ảnh rỗng được đánh dấu "hỏng" kèm nút xoá; `.pth` chỉ nhận mô hình đã tải về từ JetBot Lab.
-- Thay `resnet18` trên GPU bằng mạng nhỏ: ảnh thu về 24×24 màu → 48 nơ-ron → 2 đầu ra (x, y), huấn luyện bằng Adam (70 epoch ≈ 20 giây).
+- Thay `resnet18` trên GPU bằng mạng tích chập nhỏ: ảnh thu về 24×24 màu → Conv3×3(8) → AvgPool → Conv3×3(16) → AvgPool → 2 đầu ra (x, y), huấn luyện bằng Adam (150 ảnh, 70 epoch ≈ 20–30 giây; tệp .pth ≈ 5 KB). Dùng tích chập vì code gốc lật ngang ngẫu nhiên một nửa số ảnh, mạng phẳng không học được. Tệp .pth kiểu cũ (mạng 48 nơ-ron) vẫn nạp được.
+- Gán nhãn trên **vạch trắng ở giữa đường**: sa bàn có hai làn, ảnh lật của làn phải giống hệt làn trái nên gán nhãn giữa một làn làm robot trôi qua lại.
 - Bài 14: kéo robot tới nhiều vị trí/góc, bấm vào ảnh camera tại điểm trên tim đường robot nên đi tới (khoảng giữa ảnh); nên có ≥ 80 ảnh.
 - Bài 16: `camera.observe(execute)` lái robot mỗi khung hình; bấm **Dừng** để tắt. Robot cua gắt thì giảm *steering gain* còn 0.02–0.03.
 - Làm lại từ đầu: `!rm -r dataset_xy`.
