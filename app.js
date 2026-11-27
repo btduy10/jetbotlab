@@ -941,7 +941,7 @@ function loadCells(list, title){
   cellsEl.appendChild(addRow);
   if (title) $("#nbTitle").value = title;
   setActive(CELLS.find(c => c.type === "code") || CELLS[0]);
-  markStep(CELLS.find(c => c.type === "code"));
+  markStep(CELLS[0]);
   cellsEl.scrollTop = 0; save();
 }
 let saveT;
@@ -2035,13 +2035,13 @@ function applyLang(prev){
   document.querySelectorAll("[data-i18n-html]").forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
   document.querySelectorAll("#langSeg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.lang === LANG));
   $("#kstat").textContent = t(KSTAT);
-  renderMapSel(); renderAddRow();
+  renderMapSel(); renderAddRow(); renderLessonName();
   // bài mẫu chưa sửa thì đổi sang bản cùng ngôn ngữ
   if (prev && prev !== LANG && !K.running){
     const cur = JSON.stringify(CELLS.map(c => [c.type, c.src]));
     for (const l of LESSONS){
       const o = lessonIn(l, prev);
-      if (JSON.stringify(o.cells) === cur){ const n = lessonIn(l, LANG); loadCells(n.cells, n.file); CUR_LESSON = l; break; }
+      if (JSON.stringify(o.cells) === cur){ const n = lessonIn(l, LANG); loadCells(n.cells, n.file); CUR_LESSON = l; renderLessonName(); break; }
     }
   }
   CELLS.forEach(c => {
@@ -2204,7 +2204,14 @@ function critLabel(cr, k){
   if (k === "coll") return t("critColl").replace("{n}", cr.maxCollisions);
   return t("critInside");
 }
+// Tên bài đang mở trên thanh đầu trang (dài thì rút gọn bằng "…", rê chuột xem đủ)
+function renderLessonName(){
+  const el = $("#lessonName"); if (!el) return;
+  const L = CUR_LESSON ? lessonIn(CUR_LESSON, LANG) : null;
+  el.hidden = !L; el.textContent = L ? L.title : ""; el.title = L ? L.title : "";
+}
 function renderCrit(){
+  renderLessonName();
   const el = $("#critBox"), cr = CUR_LESSON && CUR_LESSON.criteria;
   if (!el) return;
   if (!cr){ el.hidden = true; return; }

@@ -52,6 +52,9 @@ button{cursor:pointer}
 .brand svg{flex:none}
 .brand small{font-weight:500;color:var(--muted);font-size:12px}
 .nbname{flex:1 1 180px;min-width:0;display:flex;align-items:center;gap:8px}
+.nbname .lessonname{flex:0 1 auto;min-width:0;max-width:420px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px;font-weight:650;color:var(--fg)}
+.nbname .lessonname[hidden]{display:none}
+.nbname .lessonname:not([hidden]) + input{flex:0 1 190px;max-width:190px;color:var(--muted);font-size:12px}
 .nbname input{min-width:0;width:100%;max-width:340px;border:1px solid transparent;background:transparent;border-radius:var(--r);padding:5px 8px;font-family:var(--f-code);font-size:13px}
 .nbname input:hover,.nbname input:focus{border-color:var(--line);background:var(--panel-2)}
 .kpill{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:500;color:var(--muted);background:var(--panel-2);border:1px solid var(--line-2);border-radius:99px;padding:4px 10px;white-space:nowrap}
