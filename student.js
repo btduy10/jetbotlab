@@ -62,10 +62,10 @@ window.renderAssignDrawer = el => {
 // Tài liệu giáo viên chia sẻ: bấm để tải về máy (tệp nằm trên Google Drive của giáo viên).
 const fmtBytes = n => n >= 1048576 ? (n/1048576).toFixed(n >= 10485760 ? 0 : 1) + " MB" : n >= 1024 ? Math.round(n/1024) + " KB" : n + " B";
 const matLink = m => `<a class="mat" href="${attr(m.download)}" target="_blank" rel="noopener" title="${attr(t("asFileDl"))}"><b>⬇ ${esc(m.name)}</b><small>${esc(fmtBytes(m.size))}${m.class_name ? " · " + esc(m.class_name) : ""}${m.note ? " · " + esc(m.note) : ""}</small></a>`;
-// Tài liệu chung của admin: hiện cho mọi người (kể cả chưa đăng nhập) ở đầu ngăn Bài mẫu và bảng Tệp.
+// Tài liệu chung của admin: hiện cho mọi người (kể cả chưa đăng nhập) ở bảng Tệp (không còn ở ngăn Bài mẫu).
 const PUB = { list: [] };
 window.publicFilesHtml = () => PUB.list.length ? `<details class="pubfiles" open><summary>${esc(t("pubFiles"))} (${PUB.list.length})</summary><div class="mats" title="${attr(t("pubFilesT"))}">${PUB.list.map(matLink).join("")}</div></details>` : "";
-(async () => { try { PUB.list = (await api("/api/class?a=public_materials")).materials; if (DRAWER === "nb" || DRAWER === "files") renderDrawer(DRAWER); } catch (e) {} })();
+(async () => { try { PUB.list = (await api("/api/class?a=public_materials")).materials; if (DRAWER === "files") renderDrawer(DRAWER); } catch (e) {} })();
 function bindJoin(){
   const f = $("#joinForm"); if (!f) return;
   f.onsubmit = e => { e.preventDefault(); joinClass(f.elements.code.value); };

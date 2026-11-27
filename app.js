@@ -1165,7 +1165,7 @@ function renderDrawer(which){
   if (which === "files"){ if (window.PF) PF.renderFiles(drawer); return; }
   if (which === "nb"){
     const item = l0 => { const l = lessonIn(l0, LANG); return `<button class="lesson" data-id="${attr(l.id)}"><em>${l.kind === "challenge" ? `<i class="chal">${esc(t("kindChallenge"))}</i> ` : ""}${esc(l.tag)} · ${esc(mapName(l.map).split(" · ")[0])}</em><b>${esc(l.title)}</b><span>${esc(l.desc)}</span></button>`; };
-    drawer.innerHTML = `<h3>${esc(t("drawerLessons"))}</h3>` + (window.publicFilesHtml ? publicFilesHtml() : "") + [1, 2, 3, 4, 5].map(lv => { const ls = LESSONS.filter(l => (l.level || 1) === lv); return ls.length ? `<h4 class="lvl">${esc(t("lvl" + lv))}</h4>` + ls.map(item).join("") : ""; }).join("");
+    drawer.innerHTML = `<h3>${esc(t("drawerLessons"))}</h3>` + [1, 2, 3, 4, 5].map(lv => { const ls = LESSONS.filter(l => (l.level || 1) === lv); return ls.length ? `<h4 class="lvl">${esc(t("lvl" + lv))}</h4>` + ls.map(item).join("") : ""; }).join("");
   } else {
     drawer.innerHTML = `<h3>${esc(t("drawerApi"))}</h3><div class="api">` + API.map(([cls, imp, fns]) =>
       `<h4>${cls}<small>${esc(imp)}</small></h4>` + fns.map(([code, d]) => `<div class="fn"><code>${esc(code)}</code><button class="ins" data-code="${esc(code)}">${esc(t("insert"))}</button><p>${esc(LANG === "en" && API_EN[code] ? API_EN[code] : d)}</p></div>`).join("")).join("") + "</div>";
