@@ -1477,6 +1477,7 @@ PF.renderFiles = el => {
       <button data-fm="refresh" title="${L("Làm mới", "Refresh")}">${IC.rf}</button>
       <input type="file" class="fm-in" multiple>
     </div>
+    ${!FM.dir && window.publicFilesHtml ? publicFilesHtml() : ""}
     <nav class="fm-path">${crumbs.map(([p, n], i) => (i ? '<i>/</i>' : "") + `<button data-cd="${H(p)}"${i === crumbs.length - 1 ? ' aria-current="true"' : ""}>${H(n)}</button>`).join("")}</nav>
     ${broken.length ? `<div class="fm-warn">${L(`${broken.length} ảnh rỗng (chụp khi ô camera chưa có hình) sẽ làm lỗi bước huấn luyện.`, `${broken.length} empty images (taken before the camera had a picture) will break training.`)} <button data-fm="clean">${L("Xoá ảnh hỏng", "Delete broken")}</button></div>` : ""}
     <ul class="fm-list">${rows.length ? rows.slice(0, MAXROWS).map(row).join("") : `<li class="fm-empty">${L("Thư mục trống", "Empty folder")}</li>`}
