@@ -1453,6 +1453,8 @@ const IC = {
   rf: '<svg width="15" height="15" viewBox="0 0 20 20"><path d="M15.5 10a5.5 5.5 0 1 1-1.8-4.1M15.5 3.5v3h-3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 };
 const MAXROWS = 300;
+// tên dài: rút gọn phần đầu bằng "…" nhưng luôn giữ đuôi tệp (.pth, .zip, .jpg…)
+function nameHtml(n){ const m = /^(.+?)(\.[A-Za-z0-9]{1,8})$/.exec(n); return m ? `<span class="fm-nm"><span class="fm-base">${H(m[1])}</span><span class="fm-ext">${H(m[2])}</span></span>` : `<span class="fm-nm"><span class="fm-base">${H(n)}</span></span>`; }
 PF.renderFiles = el => {
   FM.el = el;
   if (FM.dir && !vIsDir(FM.dir)) FM.dir = "";
@@ -1464,7 +1466,7 @@ PF.renderFiles = el => {
     const info = r.dir ? filesUnder(r.path).length + L(" tệp", " files") : bad ? L("hỏng · ảnh rỗng", "broken · empty image") : fmtSize(m.size || 0);
     return `<li class="fm-row${bad ? " bad" : ""}" data-p="${H(r.path)}" data-k="${kind}">` +
       `<span class="fm-ic">${kind === "img" ? `<canvas width="${R}" height="${R}"></canvas>` : IC[kind]}</span>` +
-      `<span class="fm-name" title="${H(r.name)}">${r.dir ? `<button class="fm-open">${H(r.name)}</button>` : H(r.name)}<small>${H(info)}</small></span>` +
+      `<span class="fm-name" title="${H(r.name)}">${r.dir ? `<button class="fm-open">${H(r.name)}</button>` : nameHtml(r.name)}<small>${H(info)}</small></span>` +
       `<span class="fm-act"><button data-fm="dl" title="${L("Tải về máy", "Download")}">${IC.dl}</button><button data-fm="ren" title="${L("Đổi tên", "Rename")}">${IC.ren}</button><button data-fm="del" title="${L("Xoá", "Delete")}">${IC.del}</button></span></li>`;
   };
   const used = vUsage();

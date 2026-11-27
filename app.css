@@ -76,6 +76,13 @@ select:hover{border-color:color-mix(in srgb, var(--fg) 22%, var(--line))}
 .rail button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent-ink)}
 .rail button[aria-pressed="true"]::before{content:"";position:absolute;left:-5px;top:9px;bottom:9px;width:3px;border-radius:0 3px 3px 0;background:var(--accent)}
 .drawer{width:300px;min-height:0;overflow:auto;border-right:1px solid var(--line);background:var(--panel)}
+.left > .rail{grid-column:1;grid-row:1}.left > .drawer{grid-column:2;grid-row:1}.left > .nb{grid-column:3;grid-row:1}
+/* thanh kéo đổi độ rộng ngăn bên: nằm chồng lên mép phải của ngăn */
+.dgrip{grid-column:2;grid-row:1;justify-self:end;width:8px;margin-right:-4px;z-index:5;cursor:col-resize;position:relative;touch-action:none}
+.dgrip::after{content:"";position:absolute;top:0;bottom:0;left:3px;width:2px;border-radius:2px;background:transparent;transition:background-color .15s ease}
+.dgrip:hover::after,.dgrip.drag::after{background:var(--accent)}
+.drawer[hidden] + .dgrip{display:none}
+body.dresize,body.dresize *{cursor:col-resize!important;user-select:none!important}
 .drawer[hidden]{display:none!important}
 .drawer h3{margin:0;padding:14px 14px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:600}
 .lesson{display:block;width:100%;text-align:left;border:0;background:transparent;padding:10px 16px;border-top:1px solid var(--line-2);transition:background-color .12s ease}
@@ -494,6 +501,9 @@ input[type=file]{display:none}
 .fm-row[data-k="model"] .fm-ic{color:var(--accent-ink)}
 .fm-ic canvas{width:26px;height:26px;border-radius:3px;image-rendering:pixelated;background:var(--panel-2)}
 .fm-name{min-width:0;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fm-nm{display:flex;min-width:0}
+.fm-base{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fm-ext{flex:none;white-space:nowrap}
 .fm-name small{display:block;font-size:11px;color:var(--muted)}
 .fm-open{border:0;background:transparent;padding:0;font:inherit;font-weight:600;color:var(--fg);cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .fm-open:hover{color:var(--accent-ink);text-decoration:underline}
